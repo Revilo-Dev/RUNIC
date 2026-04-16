@@ -78,7 +78,7 @@ public class ModItemModelProvider extends ItemModelProvider {
         out.add(new RuneModelDef(11f, "stat/flame_chance"));
         out.add(new RuneModelDef(12f, "stat/freezing_chance"));
         out.add(new RuneModelDef(13f, "stat/health"));
-        out.add(new RuneModelDef(14f, "stat/healing_efficiency"));
+        out.add(new RuneModelDef(14f, "stat/aegis"));
         out.add(new RuneModelDef(15f, "stat/jump_height"));
         out.add(new RuneModelDef(16f, "stat/knockback_resistance"));
         out.add(new RuneModelDef(17f, "stat/leeching_chance"));
@@ -92,8 +92,10 @@ public class ModItemModelProvider extends ItemModelProvider {
         out.add(new RuneModelDef(25f, "stat/shocking_chance"));
         out.add(new RuneModelDef(26f, "stat/stun_chance"));
         out.add(new RuneModelDef(27f, "stat/sweeping_range"));
+        out.add(new RuneModelDef(28f, "stat/fangs"));
         out.add(new RuneModelDef(29f, "stat/toughness"));
         out.add(new RuneModelDef(30f, "stat/undead_damage"));
+        out.add(new RuneModelDef(31f, "stat/stone_skin"));
         out.add(new RuneModelDef(32f, "stat/weakening_chance"));
         out.add(new RuneModelDef(33f, "stat/withering_chance"));
 

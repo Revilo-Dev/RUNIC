@@ -5,17 +5,17 @@
     "I": {
       "item": "minecraft:iron_ingot"
     },
-    "P": {
-      "tag": "minecraft:planks"
+    "B": {
+      "item": "minecraft:iron_block"
     },
-    "G": {
-      "item": "minecraft:gold_ingot"
+    "R": {
+      "item": "minecraft:redstone_block"
     }
   },
   "pattern": [
-    "III",
-    "PGP",
-    "PPP"
+    "BBB",
+    " R ",
+    "III"
   ],
   "result": {
     "count": 1,

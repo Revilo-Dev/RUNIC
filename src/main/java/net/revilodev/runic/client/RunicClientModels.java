@@ -72,7 +72,7 @@ public final class RunicClientModels {
             case "flame_chance" -> 11f;
             case "freezing_chance" -> 12f;
             case "health" -> 13f;
-            case "healing_efficiency" -> 14f;
+            case "aegis" -> 14f;
             case "jump_height" -> 15f;
             case "knockback_resistance" -> 16f;
             case "leeching_chance" -> 17f;
@@ -86,8 +86,10 @@ public final class RunicClientModels {
             case "shocking_chance" -> 25f;
             case "stun_chance" -> 26f;
             case "sweeping_range" -> 27f;
+            case "fangs" -> 28f;
             case "toughness" -> 29f;
             case "undead_damage" -> 30f;
+            case "stone" -> 31f;
             case "weakening_chance" -> 32f;
             case "withering_chance" -> 33f;
             default -> 0f;

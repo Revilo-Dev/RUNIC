@@ -1,25 +1,27 @@
 package net.revilodev.runic.runes;
 
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.projectile.AbstractArrow;
+import net.minecraft.world.entity.projectile.EvokerFangs;
 import net.minecraft.world.item.ItemStack;
-
+import net.minecraft.world.item.component.CustomData;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
-
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
-import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
-import net.neoforged.neoforge.event.entity.living.LivingDropsEvent;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
-
 import net.revilodev.runic.RunicMod;
 import net.revilodev.runic.effect.ModMobEffects;
+import net.revilodev.runic.particle.ModParticles;
 import net.revilodev.runic.stat.RuneStatType;
 import net.revilodev.runic.stat.RuneStats;
 
@@ -27,111 +29,62 @@ import java.util.Random;
 
 @EventBusSubscriber(modid = RunicMod.MOD_ID)
 public final class CombatHandler {
-
     private static final Random RNG = new Random();
+    private static final String ROOT = "runic";
+    private static final String LEECHING_FROM_ETCHING = "leeching_from_etching";
 
     private CombatHandler() {}
 
-    /* -----------------------------------------------------------
-       DAMAGE BONUS HANDLING
-       ----------------------------------------------------------- */
     @SubscribeEvent
     public static void onIncomingDamage(LivingIncomingDamageEvent event) {
-
-        DamageSource source = event.getSource();
         LivingEntity target = event.getEntity();
-
-        LivingEntity attacker =
-                source.getEntity() instanceof LivingEntity le ? le : null;
-
-        if (attacker == null) return;
-
-        RuneStats stats = RuneStats.get(attacker.getMainHandItem());
-        if (stats.isEmpty()) return;
-
-        float amount = event.getAmount();
-        float bonus = 0f;
-
-        ResourceLocation id = target.getType().builtInRegistryHolder().key().location();
-        String path = id.getPath();
-
-        boolean undead =
-                path.contains("zombie") ||
-                        path.contains("skeleton") ||
-                        path.contains("wither") ||
-                        path.contains("phantom") ||
-                        path.contains("drowned");
-
-        if (undead) bonus += stats.get(RuneStatType.UNDEAD_DAMAGE);
-
-        boolean nether =
-                path.contains("blaze") ||
-                        path.contains("ghast") ||
-                        path.contains("magma") ||
-                        path.contains("piglin") ||
-                        path.contains("hoglin");
-
-        if (nether) bonus += stats.get(RuneStatType.NETHER_DAMAGE);
-
-        if (bonus > 0f) {
-            amount *= (1f + bonus / 100f);
+        DamageSource source = event.getSource();
+        LivingEntity attacker = resolveAttacker(source);
+        if (attacker == null) {
+            return;
         }
 
-        // Arrow "Power" modifier
+        RuneStats stats = RuneStats.get(attacker.getMainHandItem());
+        if (stats.isEmpty()) {
+            return;
+        }
+
+        float amount = event.getAmount();
+        amount = applyCreatureBonuses(stats, target, amount);
+
         if (source.getDirectEntity() instanceof AbstractArrow) {
             float power = stats.get(RuneStatType.POWER);
-            if (power > 0f) {
-                amount *= (1f + power / 100f);
+            if (power > 0.0F) {
+                amount *= 1.0F + power / 100.0F;
             }
+        }
+
+        maybeSpawnFangs(attacker, target, source, stats.get(RuneStatType.FANGS));
+
+        float leech = stats.get(RuneStatType.LEECHING_CHANCE);
+        if (leech > 0.0F && RNG.nextFloat() <= leech / 100.0F) {
+            boolean fromEtching = isLeechingFromEtching(attacker.getMainHandItem());
+            float ratio = fromEtching ? 0.05F : 0.10F;
+            float drain = Math.max(0.5F, target.getMaxHealth() * ratio);
+            attacker.heal(drain);
+            spawnLeechTrail(attacker, target);
         }
 
         event.setAmount(amount);
     }
 
-
-    /* -----------------------------------------------------------
-       LEECHING
-       ----------------------------------------------------------- */
-    @SubscribeEvent
-    public static void onKill(LivingDeathEvent event) {
-        DamageSource source = event.getSource();
-        Entity src = source.getEntity();
-        if (!(src instanceof LivingEntity attacker)) return;
-        if (attacker.level().isClientSide) return;
-
-        RuneStats stats = RuneStats.get(attacker.getMainHandItem());
-        if (stats.isEmpty()) return;
-
-        float chance = stats.get(RuneStatType.LEECHING_CHANCE);
-        if (chance <= 0f) return;
-
-        if (RNG.nextFloat() <= chance / 100f) {
-            float healAmount = event.getEntity().getMaxHealth() * 0.10f;
-            attacker.heal(healAmount);
-        }
-    }
-    
-
-
-    /* -----------------------------------------------------------
-       BONUS ARROW
-       ----------------------------------------------------------- */
     @SubscribeEvent
     public static void onArrowSpawn(EntityJoinLevelEvent event) {
-
         if (!(event.getLevel() instanceof ServerLevel level)) return;
         if (!(event.getEntity() instanceof AbstractArrow arrow)) return;
         if (!(arrow.getOwner() instanceof LivingEntity shooter)) return;
-
         if (arrow.getPersistentData().getBoolean("runic_bonus_arrow")) return;
 
         RuneStats stats = RuneStats.get(shooter.getMainHandItem());
         if (stats.isEmpty()) return;
 
         float chance = stats.get(RuneStatType.BONUS_CHANCE);
-        if (chance <= 0f) return;
-
-        if (RNG.nextFloat() > chance / 100f) return;
+        if (chance <= 0.0F || RNG.nextFloat() > chance / 100.0F) return;
 
         AbstractArrow extra = (AbstractArrow) arrow.getType().create(level);
         if (extra == null) return;
@@ -140,62 +93,130 @@ public final class CombatHandler {
         extra.copyPosition(arrow);
 
         var vel = arrow.getDeltaMovement();
-        double spread = 0.05;
+        double spread = 0.05D;
         extra.setDeltaMovement(
-                vel.x + (level.random.nextDouble() - 0.5) * spread,
+                vel.x + (level.random.nextDouble() - 0.5D) * spread,
                 vel.y,
-                vel.z + (level.random.nextDouble() - 0.5) * spread
+                vel.z + (level.random.nextDouble() - 0.5D) * spread
         );
-
         extra.getPersistentData().putBoolean("runic_bonus_arrow", true);
-
         level.addFreshEntity(extra);
     }
 
-
-    /* -----------------------------------------------------------
-       STUN DAMAGE REDUCTION
-       ----------------------------------------------------------- */
     @SubscribeEvent
     public static void onDamageFromStunned(LivingDamageEvent.Pre event) {
-
-        DamageSource source = event.getSource();
-        if (!(source.getEntity() instanceof LivingEntity attacker)) return;
-
-        if (attacker.hasEffect(ModMobEffects.STUNNING)) {
-            float modified = event.getNewDamage() * 0.5f;
-            event.setNewDamage(modified);
+        if (event.getSource().getEntity() instanceof LivingEntity attacker && attacker.hasEffect(ModMobEffects.STUNNING)) {
+            event.setNewDamage(event.getNewDamage() * 0.5F);
         }
     }
 
-
-    /* -----------------------------------------------------------
-       APPLY STUN EFFECT (NO SWIRL PARTICLES)
-       ----------------------------------------------------------- */
     @SubscribeEvent
     public static void onApplyStunChance(LivingDamageEvent.Pre event) {
-
-        DamageSource src = event.getSource();
-        LivingEntity target = event.getEntity();
-
-        LivingEntity attacker =
-                src.getEntity() instanceof LivingEntity le ? le : null;
-
+        LivingEntity attacker = resolveAttacker(event.getSource());
         if (attacker == null) return;
 
         RuneStats stats = RuneStats.get(attacker.getMainHandItem());
         if (stats.isEmpty()) return;
 
         float chance = stats.get(RuneStatType.STUN_CHANCE);
-        if (chance <= 0f) return;
+        if (chance <= 0.0F || RNG.nextFloat() > chance / 100.0F) return;
 
-        if (RNG.nextFloat() > chance / 100f) return;
+        event.getEntity().addEffect(new MobEffectInstance(ModMobEffects.STUNNING, 40, 0, false, false, true));
+    }
 
-        target.addEffect(new net.minecraft.world.effect.MobEffectInstance(
-                ModMobEffects.STUNNING, 40, 0,
-                false, // ambient
-                false, // NO vanilla swirl particles
-                true   // still show icon
-        ));
+    private static LivingEntity resolveAttacker(DamageSource source) {
+        Entity direct = source.getDirectEntity();
+        if (direct instanceof AbstractArrow arrow && arrow.getOwner() instanceof LivingEntity owner) {
+            return owner;
+        }
+        return source.getEntity() instanceof LivingEntity living ? living : null;
+    }
+
+    private static float applyCreatureBonuses(RuneStats stats, LivingEntity target, float amount) {
+        ResourceLocation id = target.getType().builtInRegistryHolder().key().location();
+        String path = id.getPath();
+
+        float bonus = 0.0F;
+        if (path.contains("zombie") || path.contains("skeleton") || path.contains("wither") || path.contains("phantom") || path.contains("drowned")) {
+            bonus += stats.get(RuneStatType.UNDEAD_DAMAGE);
+        }
+        if (path.contains("blaze") || path.contains("ghast") || path.contains("magma") || path.contains("piglin") || path.contains("hoglin")) {
+            bonus += stats.get(RuneStatType.NETHER_DAMAGE);
+        }
+
+        return bonus > 0.0F ? amount * (1.0F + bonus / 100.0F) : amount;
+    }
+
+    private static void maybeSpawnFangs(LivingEntity attacker, LivingEntity target, DamageSource source, float chance) {
+        if (chance <= 0.0F || RNG.nextFloat() > chance / 100.0F) {
+            return;
+        }
+        if (source.getDirectEntity() instanceof AbstractArrow) {
+            return;
+        }
+        if (!(attacker.level() instanceof ServerLevel level)) {
+            return;
+        }
+
+        Vec3 start = attacker.position();
+        Vec3 end = target.position();
+        Vec3 delta = end.subtract(start);
+        if (delta.lengthSqr() < 0.0001D) {
+            EvokerFangs fangs = new EvokerFangs(level, target.getX(), target.getY(), target.getZ(), attacker.getYRot(), 0, attacker);
+            level.addFreshEntity(fangs);
+            return;
+        }
+
+        Vec3 step = delta.normalize().scale(1.25D);
+        float yaw = (float) Math.atan2(step.z, step.x);
+        int count = 5;
+        for (int i = 0; i < count; i++) {
+            Vec3 pos = start.add(step.scale(i + 1));
+            EvokerFangs fangs = new EvokerFangs(level, pos.x, target.getY(), pos.z, yaw, i * 2, attacker);
+            level.addFreshEntity(fangs);
+        }
+    }
+
+    private static void spawnLeechTrail(LivingEntity attacker, LivingEntity target) {
+        if (!(attacker.level() instanceof ServerLevel level)) {
+            return;
+        }
+
+        Vec3 start = target.getBoundingBox().getCenter();
+        Vec3 end = attacker.getEyePosition().add(0.0D, -0.25D, 0.0D);
+        Vec3 delta = end.subtract(start);
+        double distance = delta.length();
+        if (distance < 0.001D) {
+            return;
+        }
+
+        Vec3 velocity = delta.normalize().scale(0.55D);
+        int steps = Math.max(4, Math.min(8, (int) Math.ceil(distance * 2.0D)));
+
+        for (int i = 0; i < steps; i++) {
+            double progress = (double) i / Math.max(1, steps - 1);
+            Vec3 point = start.lerp(end, progress);
+            level.sendParticles(
+                    ModParticles.BLOOD_DROP.value(),
+                    point.x,
+                    point.y,
+                    point.z,
+                    0,
+                    velocity.x,
+                    velocity.y,
+                    velocity.z,
+                    1.0D
+            );
+        }
+    }
+
+    private static boolean isLeechingFromEtching(ItemStack weapon) {
+        CustomData data = weapon.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
+        CompoundTag root = data.copyTag();
+        if (!root.contains(ROOT, Tag.TAG_COMPOUND)) {
+            return false;
+        }
+        CompoundTag runic = root.getCompound(ROOT);
+        return runic.getBoolean(LEECHING_FROM_ETCHING);
     }
 }

@@ -11,6 +11,8 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.ShieldItem;
+import net.minecraft.world.item.TieredItem;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.loot.LootContext;
@@ -18,9 +20,12 @@ import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
 import net.neoforged.neoforge.common.loot.IGlobalLootModifier;
 import net.neoforged.neoforge.common.loot.LootModifier;
+import net.revilodev.runic.gear.GearAttribute;
+import net.revilodev.runic.gear.GearAttributes;
 import net.revilodev.runic.item.ModItems;
 import net.revilodev.runic.item.custom.RuneItem;
 import net.revilodev.runic.loot.rarity.EnhancementRarities;
+import net.revilodev.runic.runes.RuneSlots;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -73,6 +78,7 @@ public class RunicStructureLootInjector extends LootModifier {
         RandomSource rand = ctx.getRandom();
 
         maybeAddRunes(generated, rand, level, id);
+        maybeAddLootAttribute(generated, rand);
 
         return generated;
     }
@@ -164,5 +170,48 @@ public class RunicStructureLootInjector extends LootModifier {
             }
         }
         return pool.get(pool.size() - 1);
+    }
+
+    private void maybeAddLootAttribute(ObjectArrayList<ItemStack> generated, RandomSource rand) {
+        if (generated.isEmpty() || rand.nextFloat() >= this.armorChance) {
+            return;
+        }
+
+        List<ItemStack> candidates = new ArrayList<>();
+        for (ItemStack stack : generated) {
+            if (isAttributeEligible(stack)) {
+                RuneSlots.syncUsedToContents(stack);
+                candidates.add(stack);
+            }
+        }
+        if (candidates.isEmpty()) {
+            return;
+        }
+
+        ItemStack chosen = candidates.get(rand.nextInt(candidates.size()));
+        GearAttribute attribute = switch (rand.nextInt(4)) {
+            case 0 -> GearAttribute.SEALED;
+            case 1 -> GearAttribute.ANCIENT;
+            case 2 -> GearAttribute.BRITTLE;
+            default -> GearAttribute.INSTABLE;
+        };
+
+        int min = Math.max(1, this.minLevel);
+        int max = Math.max(min, this.maxLevel);
+        int level = min + rand.nextInt(max - min + 1);
+        GearAttributes.addLevel(chosen, attribute, level);
+    }
+
+    private static boolean isAttributeEligible(ItemStack stack) {
+        if (stack.isEmpty() || !stack.isDamageableItem()) {
+            return false;
+        }
+        return stack.getItem() instanceof TieredItem
+                || stack.getItem() instanceof ShieldItem
+                || stack.getItem() instanceof net.minecraft.world.item.ArmorItem
+                || stack.getItem() instanceof net.minecraft.world.item.BowItem
+                || stack.getItem() instanceof net.minecraft.world.item.CrossbowItem
+                || stack.getItem() instanceof net.minecraft.world.item.TridentItem
+                || stack.getItem() instanceof net.minecraft.world.item.MaceItem;
     }
 }

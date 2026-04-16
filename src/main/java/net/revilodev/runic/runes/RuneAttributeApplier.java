@@ -28,6 +28,13 @@ public final class RuneAttributeApplier {
         return id != null && RunicMod.MOD_ID.equals(id.getNamespace());
     }
 
+    private static boolean isVanillaBaseModifier(AttributeModifier mod) {
+        ResourceLocation id = mod.id();
+        return id != null
+                && "minecraft".equals(id.getNamespace())
+                && id.getPath().startsWith("base_");
+    }
+
     private static String makeKey(Holder<net.minecraft.world.entity.ai.attributes.Attribute> attribute,
                                   AttributeModifier modifier,
                                   EquipmentSlotGroup slotGroup) {
@@ -80,7 +87,7 @@ public final class RuneAttributeApplier {
         Set<String> keys = new HashSet<>();
 
         ItemAttributeModifiers proto =
-                stack.getPrototype().getOrDefault(DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.EMPTY);
+                new ItemStack(item).getOrDefault(DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.EMPTY);
 
         for (ItemAttributeModifiers.Entry e : proto.modifiers()) {
             addUnique(builder, keys, e.attribute(), e.modifier(), e.slot());
@@ -96,7 +103,7 @@ public final class RuneAttributeApplier {
                 stack.getOrDefault(DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.EMPTY);
 
         for (ItemAttributeModifiers.Entry e : current.modifiers()) {
-            if (!isRunicModifier(e.modifier())) {
+            if (!isRunicModifier(e.modifier()) && !isVanillaBaseModifier(e.modifier())) {
                 addUnique(builder, keys, e.attribute(), e.modifier(), e.slot());
             }
         }
@@ -104,14 +111,14 @@ public final class RuneAttributeApplier {
         EquipmentSlotGroup slotGroup = resolveSlotGroup(stack);
 
         if (slotGroup != null && stats != null && !stats.isEmpty()) {
-            addPercent(builder, stats, RuneStatType.ATTACK_DAMAGE,        Attributes.ATTACK_DAMAGE,       "attack_damage",        slotGroup);
+            addFlat   (builder, stats, RuneStatType.ATTACK_DAMAGE,        Attributes.ATTACK_DAMAGE,       "attack_damage",        slotGroup);
             addPercent(builder, stats, RuneStatType.ATTACK_SPEED,         Attributes.ATTACK_SPEED,        "attack_speed",         slotGroup);
             addPercent(builder, stats, RuneStatType.ATTACK_RANGE,         Attributes.ENTITY_INTERACTION_RANGE, "attack_range", slotGroup);
 
             addPercent(builder, stats, RuneStatType.MOVEMENT_SPEED,       Attributes.MOVEMENT_SPEED,      "movement_speed",       slotGroup);
             addPercent(builder, stats, RuneStatType.KNOCKBACK_RESISTANCE, Attributes.KNOCKBACK_RESISTANCE,"knockback_resistance", slotGroup);
-            addPercent(builder, stats, RuneStatType.HEALTH,               Attributes.MAX_HEALTH,          "health",               slotGroup);
-            addPercent(builder, stats, RuneStatType.TOUGHNESS,            Attributes.ARMOR_TOUGHNESS,     "toughness",            slotGroup);
+            addFlat   (builder, stats, RuneStatType.HEALTH,               Attributes.MAX_HEALTH,          "health",               slotGroup);
+            addFlat   (builder, stats, RuneStatType.TOUGHNESS,            Attributes.ARMOR_TOUGHNESS,     "toughness",            slotGroup);
 
             addPercent(builder, stats, RuneStatType.MINING_SPEED,         Attributes.BLOCK_BREAK_SPEED,   "mining_speed",         slotGroup);
             addRatio  (builder, stats, RuneStatType.SWEEPING_RANGE,       Attributes.SWEEPING_DAMAGE_RATIO, "sweeping_range", slotGroup);
@@ -133,6 +140,27 @@ public final class RuneAttributeApplier {
         } else {
             stack.remove(DataComponents.ENCHANTMENT_GLINT_OVERRIDE);
         }
+    }
+
+    private static void addFlat(ItemAttributeModifiers.Builder builder,
+                                RuneStats stats,
+                                RuneStatType type,
+                                Holder<net.minecraft.world.entity.ai.attributes.Attribute> attribute,
+                                String name,
+                                EquipmentSlotGroup slotGroup) {
+
+        float value = stats.get(type);
+        if (value == 0.0F) return;
+
+        ResourceLocation id = ResourceLocation.fromNamespaceAndPath(
+                RunicMod.MOD_ID,
+                "stat." + name + "." + slotGroup.name().toLowerCase()
+        );
+
+        builder.add(attribute,
+                new AttributeModifier(id, value, AttributeModifier.Operation.ADD_VALUE),
+                slotGroup
+        );
     }
 
     private static void addPercent(ItemAttributeModifiers.Builder builder,

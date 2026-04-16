@@ -14,6 +14,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.revilodev.runic.RunicMod;
 import net.revilodev.runic.block.ModBlocks;
@@ -26,7 +27,7 @@ public final class EtchingTableCategory implements IRecipeCategory<EtchingTableR
     public static final RecipeType<EtchingTableRecipe> RECIPE_TYPE =
             RecipeType.create(RunicMod.MOD_ID, "etching_table", EtchingTableRecipe.class);
 
-    private static final int WIDTH = 96;
+    private static final int WIDTH = 118;
     private static final int HEIGHT = 32;
 
     private final IDrawable background;
@@ -65,7 +66,10 @@ public final class EtchingTableCategory implements IRecipeCategory<EtchingTableR
         builder.addSlot(RecipeIngredientRole.INPUT, 26, 8)
                 .addIngredients(recipe.material());
 
-        builder.addSlot(RecipeIngredientRole.OUTPUT, 68, 8)
+        builder.addSlot(RecipeIngredientRole.INPUT, 48, 8)
+                .addItemStack(new ItemStack(Items.LAPIS_LAZULI, 1));
+
+        builder.addSlot(RecipeIngredientRole.OUTPUT, 90, 8)
                 .addItemStack(buildOutput(recipe));
     }
 

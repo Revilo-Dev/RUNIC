@@ -1,0 +1,31 @@
+{
+  "items": {
+    "gatewayexpansion:mana_steel_paxel": 3,
+    "gatewayexpansion:elixrite_paxel": 4,
+    "gatewayexpansion:astrite_paxel": 5,
+    "gatewayexpansion:lunarium_paxel": 6,
+    "gatewayexpansion:ignite_paxel": 7,
+    "gatewayexpansion:iridium_paxel": 8,
+    "gatewayexpansion:mythril_paxel": 9,
+    "gatewayexpansion:arcanium_paxel": 10,
+    "gatewayexpansion:prismatic_steel_paxel": 11,
+    "gatewayexpansion:mana_steel_sword": 7,
+    "gatewayexpansion:elixrite_sword": 7,
+    "gatewayexpansion:astrite_sword": 8,
+    "gatewayexpansion:lunarium_sword": 8,
+    "gatewayexpansion:ignite_sword": 9,
+    "gatewayexpansion:iridium_sword": 9,
+    "gatewayexpansion:mythril_sword": 10,
+    "gatewayexpansion:arcanium_sword": 10,
+    "gatewayexpansion:prismatic_steel_sword": 12,
+    "gatewayexpansion:mana_steel_magnet": 2,
+    "gatewayexpansion:elixrite_magnet": 2,
+    "gatewayexpansion:astrite_magnet": 2,
+    "gatewayexpansion:lunarium_magnet": 2,
+    "gatewayexpansion:ignite_magnet": 2,
+    "gatewayexpansion:iridium_magnet": 2,
+    "gatewayexpansion:mythril_magnet": 2,
+    "gatewayexpansion:arcanium_magnet": 2,
+    "gatewayexpansion:prismatic_steel_magnet": 3
+  }
+}

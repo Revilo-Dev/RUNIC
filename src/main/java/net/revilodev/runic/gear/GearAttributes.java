@@ -92,6 +92,18 @@ public final class GearAttributes {
         return (float) Math.pow(0.95D, lvl);
     }
 
+    public static float ancientMultiplier(ItemStack stack) {
+        int lvl = getLevel(stack, GearAttribute.ANCIENT);
+        if (lvl <= 0) return 1.0F;
+        return 1.0F + (0.05F * lvl);
+    }
+
+    public static float nextCurseChance(ItemStack stack, float baseChance) {
+        int lvl = getLevel(stack, GearAttribute.CURSED);
+        if (lvl <= 0) return baseChance;
+        return Math.max(0.0F, baseChance - (lvl * 0.10F));
+    }
+
     private static CompoundTag getRootCopy(ItemStack stack) {
         CustomData cd = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
         return cd.copyTag();

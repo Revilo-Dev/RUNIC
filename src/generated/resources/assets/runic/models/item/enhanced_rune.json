@@ -80,7 +80,7 @@
       }
     },
     {
-      "model": "runic:item/rune/stat/healing_efficiency",
+      "model": "runic:item/rune/stat/aegis",
       "predicate": {
         "runic:rune_model": 14.0
       }
@@ -164,7 +164,7 @@
       }
     },
     {
-      "model": "runic:item/rune/stat/swimming_speed",
+      "model": "runic:item/rune/stat/fangs",
       "predicate": {
         "runic:rune_model": 28.0
       }
@@ -182,7 +182,7 @@
       }
     },
     {
-      "model": "runic:item/rune/stat/water_breathing",
+      "model": "runic:item/rune/stat/stone_skin",
       "predicate": {
         "runic:rune_model": 31.0
       }

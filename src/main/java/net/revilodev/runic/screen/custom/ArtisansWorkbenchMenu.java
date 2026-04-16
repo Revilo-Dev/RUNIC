@@ -44,6 +44,7 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
 
     private static final String ROOT = "runic";
     private static final String PREVIEW_DELTA = "preview_delta";
+    private static final String LEECHING_FROM_ETCHING = "leeching_from_etching";
     private static final int MAX_ATTR_LEVEL = 10;
 
     private final ContainerLevelAccess access;
@@ -253,13 +254,14 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
         if (existing != null && existing.has(stat)) return false;
 
         Item item = target.getItem();
+        ArmorItem armor = item instanceof ArmorItem armorItem ? armorItem : null;
 
         return switch (stat) {
             case ATTACK_DAMAGE, ATTACK_SPEED, ATTACK_RANGE, SWEEPING_RANGE,
                  UNDEAD_DAMAGE, NETHER_DAMAGE,
                  STUN_CHANCE, FLAME_CHANCE, BLEEDING_CHANCE, SHOCKING_CHANCE,
                  POISON_CHANCE, WITHERING_CHANCE, WEAKENING_CHANCE,
-                 FREEZING_CHANCE, LEECHING_CHANCE, BONUS_CHANCE ->
+                 FREEZING_CHANCE, LEECHING_CHANCE, BONUS_CHANCE, FANGS ->
                     item instanceof SwordItem
                             || item instanceof AxeItem
                             || item instanceof TridentItem
@@ -271,10 +273,16 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
             case MINING_SPEED ->
                     item instanceof DiggerItem;
 
-            case MOVEMENT_SPEED, HEALTH, RESISTANCE, FIRE_RESISTANCE, BLAST_RESISTANCE,
+            case MOVEMENT_SPEED ->
+                    armor != null && armor.getEquipmentSlot() == EquipmentSlot.FEET;
+
+            case JUMP_HEIGHT ->
+                    armor != null && armor.getEquipmentSlot() == EquipmentSlot.LEGS;
+
+            case HEALTH, RESISTANCE, FIRE_RESISTANCE, BLAST_RESISTANCE,
                  PROJECTILE_RESISTANCE, KNOCKBACK_RESISTANCE,
-                 TOUGHNESS, HEALING_EFFICIENCY, JUMP_HEIGHT ->
-                    item instanceof ArmorItem;
+                 TOUGHNESS, STONE, AEGIS ->
+                    armor != null;
 
             case DURABILITY ->
                     target.isDamageableItem();
@@ -409,6 +417,8 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
         if (GearAttributes.has(gear, GearAttribute.SEALED)) return ItemStack.EMPTY;
         if (isInscription(enhancement) && !isCursedApplyingInscription(enhancement) && anyAttrAtMax(gear)) return ItemStack.EMPTY;
 
+        RuneSlots.syncUsedToContents(gear);
+
         ItemStack base = gear.copy();
         base.setCount(1);
 
@@ -484,6 +494,29 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
             else root.put(ROOT, runic);
         }
 
+        setRoot(stack, root);
+    }
+
+    private static void setLeechingSource(ItemStack stack, boolean fromEtching) {
+        CompoundTag root = getRootCopy(stack);
+        CompoundTag runic = root.contains(ROOT, Tag.TAG_COMPOUND) ? root.getCompound(ROOT) : new CompoundTag();
+        runic.putBoolean(LEECHING_FROM_ETCHING, fromEtching);
+        root.put(ROOT, runic);
+        setRoot(stack, root);
+    }
+
+    private static void clearLeechingSource(ItemStack stack) {
+        CompoundTag root = getRootCopy(stack);
+        if (!root.contains(ROOT, Tag.TAG_COMPOUND)) {
+            return;
+        }
+        CompoundTag runic = root.getCompound(ROOT);
+        runic.remove(LEECHING_FROM_ETCHING);
+        if (runic.isEmpty()) {
+            root.remove(ROOT);
+        } else {
+            root.put(ROOT, runic);
+        }
         setRoot(stack, root);
     }
 
@@ -801,6 +834,7 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
         taken.remove(DataComponents.ENCHANTMENT_GLINT_OVERRIDE);
 
         RuneStats.set(taken, RuneStats.empty());
+        clearLeechingSource(taken);
         taken.set(ModDataComponents.RUNE_SLOTS_USED.get(), 0);
 
         updateGlintAfter(taken);
@@ -837,15 +871,31 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
         return Math.max(0, lvl) * 2;
     }
 
+    public int instableShiftForPreview(ItemStack stack) {
+        return instableShift(stack);
+    }
+
     private float rollBaseStat(RuneStatType type, boolean etching, int instableShift) {
-        int min = etching ? type.etchingMinPercent() : type.minPercent();
-        int max = etching ? type.etchingMaxPercent() : type.maxPercent();
+        float min = etching ? type.etchingMinPercent() : type.minPercent();
+        float max = etching ? type.etchingMaxPercent() : type.maxPercent();
 
-        int minAdj = Math.max(0, min - instableShift);
-        int maxAdj = Math.max(minAdj, max - instableShift);
+        float minAdj = Math.max(0.0F, min - instableShift);
+        float maxAdj = Math.max(minAdj, max - instableShift);
 
-        if (minAdj == maxAdj) return (float) minAdj;
-        return (float) (minAdj + RNG.nextInt(maxAdj - minAdj + 1));
+        if (Math.abs(minAdj - maxAdj) < 0.0001F) return minAdj;
+        float step = Math.max(0.1F, type.rollStep());
+        float span = maxAdj - minAdj;
+        int steps = Math.max(1, (int) Math.floor(span / step + 0.0001F));
+        float value = minAdj + RNG.nextInt(steps + 1) * step;
+        return Math.min(maxAdj, value);
+    }
+
+    private float powerAdjusted(ItemStack stack, float value) {
+        return value * GearAttributes.cursedMultiplier(stack) * GearAttributes.ancientMultiplier(stack);
+    }
+
+    public float powerMultiplierForPreview(ItemStack stack) {
+        return GearAttributes.cursedMultiplier(stack) * GearAttributes.ancientMultiplier(stack);
     }
 
     private boolean applyUpgrade(ItemStack taken) {
@@ -921,7 +971,7 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
         RuneStatType chosen = options.get(RNG.nextInt(options.size()));
         int shift = instableShift(taken);
         float base = rollBaseStat(chosen, false, shift);
-        float val = base * GearAttributes.cursedMultiplier(taken);
+        float val = powerAdjusted(taken, base);
 
         EnumMap<RuneStatType, Float> map = new EnumMap<>(RuneStatType.class);
         map.putAll(st.view());
@@ -950,7 +1000,8 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
             }
         }
 
-        if (canOver && RNG.nextBoolean()) {
+        float overChance = GearAttributes.nextCurseChance(taken, 0.50F);
+        if (canOver && RNG.nextFloat() < overChance) {
             List<RuneStatType> opts = new ArrayList<>();
             for (Map.Entry<RuneStatType, Float> e : st.view().entrySet()) {
                 if (e.getValue() == 0.0F) continue;
@@ -960,7 +1011,7 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
 
             RuneStatType chosen = opts.get(RNG.nextInt(opts.size()));
             float cap = chosen.cap();
-            float val = (cap * 1.10F) * GearAttributes.cursedMultiplier(taken);
+            float val = powerAdjusted(taken, cap * 1.10F);
 
             EnumMap<RuneStatType, Float> map = new EnumMap<>(RuneStatType.class);
             map.putAll(st.view());
@@ -999,7 +1050,6 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
             return true;
         }
 
-        float curseMult = GearAttributes.cursedMultiplier(taken);
         int shift = instableShift(taken);
 
         EnumMap<RuneStatType, Float> map = new EnumMap<>(RuneStatType.class);
@@ -1011,13 +1061,18 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
             if (applied >= cap) break;
             if (!canApplyStatTo(taken, t)) continue;
             float base = rollBaseStat(t, false, shift);
-            map.put(t, base * curseMult);
+            map.put(t, powerAdjusted(taken, base));
             RuneSlots.tryConsumeSlot(taken);
             applied++;
         }
 
         if (!map.isEmpty()) {
             RuneStats.set(taken, new RuneStats(map));
+            if (map.containsKey(RuneStatType.LEECHING_CHANCE)) {
+                setLeechingSource(taken, false);
+            } else {
+                clearLeechingSource(taken);
+            }
             taken.set(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, true);
         }
 
@@ -1087,6 +1142,9 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
                 map.putAll(st.view());
                 map.remove(t.stat);
                 RuneStats.set(taken, map.isEmpty() ? RuneStats.empty() : new RuneStats(map));
+                if (t.stat == RuneStatType.LEECHING_CHANCE) {
+                    clearLeechingSource(taken);
+                }
             }
         }
 
@@ -1172,6 +1230,7 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
         }
 
         if (!isEnhancementItem(enhancement)) return;
+        RuneSlots.syncUsedToContents(taken);
         if (effectiveRemaining(taken) <= 0) return;
 
         RuneStats templateStats = RuneStats.get(enhancement);
@@ -1199,7 +1258,6 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
 
             if (changedStats) {
                 int shift = instableShift(taken);
-                float curseMult = GearAttributes.cursedMultiplier(taken);
                 EnumMap<RuneStatType, Float> map = new EnumMap<>(RuneStatType.class);
 
                 for (Map.Entry<RuneStatType, Float> e : rolled.view().entrySet()) {
@@ -1207,15 +1265,18 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
                     float v = e.getValue();
                     if (v == 0.0F) continue;
 
-                    int max = isEtching(enhancement) ? t.etchingMaxPercent() : t.maxPercent();
-                    int maxAdj = Math.max(0, max - shift);
+                    float max = isEtching(enhancement) ? t.etchingMaxPercent() : t.maxPercent();
+                    float maxAdj = Math.max(0.0F, max - shift);
                     if (v > maxAdj) v = maxAdj;
 
-                    map.put(t, v * curseMult);
+                    map.put(t, powerAdjusted(taken, v));
                 }
 
                 RuneStats adjusted = map.isEmpty() ? RuneStats.empty() : new RuneStats(map);
                 RuneStats.set(taken, RuneStats.combine(base, adjusted));
+                if (map.containsKey(RuneStatType.LEECHING_CHANCE)) {
+                    setLeechingSource(taken, isEtching(enhancement));
+                }
                 taken.set(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, true);
                 applied = true;
             }

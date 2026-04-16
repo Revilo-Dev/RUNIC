@@ -4,6 +4,7 @@ package net.revilodev.runic.screen.custom;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.contents.TranslatableContents;
@@ -107,16 +108,26 @@ public final class ArtisansWorkbenchScreen extends AbstractContainerScreen<Artis
         ItemStack preview = this.menu.getPreviewStack();
         if (base.isEmpty() || preview.isEmpty() || this.minecraft == null) return;
 
-        List<Component> lines = new ArrayList<>(this.getTooltipFromContainerItem(preview));
+        ItemStack enhancement = this.menu.getEnhancementStack();
+        boolean hideOutcome = hidesOutcomePreview(enhancement);
+        boolean hideRolledStatValues = !isInscription(enhancement) && !RuneStats.get(enhancement).isEmpty();
+
+        List<Component> lines = new ArrayList<>(this.getTooltipFromContainerItem((hideOutcome || hideRolledStatValues) ? base : preview));
         moveVanillaStatsToTop(lines);
         if (lines.isEmpty()) return;
 
-        ItemStack enhancement = this.menu.getEnhancementStack();
         List<Component> delta = buildDeltaLines(base, preview, enhancement);
         if (!delta.isEmpty()) {
             lines.add(Component.empty());
             lines.add(Component.literal("Changes").withStyle(ChatFormatting.GRAY));
             lines.addAll(delta);
+        }
+
+        List<Component> statRoll = buildStatRollLines(base, enhancement);
+        if (!statRoll.isEmpty()) {
+            lines.add(Component.empty());
+            lines.add(Component.literal("Stat Roll").withStyle(ChatFormatting.GRAY));
+            lines.addAll(statRoll);
         }
 
         // Place panel to the right of the GUI
@@ -143,11 +154,16 @@ public final class ArtisansWorkbenchScreen extends AbstractContainerScreen<Artis
     }
 
     private List<Component> buildDeltaLines(ItemStack base, ItemStack preview, ItemStack enhancement) {
-        if (isInscription(enhancement)) return List.of();
+        if (hidesOutcomePreview(enhancement)) return List.of();
+        if (isInscription(enhancement)
+                && !enhancement.is(ModItems.REROLL_INSCRIPTION.get())
+                && !enhancement.is(ModItems.UPGRADE_INSCRIPTION.get())) {
+            return List.of();
+        }
 
         List<Component> out = new ArrayList<>();
+        boolean hideStatRoll = !isInscription(enhancement) && !RuneStats.get(enhancement).isEmpty();
 
-        // Rune slots (show absolute base -> preview)
         int baseCap = RuneSlots.capacity(base);
         int prevCap = RuneSlots.capacity(preview);
         int baseUsed = RuneSlots.used(base);
@@ -159,7 +175,6 @@ public final class ArtisansWorkbenchScreen extends AbstractContainerScreen<Artis
             out.add(Component.literal("Rune slots: " + a + " \u2192 " + b).withStyle(ChatFormatting.AQUA));
         }
 
-        // Durability (show max + remaining deltas)
         if (base.isDamageableItem() && preview.isDamageableItem()) {
             int baseMax = base.getMaxDamage();
             int prevMax = preview.getMaxDamage();
@@ -172,7 +187,6 @@ public final class ArtisansWorkbenchScreen extends AbstractContainerScreen<Artis
             if (dRem != 0) out.add(coloredDelta("Durability (remaining)", dRem));
         }
 
-        // Rune stats (percent deltas)
         RuneStats bStats = RuneStats.get(base);
         RuneStats pStats = RuneStats.get(preview);
 
@@ -190,32 +204,41 @@ public final class ArtisansWorkbenchScreen extends AbstractContainerScreen<Artis
                 float pv = pm.getOrDefault(t, 0.0F);
                 float dv = pv - bv;
                 if (Math.abs(dv) <= 0.0001F) continue;
-                out.add(coloredPercent(pretty(t.id()), dv));
-            }
-        }
-
-        // Enchant deltas (level deltas)
-        ItemEnchantments be = base.getOrDefault(net.minecraft.core.component.DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
-        ItemEnchantments pe = preview.getOrDefault(net.minecraft.core.component.DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
-
-        if (!be.isEmpty() || !pe.isEmpty()) {
-            Map<String, Integer> bMap = enchMap(be);
-            Map<String, Integer> pMap = enchMap(pe);
-
-            List<String> eKeys = new ArrayList<>();
-            eKeys.addAll(bMap.keySet());
-            for (String k : pMap.keySet()) if (!eKeys.contains(k)) eKeys.add(k);
-            eKeys.sort(String::compareTo);
-
-            for (String k : eKeys) {
-                int bl = bMap.getOrDefault(k, 0);
-                int pl = pMap.getOrDefault(k, 0);
-                int dl = pl - bl;
-                if (dl != 0) out.add(coloredDelta(k, dl));
+                out.add(hideStatRoll
+                        ? Component.literal(pretty(t.id()) + ": Added").withStyle(ChatFormatting.GREEN)
+                        : coloredValue(pretty(t.id()), t, dv));
             }
         }
 
         return out;
+    }
+
+    private List<Component> buildStatRollLines(ItemStack gear, ItemStack enhancement) {
+        if (!Screen.hasControlDown()) return List.of();
+        if (gear.isEmpty()) return List.of();
+
+        RuneStats enhancementStats = RuneStats.get(enhancement);
+        if (enhancementStats == null || enhancementStats.isEmpty()) return List.of();
+
+        RuneStatType type = enhancementStats.view().keySet().stream().findFirst().orElse(null);
+        if (type == null) return List.of();
+
+        boolean etching = enhancement.getItem() instanceof net.revilodev.runic.item.custom.EtchingItem;
+        int shift = this.menu.instableShiftForPreview(gear);
+
+        float min = etching ? type.etchingMinPercent() : type.minPercent();
+        float max = etching ? type.etchingMaxPercent() : type.maxPercent();
+        min = Math.max(0.0F, min - shift);
+        max = Math.max(min, max - shift);
+
+        float multiplier = this.menu.powerMultiplierForPreview(gear);
+        float minAdjusted = min * multiplier;
+        float maxAdjusted = max * multiplier;
+
+        return List.of(
+                Component.literal("  " + pretty(type.id()) + ": " + formatSignedValue(type, minAdjusted) + " to " + formatSignedValue(type, maxAdjusted))
+                        .withStyle(ChatFormatting.AQUA)
+        );
     }
 
     private static boolean isInscription(ItemStack stack) {
@@ -229,13 +252,8 @@ public final class ArtisansWorkbenchScreen extends AbstractContainerScreen<Artis
                 || stack.is(ModItems.EXTRACTION_INSCRIPTION.get());
     }
 
-    private static Map<String, Integer> enchMap(ItemEnchantments e) {
-        Map<String, Integer> out = new HashMap<>();
-        for (var it : e.entrySet()) {
-            String name = it.getKey().value().description().getString();
-            out.put(name, it.getIntValue());
-        }
-        return out;
+    private static boolean hidesOutcomePreview(ItemStack stack) {
+        return stack.is(ModItems.WILD_INSCRIPTION.get());
     }
 
     private static Component coloredDelta(String label, int delta) {
@@ -244,12 +262,9 @@ public final class ArtisansWorkbenchScreen extends AbstractContainerScreen<Artis
         return Component.literal(label + ": " + s).withStyle(fmt);
     }
 
-    private static Component coloredPercent(String label, float dvRaw) {
-        double pct = dvRaw;
-        // If someone ever feeds fraction (0.18), treat as 18%
-        if (Math.abs(pct) <= 2.0) pct = pct * 100.0;
-        ChatFormatting fmt = pct > 0 ? ChatFormatting.GREEN : ChatFormatting.RED;
-        String s = (pct > 0 ? "+" : "") + trimDouble(pct) + "%";
+    private static Component coloredValue(String label, RuneStatType type, float delta) {
+        ChatFormatting fmt = delta > 0 ? ChatFormatting.GREEN : ChatFormatting.RED;
+        String s = formatSignedValue(type, delta);
         return Component.literal(label + ": " + s).withStyle(fmt);
     }
 
@@ -261,6 +276,14 @@ public final class ArtisansWorkbenchScreen extends AbstractContainerScreen<Artis
         if (av >= 1.0) return String.format(Locale.ROOT, "%.2f", v);
         if (av >= 0.1) return String.format(Locale.ROOT, "%.2f", v);
         return String.format(Locale.ROOT, "%.3f", v);
+    }
+
+    private static String formatSignedValue(RuneStatType type, float v) {
+        float av = Math.abs(v);
+        String num = Math.abs(av - Math.round(av)) < 0.001f
+                ? String.format(Locale.ROOT, "%.0f", av)
+                : String.format(Locale.ROOT, "%.1f", av);
+        return (v >= 0 ? "+" : "-") + num + (type.isPercentBased() ? "%" : "");
     }
 
     private static String pretty(String id) {

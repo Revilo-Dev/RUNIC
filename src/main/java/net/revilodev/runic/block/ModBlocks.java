@@ -26,6 +26,7 @@ public final class ModBlocks {
             BLOCKS.register("artisans_workbench",
                     () -> new ArtisansWorkbench(BlockBehaviour.Properties.of()
                             .strength(5.0F)
+                            .noOcclusion()
                             .sound(SoundType.STONE)));
 
     public static final DeferredHolder<Block, EtchingTableBlock> ETCHING_TABLE =

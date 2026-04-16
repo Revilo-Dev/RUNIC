@@ -3,11 +3,15 @@ package net.revilodev.runic.runes;
 import com.mojang.serialization.Codec;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.component.DataComponentType;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.neoforged.neoforge.registries.DeferredHolder;
+import net.revilodev.runic.item.custom.RuneItem;
+import net.revilodev.runic.stat.RuneStats;
 import net.revilodev.runic.registry.ModDataComponents;
 
 import static net.revilodev.runic.registry.ModDataComponents.DATA_COMPONENT_TYPES;
@@ -24,6 +28,33 @@ public final class RuneSlots {
     public static int used(ItemStack stack) {
         Integer v = stack.get(ModDataComponents.RUNE_SLOTS_USED.get());
         return v == null ? 0 : Math.max(0, v);
+    }
+
+    public static int countAppliedEnhancements(ItemStack stack) {
+        int total = 0;
+
+        RuneStats stats = RuneStats.get(stack);
+        if (stats != null && !stats.isEmpty()) {
+            total += stats.view().size();
+        }
+
+        ItemEnchantments enchants = stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
+        if (!enchants.isEmpty()) {
+            for (var entry : enchants.entrySet()) {
+                if (RuneItem.isEffectEnchantment(entry.getKey()) && entry.getIntValue() > 0) {
+                    total++;
+                }
+            }
+        }
+
+        return total;
+    }
+
+    public static void syncUsedToContents(ItemStack stack) {
+        int derived = Math.min(capacity(stack), countAppliedEnhancements(stack));
+        if (used(stack) < derived) {
+            stack.set(ModDataComponents.RUNE_SLOTS_USED.get(), derived);
+        }
     }
 
     public static int remaining(ItemStack stack) {

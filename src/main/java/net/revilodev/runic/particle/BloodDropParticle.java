@@ -21,9 +21,10 @@ public class BloodDropParticle extends TextureSheetParticle {
         super(level, x, y, z, vx, vy, vz);
         this.sprites = sprites;
 
-        this.setSize(0.06F, 0.06F);
-        this.lifetime = 12 + this.random.nextInt(6);
-        this.gravity = 0.30F;
+        this.setSize(0.10F, 0.10F);
+        this.lifetime = 6 + this.random.nextInt(3);
+        this.gravity = 0.02F;
+        this.friction = 0.94F;
 
         this.setSpriteFromAge(sprites);
     }

@@ -50,12 +50,14 @@ public final class ModRecipeProvider extends RecipeProvider {
         STAT_MATERIALS.put(RuneStatType.POISON_CHANCE, Items.SPIDER_EYE);
         STAT_MATERIALS.put(RuneStatType.WITHERING_CHANCE, Items.WITHER_ROSE);
         STAT_MATERIALS.put(RuneStatType.WEAKENING_CHANCE, Items.FERMENTED_SPIDER_EYE);
-        STAT_MATERIALS.put(RuneStatType.HEALING_EFFICIENCY, Items.GHAST_TEAR);
         STAT_MATERIALS.put(RuneStatType.DRAW_SPEED, Items.STRING);
         STAT_MATERIALS.put(RuneStatType.TOUGHNESS, Items.NETHERITE_SCRAP);
         STAT_MATERIALS.put(RuneStatType.FREEZING_CHANCE, Items.PACKED_ICE);
         STAT_MATERIALS.put(RuneStatType.LEECHING_CHANCE, Items.HONEY_BOTTLE);
         STAT_MATERIALS.put(RuneStatType.BONUS_CHANCE, Items.LAPIS_LAZULI);
+        STAT_MATERIALS.put(RuneStatType.FANGS, Items.EVOKER_SPAWN_EGG);
+        STAT_MATERIALS.put(RuneStatType.STONE, Items.TUFF);
+        STAT_MATERIALS.put(RuneStatType.AEGIS, Items.TOTEM_OF_UNDYING);
         STAT_MATERIALS.put(RuneStatType.JUMP_HEIGHT, Items.SLIME_BLOCK);
         STAT_MATERIALS.put(RuneStatType.POWER, Items.NETHER_STAR);
     }

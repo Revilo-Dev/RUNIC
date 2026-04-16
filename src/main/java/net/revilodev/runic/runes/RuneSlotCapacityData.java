@@ -98,11 +98,11 @@ public final class RuneSlotCapacityData extends SimpleJsonResourceReloadListener
     }
 
     private static void putSafe(Map<Item, Integer> map, ResourceLocation itemId, int slots, ResourceLocation source) {
-        Item item = BuiltInRegistries.ITEM.get(itemId);
-        if (item == null) {
+        if (!BuiltInRegistries.ITEM.containsKey(itemId)) {
             RunicMod.LOGGER.warn("RuneSlots: unknown item '{}' in {}", itemId, source);
             return;
         }
+        Item item = BuiltInRegistries.ITEM.get(itemId);
         map.put(item, Math.max(0, slots));
     }
 
@@ -156,8 +156,11 @@ public final class RuneSlotCapacityData extends SimpleJsonResourceReloadListener
     public static void importFromNetwork(Map<ResourceLocation, Integer> itemMap, Map<String, Integer> defaults) {
         Map<Item, Integer> rebuilt = new HashMap<>();
         itemMap.forEach((id, v) -> {
+            if (!BuiltInRegistries.ITEM.containsKey(id)) {
+                return;
+            }
             Item item = BuiltInRegistries.ITEM.get(id);
-            if (item != null) rebuilt.put(item, Math.max(0, v));
+            rebuilt.put(item, Math.max(0, v));
         });
         CAPACITIES = rebuilt;
         DEFAULTS = new HashMap<>(defaults);

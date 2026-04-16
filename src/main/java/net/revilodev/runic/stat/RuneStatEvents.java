@@ -6,16 +6,19 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.event.entity.living.LivingHealEvent;
+import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
 import net.neoforged.neoforge.event.tick.EntityTickEvent;
 import net.revilodev.runic.RunicMod;
 
 @EventBusSubscriber(modid = RunicMod.MOD_ID)
 public final class RuneStatEvents {
+    private static final String STONE_TICK = "runic_stone_tick";
 
     private RuneStatEvents() {}
 
@@ -26,6 +29,12 @@ public final class RuneStatEvents {
 
         float amount = event.getAmount();
         if (amount <= 0.0F) return;
+
+        float aegis = getTotal(target, RuneStatType.AEGIS);
+        if (aegis > 0.0F && target.getRandom().nextFloat() <= aegis / 100.0F) {
+            event.setAmount(0.0F);
+            return;
+        }
 
         float generic = getTotal(target, RuneStatType.RESISTANCE);
         float fire = getTotal(target, RuneStatType.FIRE_RESISTANCE);
@@ -44,16 +53,41 @@ public final class RuneStatEvents {
             amount *= reduce(blast);
         }
 
+        float stone = getTotal(target, RuneStatType.STONE);
+        long now = target.level().getGameTime();
+        long stoneUntil = target.getPersistentData().getLong(STONE_TICK);
+        if (stone > 0.0F && stoneUntil > now) {
+            amount *= reduce(stone);
+        }
+
+        if (stone > 0.0F && target.getMaxHealth() > 0.0F && amount >= target.getMaxHealth() * 0.25F) {
+            target.getPersistentData().putLong(STONE_TICK, now + 80L);
+            target.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 80, 0, false, false, true));
+        }
+
         event.setAmount(amount);
     }
 
     @SubscribeEvent
-    public static void onHeal(LivingHealEvent event) {
-        LivingEntity entity = event.getEntity();
-        float eff = getTotal(entity, RuneStatType.HEALING_EFFICIENCY);
-        if (eff > 0.0F) {
-            event.setAmount(event.getAmount() * (1.0F + eff / 100.0F));
-        }
+    public static void onEntityJoin(EntityJoinLevelEvent event) {
+        if (!(event.getEntity() instanceof LivingEntity entity)) return;
+        if (entity.level().isClientSide) return;
+
+        float runicHealth = getTotal(entity, RuneStatType.HEALTH);
+        if (runicHealth <= 0.0F) return;
+
+        AttributeInstance maxHealthAttr = entity.getAttribute(Attributes.MAX_HEALTH);
+        if (maxHealthAttr == null) return;
+
+        float current = entity.getHealth();
+        float max = entity.getMaxHealth();
+        float base = (float) maxHealthAttr.getBaseValue();
+
+        if (max <= base + 0.01F) return;
+        if (current > base + 0.01F) return;
+        if (current <= 0.0F) return;
+
+        entity.setHealth(Math.min(max, current + (max - base)));
     }
 
     @SubscribeEvent
@@ -61,10 +95,10 @@ public final class RuneStatEvents {
         if (!(event.getEntity() instanceof LivingEntity entity)) return;
         if (entity.level().isClientSide) return;
 
-        ItemStack boots = entity.getItemBySlot(EquipmentSlot.FEET);
-        if (boots.isEmpty()) return;
+        ItemStack leggings = entity.getItemBySlot(EquipmentSlot.LEGS);
+        if (leggings.isEmpty()) return;
 
-        float jump = RuneStats.get(boots).get(RuneStatType.JUMP_HEIGHT);
+        float jump = RuneStats.get(leggings).get(RuneStatType.JUMP_HEIGHT);
         if (jump <= 0) return;
 
         int amplifier = (int)(jump / 10f);

@@ -85,23 +85,25 @@ public final class RunicLangProviders {
             add("tooltip.runic.stat.undead_damage", "\ueef3 Undead Damage");
             add("tooltip.runic.stat.nether_damage", "\ueef3 Nether Damage");
             add("tooltip.runic.stat.health", "\ueef4 Health Boost");
-            add("tooltip.runic.stat.stun_chance", "\ueef4 Stun Chance");
-            add("tooltip.runic.stat.flame_chance", "\ueef4 Flame Chance");
-            add("tooltip.runic.stat.bleeding_chance", "\ueef4 Bleeding Chance");
-            add("tooltip.runic.stat.shocking_chance", "\ueef4 Shocking Chance");
-            add("tooltip.runic.stat.poison_chance", "\ueef4 Poison Chance");
-            add("tooltip.runic.stat.withering_chance", "\ueef4 Withering Chance");
-            add("tooltip.runic.stat.weakening_chance", "\ueef4 Weakening Chance");
-            add("tooltip.runic.stat.healing_efficiency", "\ueef4 Healing Efficiency");
+            add("tooltip.runic.stat.stun_chance", "\ueef4 Stunning");
+            add("tooltip.runic.stat.flame_chance", "\ueef4 Fire Aspect");
+            add("tooltip.runic.stat.bleeding_chance", "\ueef4 Bleeding");
+            add("tooltip.runic.stat.shocking_chance", "\ueef4 Shocking");
+            add("tooltip.runic.stat.poison_chance", "\ueef4 Toxic");
+            add("tooltip.runic.stat.withering_chance", "\ueef4 Withering");
+            add("tooltip.runic.stat.weakening_chance", "\ueef4 Deminishing");
             add("tooltip.runic.stat.water_breathing", "\uefe1 Water Breathing");
             add("tooltip.runic.stat.draw_speed", "\uefe8 Draw Speed");
-            add("tooltip.runic.stat.jump_height", "\uefe7 Jump Height");
+            add("tooltip.runic.stat.jump_height", "\uefe7 Leaping");
 
-            add("tooltip.runic.stat.toughness", "\uefe2 Armour Toughness");
-            add("tooltip.runic.stat.freezing_chance", "\ueef4 Freezing Chance");
-            add("tooltip.runic.stat.leeching_chance", "\ueef4 Leeching Chance");
+            add("tooltip.runic.stat.toughness", "\uefe2 Toughness");
+            add("tooltip.runic.stat.freezing_chance", "\ueef4 Freezing");
+            add("tooltip.runic.stat.leeching_chance", "\ueef4 Leaching");
             add("tooltip.runic.stat.looting", "\ueef3 Looting");
-            add("tooltip.runic.stat.bonus_chance", "\uefe5 Bonus Shot Chance");
+            add("tooltip.runic.stat.bonus_chance", "\uefe5 MultiShot");
+            add("tooltip.runic.stat.fangs", "\ueef4 Fangs");
+            add("tooltip.runic.stat.stone", "\uefe2 Stone Skin");
+            add("tooltip.runic.stat.aegis", "\uefe2 Aegis");
             add("tooltip.runic.stat.power", "\uefe5 Power");
 
             // Stat descriptions
@@ -121,21 +123,23 @@ public final class RunicLangProviders {
             add("tooltip.runic.stat_desc.undead_damage", "Increases damage to undead.");
             add("tooltip.runic.stat_desc.nether_damage", "Increases damage to nether mobs.");
             add("tooltip.runic.stat_desc.health", "Increases maximum health.");
-            add("tooltip.runic.stat_desc.stun_chance", "Chance to stun on hit.");
-            add("tooltip.runic.stat_desc.flame_chance", "Chance to ignite targets.");
+            add("tooltip.runic.stat_desc.stun_chance", "Chance to apply stunning.");
+            add("tooltip.runic.stat_desc.flame_chance", "Chance to apply fire aspect.");
             add("tooltip.runic.stat_desc.bleeding_chance", "Chance to apply bleeding.");
-            add("tooltip.runic.stat_desc.shocking_chance", "Chance to shock targets.");
-            add("tooltip.runic.stat_desc.poison_chance", "Chance to poison targets.");
-            add("tooltip.runic.stat_desc.withering_chance", "Chance to wither targets.");
-            add("tooltip.runic.stat_desc.weakening_chance", "Chance to weaken targets.");
-            add("tooltip.runic.stat_desc.healing_efficiency", "Improves healing received.");
+            add("tooltip.runic.stat_desc.shocking_chance", "Chance to apply shocking.");
+            add("tooltip.runic.stat_desc.poison_chance", "Chance to apply toxic.");
+            add("tooltip.runic.stat_desc.withering_chance", "Chance to apply withering.");
+            add("tooltip.runic.stat_desc.weakening_chance", "Chance to apply deminishing.");
             add("tooltip.runic.stat_desc.water_breathing", "Increases underwater breathing duration.");
             add("tooltip.runic.stat_desc.draw_speed", "Increases bow draw speed.");
-            add("tooltip.runic.stat_desc.toughness", "Increases armor toughness.");
-            add("tooltip.runic.stat_desc.freezing_chance", "Chance to freeze targets.");
-            add("tooltip.runic.stat_desc.leeching_chance", "Chance to heal on hit.");
-            add("tooltip.runic.stat_desc.bonus_chance", "Chance to fire an extra projectile.");
-            add("tooltip.runic.stat_desc.jump_height", "Increases jump height.");
+            add("tooltip.runic.stat_desc.toughness", "Increases toughness.");
+            add("tooltip.runic.stat_desc.freezing_chance", "Chance to apply freezing.");
+            add("tooltip.runic.stat_desc.leeching_chance", "Chance to leach 10% of enemy max health on hit.");
+            add("tooltip.runic.stat_desc.bonus_chance", "Chance to trigger multishot.");
+            add("tooltip.runic.stat_desc.fangs", "Chance to summon a line of evoker fangs on hit.");
+            add("tooltip.runic.stat_desc.stone", "Gain temporary resistance after a heavy hit.");
+            add("tooltip.runic.stat_desc.aegis", "Chance to negate an incoming hit.");
+            add("tooltip.runic.stat_desc.jump_height", "Increases leaping height.");
             add("tooltip.runic.stat_desc.power", "Increases ranged damage.");
 
             // Enchants

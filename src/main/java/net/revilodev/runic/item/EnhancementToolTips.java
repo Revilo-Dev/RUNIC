@@ -1,6 +1,7 @@
 package net.revilodev.runic.item;
 
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
@@ -30,9 +31,11 @@ public final class EnhancementToolTips {
         boolean isEtching = stack.getItem() instanceof EtchingItem;
         if (!isRune && !isEtching) return false;
 
+        stripEmptyLines(tooltip);
         stripModifierContextLines(tooltip);
         stripAttributeLines(tooltip);
         stripAllEnchantmentLines(stack, tooltip);
+        stripEmptyLines(tooltip);
 
         RuneStats stats = RuneStats.get(stack);
         boolean hasStats = stats != null && !stats.isEmpty();
@@ -60,21 +63,26 @@ public final class EnhancementToolTips {
             float present = stats.get(type);
             if (Math.abs(present) < 1.0e-6f) continue;
 
-            int min = isEtching ? type.etchingMinPercent() : type.minPercent();
-            int max = isEtching ? type.etchingMaxPercent() : type.maxPercent();
+            float min = isEtching ? type.etchingMinPercent() : type.minPercent();
+            float max = isEtching ? type.etchingMaxPercent() : type.maxPercent();
 
-            String range = (min == max) ? ("+" + min + "%") : (min + "% - " + max + "%");
+            String range = formatRange(type, min, max);
             EnhancementRarity rarity = EnhancementRarities.getStat(type.id());
 
             MutableComponent name = rarity.applyTo(Component.translatable("tooltip.runic.stat." + type.id()));
+            boolean showDesc = Screen.hasAltDown();
+            String descKey = "tooltip.runic.stat_desc." + type.id();
+            boolean hasDesc = I18n.exists(descKey);
+            if (!showDesc && hasDesc) {
+                name = name.append(Component.literal(" [Alt]").withStyle(ChatFormatting.DARK_GRAY));
+            }
             out.add(name);
 
-            String descKey = "tooltip.runic.stat_desc." + type.id();
-            if (I18n.exists(descKey)) {
+            if (showDesc && hasDesc) {
                 out.add(Component.translatable(descKey).withStyle(ChatFormatting.DARK_GRAY));
             } else {
                 String fallback = statDescription(type);
-                if (fallback != null && !fallback.isBlank()) {
+                if (showDesc && fallback != null && !fallback.isBlank()) {
                     out.add(Component.literal(fallback).withStyle(ChatFormatting.DARK_GRAY));
                 }
             }
@@ -114,11 +122,17 @@ public final class EnhancementToolTips {
     private static List<Component> buildEnchantBlocks(List<EnchLine> enchLines) {
         List<Component> out = new ArrayList<>();
         for (EnchLine e : enchLines) {
+            boolean showDesc = Screen.hasAltDown();
+            String descKey = descriptionKey(e.id);
+            boolean hasDesc = descKey != null && I18n.exists(descKey);
+
             MutableComponent name = e.rarity.applyTo(e.name.copy());
+            if (!showDesc && hasDesc) {
+                name = name.append(Component.literal(" [Alt]").withStyle(ChatFormatting.DARK_GRAY));
+            }
             out.add(name);
 
-            String descKey = descriptionKey(e.id);
-            if (descKey != null && I18n.exists(descKey)) {
+            if (showDesc && hasDesc) {
                 out.add(Component.translatable(descKey).withStyle(ChatFormatting.DARK_GRAY));
             }
 
@@ -150,6 +164,26 @@ public final class EnhancementToolTips {
         return Component.literal("Range: ")
                 .withStyle(ChatFormatting.GRAY)
                 .append(Component.literal("[" + range + "]").withStyle(ChatFormatting.AQUA));
+    }
+
+    private static String formatRange(RuneStatType type, float min, float max) {
+        String minText = formatNumber(min);
+        String maxText = formatNumber(max);
+        if (Math.abs(min - max) < 0.001F) {
+            return type.isPercentBased() ? (minText + "%") : ("+" + minText);
+        }
+        if (type.isPercentBased()) {
+            return minText + "% - " + maxText + "%";
+        }
+        return "+" + minText + " - +" + maxText;
+    }
+
+    private static String formatNumber(float value) {
+        float rounded = Math.round(value * 10.0F) / 10.0F;
+        if (Math.abs(rounded - Math.round(rounded)) < 0.001F) {
+            return String.format(Locale.ROOT, "%.0f", rounded);
+        }
+        return String.format(Locale.ROOT, "%.1f", rounded);
     }
 
     private static String descriptionKey(ResourceLocation id) {
@@ -184,20 +218,22 @@ public final class EnhancementToolTips {
             case UNDEAD_DAMAGE -> "Increases damage to undead.";
             case NETHER_DAMAGE -> "Increases damage to nether mobs.";
             case HEALTH -> "Increases maximum health.";
-            case STUN_CHANCE -> "Chance to stun on hit.";
-            case FLAME_CHANCE -> "Chance to ignite targets.";
+            case STUN_CHANCE -> "Chance to apply stunning.";
+            case FLAME_CHANCE -> "Chance to apply fire aspect.";
             case BLEEDING_CHANCE -> "Chance to apply bleeding.";
-            case SHOCKING_CHANCE -> "Chance to shock targets.";
-            case POISON_CHANCE -> "Chance to poison targets.";
-            case WITHERING_CHANCE -> "Chance to wither targets.";
-            case WEAKENING_CHANCE -> "Chance to weaken targets.";
-            case HEALING_EFFICIENCY -> "Improves healing received.";
+            case SHOCKING_CHANCE -> "Chance to apply shocking.";
+            case POISON_CHANCE -> "Chance to apply toxic.";
+            case WITHERING_CHANCE -> "Chance to apply withering.";
+            case WEAKENING_CHANCE -> "Chance to apply deminishing.";
             case DRAW_SPEED -> "Increases bow draw speed.";
-            case TOUGHNESS -> "Increases armor toughness.";
-            case FREEZING_CHANCE -> "Chance to freeze targets.";
-            case LEECHING_CHANCE -> "Chance to heal on hit.";
-            case BONUS_CHANCE -> "Chance to fire an extra projectile.";
-            case JUMP_HEIGHT -> "Increases jump height.";
+            case TOUGHNESS -> "Increases toughness.";
+            case FREEZING_CHANCE -> "Chance to apply freezing.";
+            case LEECHING_CHANCE -> "Chance to leach 10% max health.";
+            case BONUS_CHANCE -> "Chance to trigger multishot.";
+            case FANGS -> "Chance to summon evoker fangs on hit.";
+            case STONE -> "Gain temporary resistance after a heavy hit.";
+            case AEGIS -> "Chance to negate an incoming hit.";
+            case JUMP_HEIGHT -> "Increases leaping height.";
             case POWER -> "Increases ranged damage.";
         };
     }
@@ -253,6 +289,10 @@ public final class EnhancementToolTips {
             char ch = s.charAt(0);
             return (ch == '+' || ch == '-' || (ch >= '0' && ch <= '9'));
         });
+    }
+
+    private static void stripEmptyLines(List<Component> tooltip) {
+        tooltip.removeIf(c -> c == null || c.getString().isBlank());
     }
 
     private static String keyOf(Component c) {

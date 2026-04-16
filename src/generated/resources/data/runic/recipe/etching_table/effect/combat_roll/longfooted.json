@@ -1,20 +1,20 @@
 {
-    "type":  "runic:etching_table",
-    "base":  {
-                 "item":  "runic:blank_etching"
-             },
-    "effect":  "combat_roll:longfooted",
-    "material":  {
-                     "item":  "minecraft:leather_boots"
-                 },
-    "result":  {
-                   "count":  1,
-                   "id":  "runic:etching"
-               },
-    "neoforge:conditions":  [
-                                {
-                                    "type":  "neoforge:mod_loaded",
-                                    "modid":  "combat_roll"
-                                }
-                            ]
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "combat_roll"
+    }
+  ],
+  "type": "runic:etching_table",
+  "base": {
+    "item": "runic:blank_etching"
+  },
+  "effect": "combat_roll:longfooted",
+  "material": {
+    "item": "minecraft:leather_boots"
+  },
+  "result": {
+    "count": 1,
+    "id": "runic:etching"
+  }
 }

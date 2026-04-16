@@ -35,6 +35,7 @@ public final class GearTooltips {
         if (stack.getItem() instanceof RuneItem || stack.getItem() instanceof EtchingItem) return false;
         if (!shouldOverride(stack)) return false;
 
+        RuneSlots.syncUsedToContents(stack);
         moveVanillaStatsToTop(tooltip);
         stripAllEnchantmentLines(stack, tooltip);
 
@@ -196,7 +197,7 @@ public final class GearTooltips {
                     Component.literal("  ")
                             .append(Component.translatable("tooltip.runic.stat." + type.id()))
                             .append(Component.literal(" "))
-                            .append(Component.literal(formatSignedPercent(v)).withStyle(ChatFormatting.AQUA))
+                            .append(Component.literal(formatSignedValue(type, v)).withStyle(ChatFormatting.AQUA))
                             .withStyle(ChatFormatting.WHITE)
             );
 
@@ -327,19 +328,21 @@ public final class GearTooltips {
     private static String attributeDescription(GearAttribute attr) {
         return switch (attr) {
             case CURSED -> "Reduces all runic stat values by 5% per stack.";
-            case INSTABLE -> "Rerolls become weaker by reducing rolled stat ranges.";
+            case INSTABLE -> "Raises forging risk and weakens future rerolls.";
             case NEGATIVE -> "Reduces effective rune slot capacity by 1 per stack.";
             case SEALED -> "Prevents further modifications at the Artisan's Workbench.";
+            case ANCIENT -> "Boosts all rune power on the item by 5% per stack.";
+            case BRITTLE -> "This item loses durability 10% faster.";
         };
     }
 
-    private static String formatSignedPercent(float v) {
+    private static String formatSignedValue(RuneStatType type, float v) {
         float av = Math.abs(v);
         String num = Math.abs(av - Math.round(av)) < 0.001f
                 ? String.format(Locale.ROOT, "%.0f", av)
                 : String.format(Locale.ROOT, "%.1f", av);
 
-        return (v >= 0 ? "+" : "-") + num + "%";
+        return (v >= 0 ? "+" : "-") + num + (type.isPercentBased() ? "%" : "");
     }
 
     private static String toRoman(int v) {
@@ -381,20 +384,22 @@ public final class GearTooltips {
             case UNDEAD_DAMAGE -> "Increases damage to undead.";
             case NETHER_DAMAGE -> "Increases damage to nether mobs.";
             case HEALTH -> "Increases maximum health.";
-            case STUN_CHANCE -> "Chance to stun on hit.";
-            case FLAME_CHANCE -> "Chance to ignite targets.";
+            case STUN_CHANCE -> "Chance to apply stunning.";
+            case FLAME_CHANCE -> "Chance to apply fire aspect.";
             case BLEEDING_CHANCE -> "Chance to apply bleeding.";
-            case SHOCKING_CHANCE -> "Chance to shock targets.";
-            case POISON_CHANCE -> "Chance to poison targets.";
-            case WITHERING_CHANCE -> "Chance to wither targets.";
-            case WEAKENING_CHANCE -> "Chance to weaken targets.";
-            case HEALING_EFFICIENCY -> "Improves healing received.";
+            case SHOCKING_CHANCE -> "Chance to apply shocking.";
+            case POISON_CHANCE -> "Chance to apply toxic.";
+            case WITHERING_CHANCE -> "Chance to apply withering.";
+            case WEAKENING_CHANCE -> "Chance to apply deminishing.";
             case DRAW_SPEED -> "Increases bow draw speed.";
-            case TOUGHNESS -> "Increases armor toughness.";
-            case FREEZING_CHANCE -> "Chance to freeze targets.";
-            case LEECHING_CHANCE -> "Chance to heal on hit.";
-            case BONUS_CHANCE -> "Chance to fire an extra projectile.";
-            case JUMP_HEIGHT -> "Increases jump height.";
+            case TOUGHNESS -> "Increases toughness.";
+            case FREEZING_CHANCE -> "Chance to apply freezing.";
+            case LEECHING_CHANCE -> "Chance to leach 10% max health.";
+            case BONUS_CHANCE -> "Chance to trigger multishot.";
+            case FANGS -> "Chance to summon evoker fangs on hit.";
+            case STONE -> "Gain temporary resistance after a heavy hit.";
+            case AEGIS -> "Chance to negate an incoming hit.";
+            case JUMP_HEIGHT -> "Increases leaping height.";
             case POWER -> "Increases ranged damage.";
         };
     }
