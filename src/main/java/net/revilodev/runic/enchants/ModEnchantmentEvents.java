@@ -22,7 +22,6 @@ import net.revilodev.runic.RunicMod;
 
 @EventBusSubscriber(modid = RunicMod.MOD_ID)
 public class ModEnchantmentEvents {
-
     private static final ResourceKey<Enchantment> POISON_CLOUD_KEY =
             ResourceKey.create(
                     Registries.ENCHANTMENT,

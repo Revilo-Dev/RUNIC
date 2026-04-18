@@ -57,7 +57,7 @@ public final class GearTooltips {
         }
 
         if (hasRunicStats) {
-            tooltip.add(insertAt, Component.literal("Modded Stats:").withStyle(ChatFormatting.GRAY));
+            tooltip.add(insertAt, Component.literal("Stats:").withStyle(ChatFormatting.GRAY));
             insertAt++;
             tooltip.addAll(insertAt, runicStats);
             insertAt += runicStats.size();

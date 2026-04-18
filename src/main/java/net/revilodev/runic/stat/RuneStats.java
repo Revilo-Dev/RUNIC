@@ -1,7 +1,9 @@
 package net.revilodev.runic.stat;
 
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
@@ -13,6 +15,7 @@ import java.util.Map;
 public final class RuneStats {
 
     public static final String NBT_KEY = "runic_stats";
+    private static final String BASE_ITEM_KEY = "runic_base_item";
     private static final RuneStats EMPTY = new RuneStats(new EnumMap<>(RuneStatType.class));
 
     final EnumMap<RuneStatType, Float> values;
@@ -148,8 +151,13 @@ public final class RuneStats {
 
         if (stats == null || stats.isEmpty()) {
             root.remove(NBT_KEY);
+            root.remove(BASE_ITEM_KEY);
         } else {
             root.put(NBT_KEY, stats.save());
+            ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(stack.getItem());
+            if (itemId != null) {
+                root.putString(BASE_ITEM_KEY, itemId.toString());
+            }
         }
 
         RuneAttributeApplier.clearRunicAttributes(stack);
@@ -161,5 +169,19 @@ public final class RuneStats {
         }
 
         stack.set(DataComponents.CUSTOM_DATA, CustomData.of(root));
+    }
+
+    public static boolean needsRebuildForCurrentItem(ItemStack stack) {
+        RuneStats stats = get(stack);
+        if (stats == null || stats.isEmpty()) return false;
+
+        CustomData data = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
+        CompoundTag root = data.copyTag();
+        if (root == null || !root.contains(BASE_ITEM_KEY)) return true;
+
+        ResourceLocation currentId = BuiltInRegistries.ITEM.getKey(stack.getItem());
+        if (currentId == null) return true;
+
+        return !currentId.toString().equals(root.getString(BASE_ITEM_KEY));
     }
 }

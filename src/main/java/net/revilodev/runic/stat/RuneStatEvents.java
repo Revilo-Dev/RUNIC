@@ -8,11 +8,14 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.tick.EntityTickEvent;
 import net.revilodev.runic.RunicMod;
 
@@ -73,6 +76,12 @@ public final class RuneStatEvents {
         if (!(event.getEntity() instanceof LivingEntity entity)) return;
         if (entity.level().isClientSide) return;
 
+        if (entity instanceof ServerPlayer player) {
+            // Re-apply runic attributes once on join so persisted runic stats
+            // always restore their modifiers (notably MAX_HEALTH on armor).
+            reapplyRunicInventory(player);
+        }
+
         float runicHealth = getTotal(entity, RuneStatType.HEALTH);
         if (runicHealth <= 0.0F) return;
 
@@ -95,6 +104,10 @@ public final class RuneStatEvents {
         if (!(event.getEntity() instanceof LivingEntity entity)) return;
         if (entity.level().isClientSide) return;
 
+        if (entity instanceof Player player && player.tickCount % 10 == 0) {
+            reconcileRunicInventory(player);
+        }
+
         ItemStack leggings = entity.getItemBySlot(EquipmentSlot.LEGS);
         if (leggings.isEmpty()) return;
 
@@ -112,6 +125,45 @@ public final class RuneStatEvents {
                 false,
                 false
         ));
+    }
+
+    private static void reconcileRunicInventory(Player player) {
+        var inv = player.getInventory();
+        for (int i = 0; i < inv.getContainerSize(); i++) {
+            ItemStack stack = inv.getItem(i);
+            if (stack.isEmpty()) continue;
+            if (!RuneStats.needsRebuildForCurrentItem(stack)) continue;
+
+            RuneStats stats = RuneStats.get(stack);
+            if (stats == null || stats.isEmpty()) continue;
+            RuneStats.set(stack, stats);
+        }
+    }
+
+    private static void reapplyRunicInventory(Player player) {
+        var inv = player.getInventory();
+        for (int i = 0; i < inv.getContainerSize(); i++) {
+            ItemStack stack = inv.getItem(i);
+            if (stack.isEmpty()) continue;
+
+            RuneStats stats = RuneStats.get(stack);
+            if (stats == null || stats.isEmpty()) continue;
+            RuneStats.set(stack, stats);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onItemCrafted(PlayerEvent.ItemCraftedEvent event) {
+        ItemStack crafted = event.getCrafting();
+        if (crafted.isEmpty()) return;
+
+        RuneStats stats = RuneStats.get(crafted);
+        if (stats == null || stats.isEmpty()) return;
+
+        // Rebuild runic attributes against the crafted item's current base item.
+        // This keeps smithing-upgraded gear (diamond -> netherite, etc.) aligned
+        // with the new tier's base attack damage/speed/range while preserving runic bonuses.
+        RuneStats.set(crafted, stats);
     }
 
     private static float getTotal(LivingEntity e, RuneStatType type) {
