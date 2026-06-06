@@ -40,7 +40,7 @@ public final class EnhancementToolTips {
         RuneStats stats = RuneStats.get(stack);
         boolean hasStats = stats != null && !stats.isEmpty();
 
-        List<EnchLine> enchLines = collectEnchantments(stack, isEtching);
+        List<EnchLine> enchLines = collectEnchantments(stack);
         boolean hasEnchants = !enchLines.isEmpty();
 
         if (!hasStats && !hasEnchants) return true;
@@ -94,25 +94,24 @@ public final class EnhancementToolTips {
         return out;
     }
 
-    private static List<EnchLine> collectEnchantments(ItemStack stack, boolean isEtching) {
+    private static List<EnchLine> collectEnchantments(ItemStack stack) {
         ItemEnchantments stored = stack.getOrDefault(DataComponents.STORED_ENCHANTMENTS, ItemEnchantments.EMPTY);
         ItemEnchantments direct = stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
 
         LinkedHashMap<String, EnchLine> ordered = new LinkedHashMap<>();
-        addEnchantments(ordered, stored, isEtching);
-        addEnchantments(ordered, direct, isEtching);
+        addEnchantments(ordered, stored);
+        addEnchantments(ordered, direct);
 
         return new ArrayList<>(ordered.values());
     }
 
-    private static void addEnchantments(Map<String, EnchLine> out, ItemEnchantments ench, boolean isEtching) {
+    private static void addEnchantments(Map<String, EnchLine> out, ItemEnchantments ench) {
         ench.entrySet().forEach(e -> {
             Holder<Enchantment> h = e.getKey();
             String key = h.unwrapKey().map(k -> k.location().toString()).orElse(h.toString());
             ResourceLocation id = h.unwrapKey().map(ResourceKey::location).orElse(null);
 
-            int desired = isEtching ? 1 : 2;
-            int lvl = Math.min(h.value().getMaxLevel(), desired);
+            int lvl = Math.max(1, Math.min(h.value().getMaxLevel(), e.getIntValue()));
 
             EnhancementRarity rarity = EnhancementRarities.get(h);
             out.putIfAbsent(key, new EnchLine(h.value().description().copy(), lvl, rarity, id));
@@ -224,7 +223,7 @@ public final class EnhancementToolTips {
             case SHOCKING_CHANCE -> "Chance to apply shocking.";
             case POISON_CHANCE -> "Chance to apply toxic.";
             case WITHERING_CHANCE -> "Chance to apply withering.";
-            case WEAKENING_CHANCE -> "Chance to apply deminishing.";
+            case WEAKENING_CHANCE -> "Chance to apply diminishing.";
             case DRAW_SPEED -> "Increases bow draw speed.";
             case TOUGHNESS -> "Increases toughness.";
             case FREEZING_CHANCE -> "Chance to apply freezing.";
@@ -235,6 +234,7 @@ public final class EnhancementToolTips {
             case AEGIS -> "Chance to negate an incoming hit.";
             case JUMP_HEIGHT -> "Increases leaping height.";
             case POWER -> "Increases ranged damage.";
+            case ABILITY_POWER -> "Increases ability damage and scaling.";
         };
     }
 

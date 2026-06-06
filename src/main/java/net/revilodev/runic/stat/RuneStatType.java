@@ -18,7 +18,7 @@ public enum RuneStatType implements StringRepresentable {
     MOVEMENT_SPEED("movement_speed", 8, 18, 4, 9, 30.0F),
     SWEEPING_RANGE("sweeping_range", 6, 12, 3, 6, 35.0F),
     DURABILITY("durability", 12, 100, 6, 50, 0.0F),
-    RESISTANCE("resistance", 4, 8, 2, 4, 15.0F),
+    RESISTANCE("resistance", 1, 4, 1, 2, 4.0F),
     FIRE_RESISTANCE("fire_resistance", 4, 8, 2, 4, 15.0F),
     BLAST_RESISTANCE("blast_resistance", 4, 8, 2, 4, 15.0F),
     PROJECTILE_RESISTANCE("projectile_resistance", 4, 8, 2, 4, 15.0F),
@@ -43,7 +43,8 @@ public enum RuneStatType implements StringRepresentable {
     STONE("stone", 10, 20, 5, 10, 30.0F),
     AEGIS("aegis", 3, 8, 1, 4, 12.0F),
     JUMP_HEIGHT("jump_height", 6, 18, 3, 9, 25.0F),
-    POWER("power", 8, 25, 4, 13, 0.0F);
+    POWER("power", 8, 25, 4, 13, 0.0F),
+    ABILITY_POWER("ability_power", 8, 25, 4, 13, 0.0F);
 
     private static final Map<String, RuneStatType> BY_ID =
             Arrays.stream(values()).collect(Collectors.toMap(RuneStatType::id, t -> t));

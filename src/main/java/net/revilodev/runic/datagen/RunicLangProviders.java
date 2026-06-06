@@ -91,20 +91,21 @@ public final class RunicLangProviders {
             add("tooltip.runic.stat.shocking_chance", "\ueef4 Shocking");
             add("tooltip.runic.stat.poison_chance", "\ueef4 Toxic");
             add("tooltip.runic.stat.withering_chance", "\ueef4 Withering");
-            add("tooltip.runic.stat.weakening_chance", "\ueef4 Deminishing");
+            add("tooltip.runic.stat.weakening_chance", "\ueef4 Diminishing");
             add("tooltip.runic.stat.water_breathing", "\uefe1 Water Breathing");
             add("tooltip.runic.stat.draw_speed", "\uefe8 Draw Speed");
             add("tooltip.runic.stat.jump_height", "\uefe7 Leaping");
 
             add("tooltip.runic.stat.toughness", "\uefe2 Toughness");
             add("tooltip.runic.stat.freezing_chance", "\ueef4 Freezing");
-            add("tooltip.runic.stat.leeching_chance", "\ueef4 Leaching");
+            add("tooltip.runic.stat.leeching_chance", "\ueef4 Leeching");
             add("tooltip.runic.stat.looting", "\ueef3 Looting");
-            add("tooltip.runic.stat.bonus_chance", "\uefe5 MultiShot");
+            add("tooltip.runic.stat.bonus_chance", "\uefe5 Multishot");
             add("tooltip.runic.stat.fangs", "\ueef4 Fangs");
             add("tooltip.runic.stat.stone", "\uefe2 Stone Skin");
             add("tooltip.runic.stat.aegis", "\uefe2 Aegis");
             add("tooltip.runic.stat.power", "\uefe5 Power");
+            add("tooltip.runic.stat.ability_power", "\ueef4 Ability Power");
 
             // Stat descriptions
             add("tooltip.runic.stat_desc.attack_speed", "Increases attack speed.");
@@ -129,7 +130,7 @@ public final class RunicLangProviders {
             add("tooltip.runic.stat_desc.shocking_chance", "Chance to apply shocking.");
             add("tooltip.runic.stat_desc.poison_chance", "Chance to apply toxic.");
             add("tooltip.runic.stat_desc.withering_chance", "Chance to apply withering.");
-            add("tooltip.runic.stat_desc.weakening_chance", "Chance to apply deminishing.");
+            add("tooltip.runic.stat_desc.weakening_chance", "Chance to apply diminishing.");
             add("tooltip.runic.stat_desc.water_breathing", "Increases underwater breathing duration.");
             add("tooltip.runic.stat_desc.draw_speed", "Increases bow draw speed.");
             add("tooltip.runic.stat_desc.toughness", "Increases toughness.");
@@ -141,6 +142,7 @@ public final class RunicLangProviders {
             add("tooltip.runic.stat_desc.aegis", "Chance to negate an incoming hit.");
             add("tooltip.runic.stat_desc.jump_height", "Increases leaping height.");
             add("tooltip.runic.stat_desc.power", "Increases ranged damage.");
+            add("tooltip.runic.stat_desc.ability_power", "Increases ability damage and scaling.");
 
             // Enchants
             add("enchantment.runic.poison_cloud", "Poison Cloud");

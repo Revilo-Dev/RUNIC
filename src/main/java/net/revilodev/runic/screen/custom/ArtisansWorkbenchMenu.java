@@ -267,7 +267,7 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
                             || item instanceof TridentItem
                             || item instanceof MaceItem;
 
-            case POWER, DRAW_SPEED ->
+            case POWER, DRAW_SPEED, ABILITY_POWER ->
                     item instanceof BowItem || item instanceof CrossbowItem;
 
             case MINING_SPEED ->
@@ -291,7 +291,13 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
         };
     }
 
-    private boolean canApplyAnyEffectEnchant(ItemStack target, ItemEnchantments enchants) {
+    private int cappedDesiredEffectLevel(Holder<Enchantment> enchantment, int requestedLevel, boolean fromEtching) {
+        int sourceCap = fromEtching ? RuneItem.EFFECT_LEVEL_ETCHING : RuneItem.EFFECT_LEVEL_RUNE;
+        int cappedRequested = Math.max(1, Math.min(sourceCap, requestedLevel));
+        return RuneItem.clampEffectLevel(enchantment, cappedRequested);
+    }
+
+    private boolean canApplyAnyEffectEnchant(ItemStack target, ItemEnchantments enchants, boolean fromEtching) {
         if (enchants == null || enchants.isEmpty()) return false;
 
         ItemEnchantments current = target.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
@@ -300,7 +306,7 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
             Holder<Enchantment> h = e.getKey();
             if (!RuneItem.isEffectEnchantment(h)) continue;
 
-            int desired = RuneItem.clampEffectLevel(h, e.getIntValue());
+            int desired = cappedDesiredEffectLevel(h, e.getIntValue(), fromEtching);
             int have = current.getLevel(h);
             if (have >= desired) continue;
 
@@ -458,7 +464,7 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
             boolean statApplicable = stat != null && canApplyStatTo(out, stat);
 
             ItemEnchantments enchants = getEnhancementEnchantments(enhancement);
-            boolean effectApplicable = canApplyAnyEffectEnchant(out, enchants);
+            boolean effectApplicable = canApplyAnyEffectEnchant(out, enchants, isEtching(enhancement));
 
             if (!statApplicable && !effectApplicable) return ItemStack.EMPTY;
 
@@ -1160,7 +1166,10 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
 
         if (t.isEnchant()) {
             ItemEnchantments.Mutable mut = new ItemEnchantments.Mutable(ItemEnchantments.EMPTY);
-            mut.set(t.enchant, t.level);
+            int extractedLevel = RuneItem.isEffectEnchantment(t.enchant)
+                    ? RuneItem.forcedEtchingEffectLevel(t.enchant)
+                    : Math.max(1, t.level);
+            mut.set(t.enchant, extractedLevel);
             out.set(DataComponents.STORED_ENCHANTMENTS, mut.toImmutable());
             return out;
         }
@@ -1283,7 +1292,7 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
         }
 
         if (hasEnch) {
-            applied = applyEffectEnchant(taken, enchants) || applied;
+            applied = applyEffectEnchant(taken, enchants, isEtching(enhancement)) || applied;
         }
 
         if (applied) {
@@ -1291,7 +1300,7 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
         }
     }
 
-    private boolean applyEffectEnchant(ItemStack target, ItemEnchantments enchants) {
+    private boolean applyEffectEnchant(ItemStack target, ItemEnchantments enchants, boolean fromEtching) {
         ItemEnchantments current = target.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
         ItemEnchantments.Mutable mut = new ItemEnchantments.Mutable(current);
 
@@ -1301,7 +1310,7 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
             Holder<Enchantment> h = entry.getKey();
             if (!RuneItem.isEffectEnchantment(h)) continue;
 
-            int desired = RuneItem.clampEffectLevel(h, entry.getIntValue());
+            int desired = cappedDesiredEffectLevel(h, entry.getIntValue(), fromEtching);
             int have = mut.getLevel(h);
             if (have >= desired) continue;
 

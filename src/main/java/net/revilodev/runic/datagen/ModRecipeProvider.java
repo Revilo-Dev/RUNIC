@@ -60,6 +60,7 @@ public final class ModRecipeProvider extends RecipeProvider {
         STAT_MATERIALS.put(RuneStatType.AEGIS, Items.TOTEM_OF_UNDYING);
         STAT_MATERIALS.put(RuneStatType.JUMP_HEIGHT, Items.SLIME_BLOCK);
         STAT_MATERIALS.put(RuneStatType.POWER, Items.NETHER_STAR);
+        STAT_MATERIALS.put(RuneStatType.ABILITY_POWER, Items.EXPERIENCE_BOTTLE);
     }
 
     private static final List<ResourceLocation> EFFECTS = List.of(

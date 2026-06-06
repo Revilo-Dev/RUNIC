@@ -390,7 +390,7 @@ public final class GearTooltips {
             case SHOCKING_CHANCE -> "Chance to apply shocking.";
             case POISON_CHANCE -> "Chance to apply toxic.";
             case WITHERING_CHANCE -> "Chance to apply withering.";
-            case WEAKENING_CHANCE -> "Chance to apply deminishing.";
+            case WEAKENING_CHANCE -> "Chance to apply diminishing.";
             case DRAW_SPEED -> "Increases bow draw speed.";
             case TOUGHNESS -> "Increases toughness.";
             case FREEZING_CHANCE -> "Chance to apply freezing.";
@@ -401,6 +401,7 @@ public final class GearTooltips {
             case AEGIS -> "Chance to negate an incoming hit.";
             case JUMP_HEIGHT -> "Increases leaping height.";
             case POWER -> "Increases ranged damage.";
+            case ABILITY_POWER -> "Increases ability damage and scaling.";
         };
     }
 

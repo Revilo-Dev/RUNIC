@@ -480,6 +480,30 @@
       "predicate": {
         "runic:rune_model": 80.0
       }
+    },
+    {
+      "model": "runic:item/rune/effect/aqua_affinity",
+      "predicate": {
+        "runic:rune_model": 81.0
+      }
+    },
+    {
+      "model": "runic:item/rune/effect/depth_strider",
+      "predicate": {
+        "runic:rune_model": 82.0
+      }
+    },
+    {
+      "model": "runic:item/rune/effect/feather_falling",
+      "predicate": {
+        "runic:rune_model": 83.0
+      }
+    },
+    {
+      "model": "runic:item/rune/stat/ability_power",
+      "predicate": {
+        "runic:rune_model": 84.0
+      }
     }
   ],
   "textures": {

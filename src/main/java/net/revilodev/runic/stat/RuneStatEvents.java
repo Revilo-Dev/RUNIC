@@ -167,11 +167,7 @@ public final class RuneStatEvents {
     }
 
     private static float getTotal(LivingEntity e, RuneStatType type) {
-        float total = 0.0F;
-        for (ItemStack s : e.getAllSlots()) {
-            total += RuneStats.get(s).get(type);
-        }
-        return total;
+        return RuneStats.getTotalFromEquipment(e, type);
     }
 
     private static float reduce(float percent) {

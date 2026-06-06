@@ -11,18 +11,23 @@ import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.Mirror;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import net.revilodev.runic.screen.custom.ArtisansWorkbenchMenu;
 
 public class ArtisansWorkbench extends HorizontalDirectionalBlock {
 
     public static final MapCodec<ArtisansWorkbench> CODEC =
             simpleCodec(ArtisansWorkbench::new);
+    private static final VoxelShape X_AXIS_SHAPE = box(2.0D, 0.0D, 0.0D, 14.0D, 16.0D, 16.0D);
+    private static final VoxelShape Z_AXIS_SHAPE = box(0.0D, 0.0D, 2.0D, 16.0D, 16.0D, 14.0D);
 
     public ArtisansWorkbench(Properties props) {
         super(props);
@@ -68,6 +73,16 @@ public class ArtisansWorkbench extends HorizontalDirectionalBlock {
     @Override
     protected BlockState mirror(BlockState state, Mirror mirror) {
         return state.rotate(mirror.getRotation(state.getValue(FACING)));
+    }
+
+    @Override
+    protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+        return state.getValue(FACING).getAxis() == Direction.Axis.X ? X_AXIS_SHAPE : Z_AXIS_SHAPE;
+    }
+
+    @Override
+    protected VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+        return this.getShape(state, level, pos, context);
     }
 
     @Override

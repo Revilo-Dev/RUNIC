@@ -5,10 +5,14 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -53,6 +57,7 @@ public final class RuneOnHitHandler {
 
         tryRollEffect(stats, RuneStatType.SHOCKING_CHANCE, rand,
                 () -> {
+                    summonShockingLightning(player, target);
                     if (!applyCustomEffectOrSkip(target, SHOCK_ID, 80, 0)) {
                         target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 80, 1));
                     }
@@ -104,5 +109,25 @@ public final class RuneOnHitHandler {
         ));
 
         return true;
+    }
+
+    private static void summonShockingLightning(Player player, LivingEntity target) {
+        if (!(target.level() instanceof ServerLevel level)) {
+            return;
+        }
+
+        LightningBolt lightning = EntityType.LIGHTNING_BOLT.create(level);
+        if (lightning == null) {
+            return;
+        }
+
+        lightning.moveTo(target.getX(), target.getY(), target.getZ());
+        // Visual-only lightning cannot ignite blocks and does not damage entities.
+        lightning.setVisualOnly(true);
+        if (player instanceof ServerPlayer serverPlayer) {
+            lightning.setCause(serverPlayer);
+        }
+
+        level.addFreshEntity(lightning);
     }
 }

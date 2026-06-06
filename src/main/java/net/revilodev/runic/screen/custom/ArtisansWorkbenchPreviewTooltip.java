@@ -1,7 +1,6 @@
 // src/main/java/net/revilodev/runic/screen/custom/ArtisansWorkbenchPreviewTooltip.java
 package net.revilodev.runic.screen.custom;
 
-import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;

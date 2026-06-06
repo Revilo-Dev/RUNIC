@@ -1,5 +1,6 @@
 {
+  "type": "minecraft:simple",
   "textures": [
-    "runic:particle_effects/blood-drop"
+    "runic:blood-drop"
   ]
 }
