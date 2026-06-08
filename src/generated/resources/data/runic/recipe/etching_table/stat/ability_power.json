@@ -4,11 +4,11 @@
     "item": "runic:blank_etching"
   },
   "material": {
-    "item": "minecraft:lapis_lazuli"
+    "item": "minecraft:experience_bottle"
   },
   "result": {
     "count": 1,
     "id": "runic:etching"
   },
-  "stat": "bonus_chance"
+  "stat": "ability_power"
 }

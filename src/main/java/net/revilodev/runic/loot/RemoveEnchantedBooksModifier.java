@@ -9,6 +9,7 @@ import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
 import net.neoforged.neoforge.common.loot.IGlobalLootModifier;
 import net.neoforged.neoforge.common.loot.LootModifier;
+import net.revilodev.runic.RunicConfig;
 
 public class RemoveEnchantedBooksModifier extends LootModifier {
     public static final MapCodec<RemoveEnchantedBooksModifier> CODEC =
@@ -20,6 +21,9 @@ public class RemoveEnchantedBooksModifier extends LootModifier {
 
     @Override
     protected ObjectArrayList<ItemStack> doApply(ObjectArrayList<ItemStack> generatedLoot, LootContext context) {
+        if (RunicConfig.disableRunicLoot()) {
+            return generatedLoot;
+        }
         generatedLoot.removeIf(stack -> stack.is(Items.ENCHANTED_BOOK));
         return generatedLoot;
     }

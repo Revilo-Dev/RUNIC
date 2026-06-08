@@ -19,6 +19,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.revilodev.runic.screen.custom.ArtisansWorkbenchMenu;
 
@@ -26,8 +27,22 @@ public class ArtisansWorkbench extends HorizontalDirectionalBlock {
 
     public static final MapCodec<ArtisansWorkbench> CODEC =
             simpleCodec(ArtisansWorkbench::new);
-    private static final VoxelShape X_AXIS_SHAPE = box(2.0D, 0.0D, 0.0D, 14.0D, 16.0D, 16.0D);
-    private static final VoxelShape Z_AXIS_SHAPE = box(0.0D, 0.0D, 2.0D, 16.0D, 16.0D, 14.0D);
+    private static final VoxelShape Z_AXIS_SHAPE = Shapes.or(
+            box(3.0D, 0.0D, 1.0D, 13.0D, 3.0D, 15.0D),
+            box(5.0D, 3.0D, 3.0D, 11.0D, 9.0D, 13.0D),
+            box(4.0D, 3.0D, 2.0D, 12.0D, 4.0D, 14.0D),
+            box(4.0D, 9.0D, 2.0D, 12.0D, 10.0D, 15.0D),
+            box(3.0D, 10.0D, 0.0D, 13.0D, 15.0D, 15.0D),
+            box(4.0D, 10.0D, 15.0D, 12.0D, 15.0D, 16.0D)
+    );
+    private static final VoxelShape X_AXIS_SHAPE = Shapes.or(
+            box(1.0D, 0.0D, 3.0D, 15.0D, 3.0D, 13.0D),
+            box(3.0D, 3.0D, 5.0D, 13.0D, 9.0D, 11.0D),
+            box(2.0D, 3.0D, 4.0D, 14.0D, 4.0D, 12.0D),
+            box(2.0D, 9.0D, 4.0D, 15.0D, 10.0D, 12.0D),
+            box(0.0D, 10.0D, 3.0D, 15.0D, 15.0D, 13.0D),
+            box(15.0D, 10.0D, 4.0D, 16.0D, 15.0D, 12.0D)
+    );
 
     public ArtisansWorkbench(Properties props) {
         super(props);
@@ -62,7 +77,7 @@ public class ArtisansWorkbench extends HorizontalDirectionalBlock {
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext ctx) {
         return this.defaultBlockState()
-                .setValue(FACING, ctx.getHorizontalDirection().getOpposite());
+                .setValue(FACING, ctx.getHorizontalDirection());
     }
 
     @Override
@@ -77,7 +92,7 @@ public class ArtisansWorkbench extends HorizontalDirectionalBlock {
 
     @Override
     protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
-        return state.getValue(FACING).getAxis() == Direction.Axis.X ? X_AXIS_SHAPE : Z_AXIS_SHAPE;
+        return state.getValue(FACING).getAxis() == Direction.Axis.X ? Z_AXIS_SHAPE : X_AXIS_SHAPE;
     }
 
     @Override

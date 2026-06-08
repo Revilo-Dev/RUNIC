@@ -19,6 +19,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
+import net.neoforged.neoforge.event.entity.living.LivingHealEvent;
 import net.revilodev.runic.RunicMod;
 import net.revilodev.runic.effect.ModMobEffects;
 import net.revilodev.runic.particle.ModParticles;
@@ -74,33 +75,10 @@ public final class CombatHandler {
     }
 
     @SubscribeEvent
-    public static void onArrowSpawn(EntityJoinLevelEvent event) {
-        if (!(event.getLevel() instanceof ServerLevel level)) return;
-        if (!(event.getEntity() instanceof AbstractArrow arrow)) return;
-        if (!(arrow.getOwner() instanceof LivingEntity shooter)) return;
-        if (arrow.getPersistentData().getBoolean("runic_bonus_arrow")) return;
-
-        RuneStats stats = RuneStats.get(shooter.getMainHandItem());
-        if (stats.isEmpty()) return;
-
-        float chance = stats.get(RuneStatType.BONUS_CHANCE);
-        if (chance <= 0.0F || RNG.nextFloat() > chance / 100.0F) return;
-
-        AbstractArrow extra = (AbstractArrow) arrow.getType().create(level);
-        if (extra == null) return;
-
-        extra.setOwner(shooter);
-        extra.copyPosition(arrow);
-
-        var vel = arrow.getDeltaMovement();
-        double spread = 0.05D;
-        extra.setDeltaMovement(
-                vel.x + (level.random.nextDouble() - 0.5D) * spread,
-                vel.y,
-                vel.z + (level.random.nextDouble() - 0.5D) * spread
-        );
-        extra.getPersistentData().putBoolean("runic_bonus_arrow", true);
-        level.addFreshEntity(extra);
+    public static void onBleedingHeal(LivingHealEvent event) {
+        if (event.getEntity().hasEffect(ModMobEffects.BLEEDING)) {
+            event.setCanceled(true);
+        }
     }
 
     @SubscribeEvent

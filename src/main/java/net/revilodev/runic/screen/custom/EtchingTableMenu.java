@@ -14,6 +14,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.Level;
+import net.revilodev.runic.RunicConfig;
 import net.revilodev.runic.block.ModBlocks;
 import net.revilodev.runic.event.EnchantBlacklist;
 import net.revilodev.runic.recipe.EtchingTableInput;
@@ -105,6 +106,12 @@ public final class EtchingTableMenu extends AbstractContainerMenu {
     }
 
     private void updateResult() {
+        if (RunicConfig.disableEtchingCrafting()) {
+            clearResult();
+            broadcastChanges();
+            return;
+        }
+
         ItemStack base = input.getItem(0);
         ItemStack mat = input.getItem(1);
 
@@ -141,7 +148,7 @@ public final class EtchingTableMenu extends AbstractContainerMenu {
 
 
     private void craft(Player player) {
-        if (lastRecipe == null) return;
+        if (lastRecipe == null || RunicConfig.disableEtchingCrafting()) return;
 
         ItemStack base = input.getItem(0);
         ItemStack mat = input.getItem(1);
@@ -166,6 +173,7 @@ public final class EtchingTableMenu extends AbstractContainerMenu {
     }
 
     public static boolean canAffordEtchingCostLevels(Player player) {
+        if (RunicConfig.disableEtchingCrafting()) return false;
         return player.getAbilities().instabuild || player.experienceLevel >= ETCHING_XP_COST_LEVELS;
     }
 

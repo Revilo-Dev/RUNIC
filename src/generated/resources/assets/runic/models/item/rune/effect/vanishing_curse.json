@@ -1,7 +1,7 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "runic:item/rune",
+    "layer0": "runic:item/rune_base",
     "layer1": "runic:item/icons/effect/vanishing_curse"
   }
 }

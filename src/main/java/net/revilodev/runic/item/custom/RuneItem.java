@@ -9,6 +9,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
+import net.revilodev.runic.event.EnchantBlacklist;
 import net.revilodev.runic.item.ModItems;
 import net.revilodev.runic.loot.rarity.EnhancementRarities;
 import net.revilodev.runic.stat.RuneStatType;
@@ -126,7 +127,7 @@ public class RuneItem extends Item {
     }
 
     public static ItemStack createEffectRune(Holder<Enchantment> enchantment) {
-        if (!isEffectEnchantment(enchantment)) {
+        if (!isEffectEnchantment(enchantment) || EnchantBlacklist.isBlacklisted(enchantment)) {
             return ItemStack.EMPTY;
         }
         ItemStack stack = new ItemStack(ModItems.ENHANCED_RUNE.get());
@@ -143,10 +144,16 @@ public class RuneItem extends Item {
 
     public static ItemStack createRandomStatRune(RandomSource random) {
         RuneStatType[] all = RuneStatType.values();
-        if (all.length == 0) {
+        List<RuneStatType> allowed = new ArrayList<>();
+        for (RuneStatType type : all) {
+            if (!EnchantBlacklist.isStatBlacklisted(type)) {
+                allowed.add(type);
+            }
+        }
+        if (allowed.isEmpty()) {
             return ItemStack.EMPTY;
         }
-        RuneStatType chosen = pickWeightedStat(all, random);
+        RuneStatType chosen = pickWeightedStat(allowed.toArray(RuneStatType[]::new), random);
         return createStatRune(random, chosen);
     }
 

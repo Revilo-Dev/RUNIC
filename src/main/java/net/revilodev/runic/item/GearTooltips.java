@@ -395,7 +395,6 @@ public final class GearTooltips {
             case TOUGHNESS -> "Increases toughness.";
             case FREEZING_CHANCE -> "Chance to apply freezing.";
             case LEECHING_CHANCE -> "Chance to leach 10% max health.";
-            case BONUS_CHANCE -> "Chance to trigger multishot.";
             case FANGS -> "Chance to summon evoker fangs on hit.";
             case STONE -> "Gain temporary resistance after a heavy hit.";
             case AEGIS -> "Chance to negate an incoming hit.";

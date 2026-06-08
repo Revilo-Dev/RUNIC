@@ -26,7 +26,9 @@ import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
+import net.revilodev.runic.RunicConfig;
 import net.revilodev.runic.block.ModBlocks;
+import net.revilodev.runic.event.EnchantBlacklist;
 import net.revilodev.runic.gear.GearAttribute;
 import net.revilodev.runic.gear.GearAttributes;
 import net.revilodev.runic.item.ModItems;
@@ -229,6 +231,9 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
     }
 
     private int effectiveCapacity(ItemStack stack) {
+        if (!RuneSlots.enabled()) {
+            return Integer.MAX_VALUE;
+        }
         int cap = RuneSlots.capacity(stack);
         int neg = GearAttributes.getLevel(stack, GearAttribute.NEGATIVE);
         return Math.max(0, cap - neg);
@@ -249,6 +254,7 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
 
     private boolean canApplyStatTo(ItemStack target, RuneStatType stat) {
         if (stat == null) return false;
+        if (EnchantBlacklist.isStatBlacklisted(stat)) return false;
 
         RuneStats existing = RuneStats.get(target);
         if (existing != null && existing.has(stat)) return false;
@@ -261,7 +267,7 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
                  UNDEAD_DAMAGE, NETHER_DAMAGE,
                  STUN_CHANCE, FLAME_CHANCE, BLEEDING_CHANCE, SHOCKING_CHANCE,
                  POISON_CHANCE, WITHERING_CHANCE, WEAKENING_CHANCE,
-                 FREEZING_CHANCE, LEECHING_CHANCE, BONUS_CHANCE, FANGS ->
+                 FREEZING_CHANCE, LEECHING_CHANCE, FANGS ->
                     item instanceof SwordItem
                             || item instanceof AxeItem
                             || item instanceof TridentItem
@@ -305,6 +311,7 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
         for (Object2IntMap.Entry<Holder<Enchantment>> e : enchants.entrySet()) {
             Holder<Enchantment> h = e.getKey();
             if (!RuneItem.isEffectEnchantment(h)) continue;
+            if (EnchantBlacklist.isBlacklisted(h)) continue;
 
             int desired = cappedDesiredEffectLevel(h, e.getIntValue(), fromEtching);
             int have = current.getLevel(h);
@@ -362,6 +369,13 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
             RuneStatType t = e.getKey();
             float v = e.getValue();
             if (v <= 0.0F) continue;
+            if (EnchantBlacklist.isStatBlacklisted(t)) continue;
+
+            if (RunicConfig.disableStatCaps()) {
+                int allowed = Math.min(10, maxCost);
+                if (allowed >= 1) return true;
+                continue;
+            }
 
             float cap = t.cap();
             if (cap <= 0.0F) continue;
@@ -382,6 +396,7 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
     }
 
     private boolean canApplyExpansion(ItemStack target) {
+        if (!RuneSlots.enabled()) return false;
         if (!target.isDamageableItem()) return false;
         if (target.getMaxDamage() <= 1) return false;
         return RuneSlots.expansionsUsed(target) < 3;
@@ -925,6 +940,16 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
             RuneStatType t = e.getKey();
             float v = e.getValue();
             if (v <= 0.0F) continue;
+            if (EnchantBlacklist.isStatBlacklisted(t)) continue;
+
+            if (RunicConfig.disableStatCaps()) {
+                int a = Math.min(10, maxCost);
+                if (a >= 1) {
+                    candidates.add(t);
+                    allowed.put(t, a);
+                }
+                continue;
+            }
 
             float cap = t.cap();
             if (cap <= 0.0F) continue;
@@ -1309,6 +1334,7 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
         for (var entry : enchants.entrySet()) {
             Holder<Enchantment> h = entry.getKey();
             if (!RuneItem.isEffectEnchantment(h)) continue;
+            if (EnchantBlacklist.isBlacklisted(h)) continue;
 
             int desired = cappedDesiredEffectLevel(h, entry.getIntValue(), fromEtching);
             int have = mut.getLevel(h);

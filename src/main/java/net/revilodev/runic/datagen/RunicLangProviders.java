@@ -100,7 +100,6 @@ public final class RunicLangProviders {
             add("tooltip.runic.stat.freezing_chance", "\ueef4 Freezing");
             add("tooltip.runic.stat.leeching_chance", "\ueef4 Leeching");
             add("tooltip.runic.stat.looting", "\ueef3 Looting");
-            add("tooltip.runic.stat.bonus_chance", "\uefe5 Multishot");
             add("tooltip.runic.stat.fangs", "\ueef4 Fangs");
             add("tooltip.runic.stat.stone", "\uefe2 Stone Skin");
             add("tooltip.runic.stat.aegis", "\uefe2 Aegis");
@@ -136,7 +135,6 @@ public final class RunicLangProviders {
             add("tooltip.runic.stat_desc.toughness", "Increases toughness.");
             add("tooltip.runic.stat_desc.freezing_chance", "Chance to apply freezing.");
             add("tooltip.runic.stat_desc.leeching_chance", "Chance to leach 10% of enemy max health on hit.");
-            add("tooltip.runic.stat_desc.bonus_chance", "Chance to trigger multishot.");
             add("tooltip.runic.stat_desc.fangs", "Chance to summon a line of evoker fangs on hit.");
             add("tooltip.runic.stat_desc.stone", "Gain temporary resistance after a heavy hit.");
             add("tooltip.runic.stat_desc.aegis", "Chance to negate an incoming hit.");

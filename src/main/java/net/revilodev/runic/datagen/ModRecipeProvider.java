@@ -54,7 +54,6 @@ public final class ModRecipeProvider extends RecipeProvider {
         STAT_MATERIALS.put(RuneStatType.TOUGHNESS, Items.NETHERITE_SCRAP);
         STAT_MATERIALS.put(RuneStatType.FREEZING_CHANCE, Items.PACKED_ICE);
         STAT_MATERIALS.put(RuneStatType.LEECHING_CHANCE, Items.HONEY_BOTTLE);
-        STAT_MATERIALS.put(RuneStatType.BONUS_CHANCE, Items.LAPIS_LAZULI);
         STAT_MATERIALS.put(RuneStatType.FANGS, Items.EVOKER_SPAWN_EGG);
         STAT_MATERIALS.put(RuneStatType.STONE, Items.TUFF);
         STAT_MATERIALS.put(RuneStatType.AEGIS, Items.TOTEM_OF_UNDYING);

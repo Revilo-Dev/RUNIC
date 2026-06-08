@@ -8,7 +8,10 @@ import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.minecraft.core.component.DataComponents;
 import net.revilodev.runic.recipe.EtchingTableRecipe;
+import net.revilodev.runic.stat.RuneStatType;
+import net.revilodev.runic.stat.RuneStats;
 
+import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -37,6 +40,7 @@ public final class EnchantBlacklist {
        CONFIG DISABLED (RUNTIME)
        =============================== */
     private static final Set<ResourceLocation> CONFIG_DISABLED = new HashSet<>();
+    private static final Set<String> CONFIG_DISABLED_STATS = new HashSet<>();
     private static volatile boolean DISABLE_ALL = false;
 
     public static void setConfigDisabled(Set<ResourceLocation> ids) {
@@ -46,6 +50,11 @@ public final class EnchantBlacklist {
 
     public static void setDisableAll(boolean disableAll) {
         DISABLE_ALL = disableAll;
+    }
+
+    public static void setConfigDisabledStats(Set<String> ids) {
+        CONFIG_DISABLED_STATS.clear();
+        CONFIG_DISABLED_STATS.addAll(ids);
     }
 
     /* ===============================
@@ -62,10 +71,21 @@ public final class EnchantBlacklist {
         return DISABLE_ALL || HARD_DISABLED.contains(id) || CONFIG_DISABLED.contains(id);
     }
 
+    public static boolean isStatBlacklisted(RuneStatType type) {
+        return type != null && isStatBlacklisted(type.id());
+    }
+
+    public static boolean isStatBlacklisted(String statId) {
+        return statId != null && CONFIG_DISABLED_STATS.contains(statId);
+    }
+
     /* ===============================
        ETCHING TABLE SUPPORT
        =============================== */
     public static boolean isRecipeBlacklisted(EtchingTableRecipe recipe) {
+        if (recipe.stat().map(EnchantBlacklist::isStatBlacklisted).orElse(false)) {
+            return true;
+        }
         return recipe.effect()
                 .map(EnchantBlacklist::isBlacklisted)
                 .orElse(false);
@@ -101,6 +121,28 @@ public final class EnchantBlacklist {
                 stack.set(DataComponents.STORED_ENCHANTMENTS, cleaned);
                 changed = true;
             }
+        }
+
+        RuneStats stats = RuneStats.get(stack);
+        if (stats != null && !stats.isEmpty()) {
+            EnumMap<RuneStatType, Float> map = new EnumMap<>(RuneStatType.class);
+            map.putAll(stats.view());
+            boolean removedAny = false;
+            for (RuneStatType type : RuneStatType.values()) {
+                if (isStatBlacklisted(type) && map.remove(type) != null) {
+                    removedAny = true;
+                }
+            }
+            if (removedAny) {
+                RuneStats.set(stack, map.isEmpty() ? RuneStats.empty() : new RuneStats(map));
+                changed = true;
+            }
+        }
+
+        RuneStats remainingStats = RuneStats.get(stack);
+        ItemEnchantments remainingEnchants = stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
+        if ((remainingStats == null || remainingStats.isEmpty()) && remainingEnchants.isEmpty()) {
+            stack.remove(DataComponents.ENCHANTMENT_GLINT_OVERRIDE);
         }
 
         return changed;

@@ -20,7 +20,7 @@ public class BleedingMobEffect extends MobEffect {
     @Override
     public boolean applyEffectTick(LivingEntity entity, int amplifier) {
         if (!entity.level().isClientSide) {
-            float percentPerSecond = 0.02f;
+            float percentPerSecond = 0.05f;
             float damage = percentPerSecond * entity.getMaxHealth();
             entity.hurt(entity.damageSources().magic(), damage);
 
@@ -43,7 +43,7 @@ public class BleedingMobEffect extends MobEffect {
 
     @Override
     public boolean shouldApplyEffectTickThisTick(int tickCount, int amplifier) {
-        return tickCount % 20 == 0; // once per second
+        return tickCount % 20 == 0 && tickCount < 100;
     }
 
     public void renderInventoryIcon(MobEffectInstance effect, EffectRenderingInventoryScreen<?> gui, GuiGraphics graphics, int x, int y, float z) {

@@ -20,6 +20,8 @@ import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
 import net.neoforged.neoforge.common.loot.IGlobalLootModifier;
 import net.neoforged.neoforge.common.loot.LootModifier;
+import net.revilodev.runic.RunicConfig;
+import net.revilodev.runic.event.EnchantBlacklist;
 import net.revilodev.runic.gear.GearAttribute;
 import net.revilodev.runic.gear.GearAttributes;
 import net.revilodev.runic.item.ModItems;
@@ -60,6 +62,10 @@ public class RunicStructureLootInjector extends LootModifier {
 
     @Override
     protected ObjectArrayList<ItemStack> doApply(ObjectArrayList<ItemStack> generated, LootContext ctx) {
+        if (RunicConfig.disableRunicLoot()) {
+            return generated;
+        }
+
         if (ctx.getParamOrNull(LootContextParams.BLOCK_STATE) != null) {
             return generated;
         }
@@ -141,7 +147,9 @@ public class RunicStructureLootInjector extends LootModifier {
         List<Holder<Enchantment>> pool = new ArrayList<>();
         for (ResourceLocation id : RuneItem.allowedEffectIds()) {
             ResourceKey<Enchantment> key = ResourceKey.create(Registries.ENCHANTMENT, id);
-            reg.getHolder(key).ifPresent(pool::add);
+            reg.getHolder(key)
+                    .filter(holder -> !EnchantBlacklist.isBlacklisted(holder))
+                    .ifPresent(pool::add);
         }
         if (pool.isEmpty()) {
             return ItemStack.EMPTY;

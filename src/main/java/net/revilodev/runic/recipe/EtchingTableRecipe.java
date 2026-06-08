@@ -17,6 +17,8 @@ import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
+import net.revilodev.runic.RunicConfig;
+import net.revilodev.runic.event.EnchantBlacklist;
 import net.revilodev.runic.item.custom.EtchingItem;
 import net.revilodev.runic.item.custom.RuneItem;
 import net.revilodev.runic.stat.RuneStatType;
@@ -81,6 +83,9 @@ public final class EtchingTableRecipe implements Recipe<EtchingTableInput> {
 
     @Override
     public boolean matches(EtchingTableInput input, net.minecraft.world.level.Level level) {
+        if (RunicConfig.disableEtchingCrafting()) return false;
+        if (stat.map(EnchantBlacklist::isStatBlacklisted).orElse(false)) return false;
+        if (effect.map(EnchantBlacklist::isBlacklisted).orElse(false)) return false;
         if (!base.test(input.base())) return false;
 
         if (!material.test(input.material())) return false;
@@ -94,6 +99,15 @@ public final class EtchingTableRecipe implements Recipe<EtchingTableInput> {
 
     @Override
     public ItemStack assemble(EtchingTableInput input, HolderLookup.Provider registries) {
+        if (RunicConfig.disableEtchingCrafting()) {
+            return ItemStack.EMPTY;
+        }
+        if (stat.map(EnchantBlacklist::isStatBlacklisted).orElse(false)) {
+            return ItemStack.EMPTY;
+        }
+        if (effect.map(EnchantBlacklist::isBlacklisted).orElse(false)) {
+            return ItemStack.EMPTY;
+        }
         ItemStack out = result.copy();
 
         if (stat.isPresent()) {

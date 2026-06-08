@@ -8,6 +8,7 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
+import net.revilodev.runic.RunicConfig;
 import net.revilodev.runic.runes.RuneAttributeApplier;
 
 import java.util.EnumMap;
@@ -105,6 +106,10 @@ public final class RuneStats {
     }
 
     public static RuneStats combine(RuneStats base, RuneStats add) {
+        return combine(base, add, !RunicConfig.disableStatCaps());
+    }
+
+    public static RuneStats combine(RuneStats base, RuneStats add, boolean respectCaps) {
         if ((base == null || base.isEmpty()) && (add == null || add.isEmpty())) {
             return EMPTY;
         }
@@ -123,7 +128,7 @@ public final class RuneStats {
                 float sum = existing + added;
 
                 float cap = type.cap();
-                if (cap > 0.0F && sum > cap) {
+                if (respectCaps && cap > 0.0F && sum > cap) {
                     sum = cap;
                 }
 

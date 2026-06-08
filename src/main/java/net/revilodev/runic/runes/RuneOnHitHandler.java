@@ -50,7 +50,7 @@ public final class RuneOnHitHandler {
         RandomSource rand = player.getRandom();
 
         tryRollEffect(stats, RuneStatType.BLEEDING_CHANCE, rand,
-                () -> applyCustomEffectOrSkip(target, BLEEDING_ID, 140, 0));
+                () -> applyCustomEffectOrSkip(target, BLEEDING_ID, 100, 0));
 
         tryRollEffect(stats, RuneStatType.STUN_CHANCE, rand,
                 () -> applyCustomEffectOrSkip(target, STUN_ID, 60, 0));

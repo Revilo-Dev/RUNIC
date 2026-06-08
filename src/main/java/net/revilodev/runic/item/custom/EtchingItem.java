@@ -9,6 +9,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
+import net.revilodev.runic.event.EnchantBlacklist;
 import net.revilodev.runic.item.ModItems;
 import net.revilodev.runic.stat.RuneStatType;
 import net.revilodev.runic.stat.RuneStats;
@@ -37,7 +38,7 @@ public class EtchingItem extends Item {
     }
 
     public static ItemStack createEffectEtching(Holder<Enchantment> enchantment) {
-        if (!isEffectEnchantment(enchantment)) {
+        if (!isEffectEnchantment(enchantment) || EnchantBlacklist.isBlacklisted(enchantment)) {
             return ItemStack.EMPTY;
         }
         ItemStack stack = new ItemStack(ModItems.ETCHING.get());
@@ -54,10 +55,16 @@ public class EtchingItem extends Item {
 
     public static ItemStack createRandomStatEtching(RandomSource random) {
         RuneStatType[] all = RuneStatType.values();
-        if (all.length == 0) {
+        List<RuneStatType> allowed = new ArrayList<>();
+        for (RuneStatType type : all) {
+            if (!EnchantBlacklist.isStatBlacklisted(type)) {
+                allowed.add(type);
+            }
+        }
+        if (allowed.isEmpty()) {
             return ItemStack.EMPTY;
         }
-        return createStatEtching(random, all[random.nextInt(all.length)]);
+        return createStatEtching(random, allowed.get(random.nextInt(allowed.size())));
     }
 
     public static RuneStats getRolledStatsForTooltip(ItemStack etching) {

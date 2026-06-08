@@ -25,6 +25,7 @@ import net.revilodev.runic.recipe.ModRecipeSerializers;
 import net.revilodev.runic.recipe.ModRecipeTypes;
 import net.revilodev.runic.registry.ModDataComponents;
 import net.revilodev.runic.screen.ModMenuTypes;
+import net.revilodev.runic.command.RunicCommands;
 import org.slf4j.Logger;
 
 
@@ -65,6 +66,7 @@ public class RunicMod {
         }
 
         NeoForge.EVENT_BUS.register(this);
+        NeoForge.EVENT_BUS.addListener(RunicCommands::register);
     }
 
     private void commonSetup(final net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent event) {

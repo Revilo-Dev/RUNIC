@@ -1,7 +1,7 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "runic:item/etching",
+    "layer0": "runic:item/etching_base",
     "layer1": "runic:item/icons/effect/chill_aura"
   }
 }
