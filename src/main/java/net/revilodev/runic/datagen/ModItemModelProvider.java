@@ -20,6 +20,8 @@ public class ModItemModelProvider extends ItemModelProvider {
 
     @Override
     protected void registerModels() {
+        basicItem(ModItems.BLANK_INSCRIPTION.get());
+        basicItem(ModItems.BLANK_ETCHING.get());
         basicItem(ModItems.EXPANSION_INSCRIPTION.get());
         basicItem(ModItems.REPAIR_INSCRIPTION.get());
         basicItem(ModItems.UPGRADE_INSCRIPTION.get());

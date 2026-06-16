@@ -27,6 +27,8 @@ public final class GearTooltips {
 
     private GearTooltips() {}
 
+    private static final int ENCHANT_TOOLTIP_PREVIEW_LIMIT = 4;
+
     private static final char SLOT_FILLED = '⬤';
     private static final char SLOT_EMPTY = '◯';
 
@@ -244,13 +246,18 @@ public final class GearTooltips {
         addEnchantments(ordered, stored);
 
         List<Component> out = new ArrayList<>();
+        boolean showAll = Screen.hasAltDown();
+        int shown = 0;
         for (EnchLine e : ordered.values()) {
+            if (!showAll && shown >= ENCHANT_TOOLTIP_PREVIEW_LIMIT) break;
+
             Component name = e.rarity.applyTo(e.name.copy());
             String roman = toRoman(e.level);
             Component lvl = roman.isEmpty()
                     ? Component.empty()
                     : Component.literal(" " + roman).withStyle(e.rarity.style());
             out.add(Component.literal("  ").append(name).append(lvl));
+            shown++;
 
             if (showDetails) {
                 String descKey = descriptionKey(e.id);
@@ -259,6 +266,10 @@ public final class GearTooltips {
                             .append(Component.translatable(descKey).withStyle(ChatFormatting.DARK_GRAY)));
                 }
             }
+        }
+        if (!showAll && ordered.size() > ENCHANT_TOOLTIP_PREVIEW_LIMIT) {
+            int hidden = ordered.size() - ENCHANT_TOOLTIP_PREVIEW_LIMIT;
+            out.add(Component.literal("  " + hidden + " more - press Alt to view more").withStyle(ChatFormatting.DARK_GRAY));
         }
         return out;
     }

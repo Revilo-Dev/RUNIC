@@ -94,7 +94,7 @@ public final class RunicLangProviders {
             add("tooltip.runic.stat.weakening_chance", "\ueef4 Diminishing");
             add("tooltip.runic.stat.water_breathing", "\uefe1 Water Breathing");
             add("tooltip.runic.stat.draw_speed", "\uefe8 Draw Speed");
-            add("tooltip.runic.stat.jump_height", "\uefe7 Leaping");
+            add("tooltip.runic.stat.jump_height", "\uefe4 Leaping");
 
             add("tooltip.runic.stat.toughness", "\uefe2 Toughness");
             add("tooltip.runic.stat.freezing_chance", "\ueef4 Freezing");
@@ -103,7 +103,7 @@ public final class RunicLangProviders {
             add("tooltip.runic.stat.fangs", "\ueef4 Fangs");
             add("tooltip.runic.stat.stone", "\uefe2 Stone Skin");
             add("tooltip.runic.stat.aegis", "\uefe2 Aegis");
-            add("tooltip.runic.stat.power", "\uefe5 Power");
+            add("tooltip.runic.stat.power", "\uefe8 Power");
             add("tooltip.runic.stat.ability_power", "\ueef4 Ability Power");
 
             // Stat descriptions

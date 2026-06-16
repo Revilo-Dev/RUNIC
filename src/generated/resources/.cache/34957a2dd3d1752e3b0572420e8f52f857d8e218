@@ -1,4 +1,6 @@
-// 1.21.1	2026-06-08T19:38:54.8334711	Item Models: runic
+// 1.21.1	2026-06-09T18:44:12.2874812	Item Models: runic
+8c6bce6213fe74f2e97edda311b11ea3c68e72a3 assets/runic/models/item/blank_etching.json
+a102d64c957d27075fa5fb554dcae22cef2068be assets/runic/models/item/blank_inscription.json
 099f7228c97cbd5bf5e3236d83df0d964909fe1a assets/runic/models/item/cursed_inscription.json
 dbf530856be0adcaaeb952049dee119409e3bd06 assets/runic/models/item/enhanced_rune.json
 8e27b8059e62259995745b5f693a4c84a0f31315 assets/runic/models/item/etching.json

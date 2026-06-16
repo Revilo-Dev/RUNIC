@@ -92,7 +92,8 @@ public class ArtisansWorkbench extends HorizontalDirectionalBlock {
 
     @Override
     protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
-        return state.getValue(FACING).getAxis() == Direction.Axis.X ? Z_AXIS_SHAPE : X_AXIS_SHAPE;
+        Direction facing = state.getValue(FACING).getOpposite();
+        return facing.getAxis() == Direction.Axis.X ? X_AXIS_SHAPE : Z_AXIS_SHAPE;
     }
 
     @Override

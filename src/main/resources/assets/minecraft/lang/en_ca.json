@@ -1,12 +1,12 @@
 {
-  "enchantment.minecraft.aqua_affinity": "\uefe6 Aqua Affinity",
+  "enchantment.minecraft.aqua_affinity": "\uefe1 Aqua Affinity",
   "enchantment.minecraft.bane_of_arthropods": "\uefe5 Bane of Arthropods",
   "enchantment.minecraft.binding_curse": "\ueef3 Curse of Binding",
   "enchantment.minecraft.blast_protection": "\uefe2 Blast Protection",
   "enchantment.minecraft.channeling": "\uefe7 Channeling",
-  "enchantment.minecraft.depth_strider": "\uefe7 Depth Strider",
+  "enchantment.minecraft.depth_strider": "\uefe4 Depth Strider",
   "enchantment.minecraft.efficiency": "\uefe6 Efficiency",
-  "enchantment.minecraft.feather_falling": "\ueef4 Feather Falling",
+  "enchantment.minecraft.feather_falling": "\uefe4 Feather Falling",
   "enchantment.minecraft.fire_aspect": "\uefe5 Fire Aspect",
   "enchantment.minecraft.fire_protection": "\uefe2 Fire Protection",
   "enchantment.minecraft.flame": "\uefe8 Flame",
@@ -61,4 +61,3 @@
   "enchantment.runic.toughness": "\uefe2 Toughness",
   "enchantment.runic.curse_of_unluck": "\ueef3 Curse of Bad Luck"
 }
-
