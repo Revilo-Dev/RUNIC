@@ -1,0 +1,13 @@
+{
+  "type": "runic:etching_table",
+  "base": {
+    "item": "runic:blank_inscription"
+  },
+  "material": {
+    "item": "minecraft:milk_bucket"
+  },
+  "result": {
+    "count": 1,
+    "id": "runic:purification_inscription"
+  }
+}

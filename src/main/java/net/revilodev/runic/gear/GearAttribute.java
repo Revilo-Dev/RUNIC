@@ -9,7 +9,14 @@ public enum GearAttribute {
     INSTABLE("instable", Component.literal("Unstable"), ChatFormatting.GRAY),
     NEGATIVE("negative", Component.literal("Negative"), ChatFormatting.WHITE),
     ANCIENT("ancient", Component.literal("Ancient"), ChatFormatting.GOLD),
-    BRITTLE("brittle", Component.literal("Brittle"), ChatFormatting.RED);
+    BRITTLE("brittle", Component.literal("Brittle"), ChatFormatting.RED),
+    FRACTURED("fractured", Component.translatable("tooltip.runic.attribute.fractured"), ChatFormatting.DARK_PURPLE),
+    EXHAUSTED("exhausted", Component.translatable("tooltip.runic.attribute.exhausted"), ChatFormatting.DARK_GRAY),
+    OVERFORGED("overforged", Component.translatable("tooltip.runic.attribute.overforged"), ChatFormatting.GOLD),
+    CHAOTIC("chaotic", Component.translatable("tooltip.runic.attribute.chaotic"), ChatFormatting.LIGHT_PURPLE),
+    REINFORCED("reinforced", Component.translatable("tooltip.runic.attribute.reinforced"), ChatFormatting.GREEN),
+    TEMPERED("tempered", Component.translatable("tooltip.runic.attribute.tempered"), ChatFormatting.AQUA),
+    HARMONIZED("harmonized", Component.translatable("tooltip.runic.attribute.harmonized"), ChatFormatting.BLUE);
 
     private final String id;
     private final Component displayName;

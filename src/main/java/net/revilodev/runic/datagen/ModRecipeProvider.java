@@ -15,6 +15,7 @@ import net.neoforged.neoforge.common.conditions.ModLoadedCondition;
 import net.revilodev.runic.RunicMod;
 import net.revilodev.runic.item.ModItems;
 import net.revilodev.runic.recipe.EtchingTableRecipe;
+import net.revilodev.runic.runes.UniqueRuneSources;
 import net.revilodev.runic.stat.RuneStatType;
 
 import java.util.EnumMap;
@@ -223,6 +224,7 @@ public final class ModRecipeProvider extends RecipeProvider {
 
         Ingredient statBase = Ingredient.of(ModItems.BLANK_ETCHING.get());
         for (RuneStatType type : RuneStatType.values()) {
+            if (UniqueRuneSources.isUniqueEtchingStat(type)) continue;
             ItemLike mat = STAT_MATERIALS.get(type);
             if (mat == null) throw new IllegalStateException("Missing STAT_MATERIALS for stat: " + type.id());
 
@@ -245,6 +247,7 @@ public final class ModRecipeProvider extends RecipeProvider {
         Ingredient effectBase = Ingredient.of(ModItems.BLANK_ETCHING.get());
 
         for (ResourceLocation effectId : EFFECTS) {
+            if (UniqueRuneSources.isUniqueEtchingEffect(effectId)) continue;
             ResourceLocation id = ResourceLocation.fromNamespaceAndPath(
                     RunicMod.MOD_ID,
                     "etching_table/effect/" + effectId.getNamespace() + "/" + effectId.getPath()
@@ -278,6 +281,10 @@ public final class ModRecipeProvider extends RecipeProvider {
         addUtility(output, "upgrade_rune", base, Items.LAPIS_BLOCK, ModItems.UPGRADE_INSCRIPTION.get());
         addUtility(output, "reroll_inscription", base, Items.GOLD_BLOCK, ModItems.REROLL_INSCRIPTION.get());
         addUtility(output, "extraction_inscription", base, Items.EMERALD_BLOCK, ModItems.EXTRACTION_INSCRIPTION.get());
+        addUtility(output, "purification_inscription", base, Items.MILK_BUCKET, ModItems.PURIFICATION_INSCRIPTION.get());
+        addUtility(output, "stabilization_inscription", base, Items.AMETHYST_SHARD, ModItems.STABILIZATION_INSCRIPTION.get());
+        addUtility(output, "tempering_inscription", base, Items.IRON_BLOCK, ModItems.TEMPERING_INSCRIPTION.get());
+        addUtility(output, "relic_socket_inscription", base, Items.ECHO_SHARD, ModItems.RELIC_SOCKET_INSCRIPTION.get());
     }
 
     private static void addUtility(

@@ -6,18 +6,27 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
+import net.revilodev.runic.RunicConfig;
 import net.revilodev.runic.RunicMod;
 import net.revilodev.runic.client.ArtisansPreviewRenderer;
+import net.revilodev.runic.gear.GearAttribute;
+import net.revilodev.runic.gear.GearAttributes;
+import net.revilodev.runic.gear.RunicItemData;
 import net.revilodev.runic.item.ModItems;
+import net.revilodev.runic.relic.RelicRegistry;
 import net.revilodev.runic.runes.RuneSlots;
 import net.revilodev.runic.stat.RuneStatType;
 import net.revilodev.runic.stat.RuneStats;
+import net.revilodev.runic.synergy.SynergyRegistry;
 
 import java.util.*;
 
@@ -32,6 +41,8 @@ public final class ArtisansWorkbenchScreen extends AbstractContainerScreen<Artis
 
     private static final int FORGE_X = 52;
     private static final int FORGE_Y = 51;
+    private static final String PREVIEW_DELTA = "preview_delta";
+    private static final String PREVIEW_INVALID = "preview_invalid";
 
     private ForgeButton forgeButton;
 
@@ -61,7 +72,8 @@ public final class ArtisansWorkbenchScreen extends AbstractContainerScreen<Artis
     private void syncButtonState() {
         if (this.forgeButton == null) return;
         this.forgeButton.setPosition(this.leftPos + FORGE_X, this.topPos + FORGE_Y);
-        this.forgeButton.active = !this.menu.getPreviewStack().isEmpty();
+        ItemStack preview = this.menu.getPreviewStack();
+        this.forgeButton.active = !preview.isEmpty() && !isPreviewInvalid(preview);
         this.forgeButton.visible = true;
     }
 
@@ -119,14 +131,14 @@ public final class ArtisansWorkbenchScreen extends AbstractContainerScreen<Artis
         List<Component> delta = buildDeltaLines(base, preview, enhancement);
         if (!delta.isEmpty()) {
             lines.add(Component.empty());
-            lines.add(Component.literal("Changes").withStyle(ChatFormatting.GRAY));
+            lines.add(Component.translatable("tooltip.runic.preview_changes_header").withStyle(ChatFormatting.GRAY));
             lines.addAll(delta);
         }
 
         List<Component> statRoll = buildStatRollLines(base, enhancement);
         if (!statRoll.isEmpty()) {
             lines.add(Component.empty());
-            lines.add(Component.literal("Stat Roll").withStyle(ChatFormatting.GRAY));
+            lines.add(Component.translatable("tooltip.runic.preview_stat_roll_header").withStyle(ChatFormatting.GRAY));
             lines.addAll(statRoll);
         }
 
@@ -155,14 +167,17 @@ public final class ArtisansWorkbenchScreen extends AbstractContainerScreen<Artis
 
     private List<Component> buildDeltaLines(ItemStack base, ItemStack preview, ItemStack enhancement) {
         if (hidesOutcomePreview(enhancement)) return List.of();
-        if (isInscription(enhancement)
-                && !enhancement.is(ModItems.REROLL_INSCRIPTION.get())
-                && !enhancement.is(ModItems.UPGRADE_INSCRIPTION.get())) {
-            return List.of();
-        }
-
         List<Component> out = new ArrayList<>();
         boolean hideStatRoll = !isInscription(enhancement) && !RuneStats.get(enhancement).isEmpty();
+        CompoundTag delta = getPreviewDelta(preview);
+
+        if (delta != null && delta.contains("failure_key", Tag.TAG_STRING)) {
+            out.add(Component.translatable(delta.getString("failure_key")).withStyle(ChatFormatting.RED));
+            return out;
+        }
+        if (delta != null && delta.contains("warning_key", Tag.TAG_STRING)) {
+            out.add(Component.translatable(delta.getString("warning_key")).withStyle(ChatFormatting.GOLD));
+        }
 
         int baseCap = RuneSlots.capacity(base);
         int prevCap = RuneSlots.capacity(preview);
@@ -170,9 +185,49 @@ public final class ArtisansWorkbenchScreen extends AbstractContainerScreen<Artis
         int prevUsed = RuneSlots.used(preview);
 
         if (baseCap != prevCap || baseUsed != prevUsed) {
-            String a = baseUsed + "/" + baseCap;
-            String b = prevUsed + "/" + prevCap;
-            out.add(Component.literal("Rune slots: " + a + " \u2192 " + b).withStyle(ChatFormatting.AQUA));
+            out.add(Component.translatable("tooltip.runic.preview_slots_result",
+                    baseUsed + "/" + baseCap,
+                    prevUsed + "/" + prevCap).withStyle(ChatFormatting.AQUA));
+        }
+
+        int baseCorruption = RunicItemData.getCorruption(base);
+        int prevCorruption = RunicItemData.getCorruption(preview);
+        if (baseCorruption != prevCorruption) {
+            int deltaCorruption = prevCorruption - baseCorruption;
+            out.add(Component.translatable("tooltip.runic.preview_corruption_delta", signedPercent(deltaCorruption))
+                    .withStyle(deltaCorruption > 0 ? ChatFormatting.DARK_PURPLE : ChatFormatting.GREEN));
+            out.add(Component.translatable("tooltip.runic.preview_result_band",
+                    prevCorruption,
+                    RunicItemData.getCorruptionBand(preview).displayName()).withStyle(ChatFormatting.DARK_PURPLE));
+        }
+        if (delta != null && delta.contains("relic_id", Tag.TAG_STRING)) {
+            ResourceLocation relicId = ResourceLocation.tryParse(delta.getString("relic_id"));
+            out.add(Component.translatable("tooltip.runic.relic", RelicRegistry.displayName(relicId)).withStyle(ChatFormatting.GOLD));
+            if (delta.contains("relic_corruption", Tag.TAG_INT)) {
+                out.add(Component.translatable("tooltip.runic.relic_corruption", delta.getInt("relic_corruption")).withStyle(ChatFormatting.DARK_PURPLE));
+            }
+            if (delta.contains("relic_durability_use", Tag.TAG_DOUBLE)) {
+                out.add(Component.translatable("tooltip.runic.relic_durability_use", formatNumber(delta.getDouble("relic_durability_use"))).withStyle(ChatFormatting.GRAY));
+            }
+        }
+
+        int basePotential = RunicItemData.getSynergyPotential(base);
+        int prevPotential = RunicItemData.getSynergyPotential(preview);
+        if (basePotential != prevPotential) {
+            out.add(Component.translatable("tooltip.runic.preview_synergy_potential_result",
+                    toRoman(basePotential),
+                    toRoman(prevPotential)).withStyle(ChatFormatting.LIGHT_PURPLE));
+        }
+
+        ResourceLocation newEnhancement = enhancementRef(enhancement);
+        if (newEnhancement != null && !SynergyRegistry.possibleSynergies(newEnhancement, base).isEmpty()) {
+            int chance = (int) Math.round(RunicItemData.getSynergyChance(base) * 100.0D);
+            out.add(Component.translatable("tooltip.runic.possible_synergy_detected").withStyle(ChatFormatting.LIGHT_PURPLE));
+            out.add(Component.translatable("tooltip.runic.synergy_chance", chance).withStyle(ChatFormatting.GRAY));
+            out.add(Component.translatable("tooltip.runic.preview_synergy_failure", RunicConfig.failedSynergyCorruption()).withStyle(ChatFormatting.RED));
+            if (GearAttributes.has(base, GearAttribute.FRACTURED)) {
+                out.add(Component.translatable("tooltip.runic.preview_synergy_failure_fractured", RunicConfig.fracturedExtraFailureCorruption()).withStyle(ChatFormatting.RED));
+            }
         }
 
         if (base.isDamageableItem() && preview.isDamageableItem()) {
@@ -213,6 +268,35 @@ public final class ArtisansWorkbenchScreen extends AbstractContainerScreen<Artis
         return out;
     }
 
+    private static CompoundTag getPreviewDelta(ItemStack stack) {
+        CustomDataAccessor accessor = new CustomDataAccessor(stack);
+        return accessor.getPreviewDelta();
+    }
+
+    private static boolean isPreviewInvalid(ItemStack stack) {
+        return new CustomDataAccessor(stack).isPreviewInvalid();
+    }
+
+    private static String formatNumber(double value) {
+        long rounded = Math.round(value);
+        return Math.abs(value - rounded) < 0.001D ? Long.toString(rounded) : String.format(Locale.ROOT, "%.1f", value);
+    }
+
+    private static String signedPercent(int value) {
+        return (value > 0 ? "+" : "") + value + "%";
+    }
+
+    private record CustomDataAccessor(ItemStack stack) {
+        CompoundTag getPreviewDelta() {
+            var data = stack.getOrDefault(DataComponents.CUSTOM_DATA, net.minecraft.world.item.component.CustomData.EMPTY).copyTag();
+            return data.contains(PREVIEW_DELTA, Tag.TAG_COMPOUND) ? data.getCompound(PREVIEW_DELTA) : null;
+        }
+
+        boolean isPreviewInvalid() {
+            return stack.getOrDefault(DataComponents.CUSTOM_DATA, net.minecraft.world.item.component.CustomData.EMPTY).copyTag().getBoolean(PREVIEW_INVALID);
+        }
+    }
+
     private List<Component> buildStatRollLines(ItemStack gear, ItemStack enhancement) {
         if (!Screen.hasControlDown()) return List.of();
         if (gear.isEmpty()) return List.of();
@@ -236,8 +320,10 @@ public final class ArtisansWorkbenchScreen extends AbstractContainerScreen<Artis
         float maxAdjusted = max * multiplier;
 
         return List.of(
-                Component.literal("  " + pretty(type.id()) + ": " + formatSignedValue(type, minAdjusted) + " to " + formatSignedValue(type, maxAdjusted))
-                        .withStyle(ChatFormatting.AQUA)
+                Component.translatable("tooltip.runic.preview_stat_roll_range",
+                        pretty(type.id()),
+                        formatSignedValue(type, minAdjusted),
+                        formatSignedValue(type, maxAdjusted)).withStyle(ChatFormatting.AQUA)
         );
     }
 
@@ -249,7 +335,12 @@ public final class ArtisansWorkbenchScreen extends AbstractContainerScreen<Artis
                 || stack.is(ModItems.REROLL_INSCRIPTION.get())
                 || stack.is(ModItems.CURSED_INSCRIPTION.get())
                 || stack.is(ModItems.WILD_INSCRIPTION.get())
-                || stack.is(ModItems.EXTRACTION_INSCRIPTION.get());
+                || stack.is(ModItems.EXTRACTION_INSCRIPTION.get())
+                || stack.is(ModItems.RESONANCE_INSCRIPTION.get())
+                || stack.is(ModItems.PURIFICATION_INSCRIPTION.get())
+                || stack.is(ModItems.STABILIZATION_INSCRIPTION.get())
+                || stack.is(ModItems.TEMPERING_INSCRIPTION.get())
+                || stack.is(ModItems.RELIC_SOCKET_INSCRIPTION.get());
     }
 
     private static boolean hidesOutcomePreview(ItemStack stack) {
@@ -295,6 +386,42 @@ public final class ArtisansWorkbenchScreen extends AbstractContainerScreen<Artis
             sb.append(Character.toUpperCase(p.charAt(0))).append(p.substring(1)).append(' ');
         }
         return sb.toString().trim();
+    }
+
+    private static ResourceLocation enhancementRef(ItemStack enhancement) {
+        RuneStats stats = RuneStats.get(enhancement);
+        if (stats != null && !stats.isEmpty()) {
+            RuneStatType type = stats.view().keySet().stream().findFirst().orElse(null);
+            return type == null ? null : SynergyRegistry.statId(type);
+        }
+
+        ItemEnchantments enchants = enhancement.getOrDefault(net.minecraft.core.component.DataComponents.STORED_ENCHANTMENTS, ItemEnchantments.EMPTY);
+        if (enchants.isEmpty()) {
+            enchants = enhancement.getOrDefault(net.minecraft.core.component.DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
+        }
+        for (var entry : enchants.entrySet()) {
+            if (entry.getIntValue() <= 0) continue;
+            Optional<ResourceLocation> id = entry.getKey().unwrapKey().map(k -> k.location());
+            if (id.isPresent()) return id.get();
+        }
+        return null;
+    }
+
+    private static String toRoman(int v) {
+        if (v <= 0) return "0";
+        if (v >= 10) return "X";
+        return switch (v) {
+            case 1 -> "I";
+            case 2 -> "II";
+            case 3 -> "III";
+            case 4 -> "IV";
+            case 5 -> "V";
+            case 6 -> "VI";
+            case 7 -> "VII";
+            case 8 -> "VIII";
+            case 9 -> "IX";
+            default -> "";
+        };
     }
 
     private static void moveVanillaStatsToTop(List<Component> tooltip) {

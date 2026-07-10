@@ -1,14 +1,13 @@
 {
   "type": "runic:etching_table",
   "base": {
-    "item": "runic:blank_etching"
+    "item": "runic:blank_inscription"
   },
-  "effect": "minecraft:swift_sneak",
   "material": {
     "item": "minecraft:echo_shard"
   },
   "result": {
     "count": 1,
-    "id": "runic:etching"
+    "id": "runic:relic_socket_inscription"
   }
 }

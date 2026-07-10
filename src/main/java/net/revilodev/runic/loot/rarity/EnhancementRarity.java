@@ -11,6 +11,7 @@ public enum EnhancementRarity {
     RARE("rare", ChatFormatting.DARK_AQUA, 6, 2),
     EPIC("epic", ChatFormatting.GOLD, 3, 3),
     LEGENDARY("legendary", ChatFormatting.LIGHT_PURPLE, 1, 4),
+    MYTHIC("mythic", ChatFormatting.RED, 0, 5),
     CURSED("cursed", ChatFormatting.DARK_RED, 2, 0);
 
     private final String key;

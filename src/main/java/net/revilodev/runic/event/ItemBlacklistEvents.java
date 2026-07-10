@@ -11,6 +11,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentInstance;
+import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
@@ -19,7 +20,7 @@ import net.revilodev.runic.RunicMod;
 
 import java.util.List;
 
-@EventBusSubscriber(modid = RunicMod.MOD_ID)
+@EventBusSubscriber(modid = RunicMod.MOD_ID, value = Dist.CLIENT)
 public final class ItemBlacklistEvents {
     private ItemBlacklistEvents() {}
 

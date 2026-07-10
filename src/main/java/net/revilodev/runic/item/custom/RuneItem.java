@@ -5,6 +5,7 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
@@ -12,6 +13,7 @@ import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.revilodev.runic.event.EnchantBlacklist;
 import net.revilodev.runic.item.ModItems;
 import net.revilodev.runic.loot.rarity.EnhancementRarities;
+import net.revilodev.runic.mythic.MythicRuneRegistry;
 import net.revilodev.runic.stat.RuneStatType;
 import net.revilodev.runic.stat.RuneStats;
 
@@ -100,6 +102,15 @@ public class RuneItem extends Item {
     @Override
     public boolean isEnchantable(ItemStack stack) {
         return false;
+    }
+
+    @Override
+    public Component getName(ItemStack stack) {
+        ResourceLocation mythicId = MythicRuneRegistry.getItemRuneId(stack);
+        if (mythicId != null) {
+            return Component.translatable("tooltip.runic.mythic_name." + mythicId.getPath().substring("mythic/".length()));
+        }
+        return super.getName(stack);
     }
 
     public static Set<ResourceLocation> allowedEffectIds() {
@@ -213,9 +224,21 @@ public class RuneItem extends Item {
         return enchants.keySet().iterator().next();
     }
 
+    public static ItemStack createMythicRune(ResourceLocation id) {
+        if (!MythicRuneRegistry.isKnown(id)) {
+            return ItemStack.EMPTY;
+        }
+        ItemStack stack = new ItemStack(ModItems.ENHANCED_RUNE.get());
+        MythicRuneRegistry.setItemRuneId(stack, id);
+        return stack;
+    }
+
     @Override
     public boolean isFoil(ItemStack stack) {
         if (stack.isEnchanted()) {
+            return true;
+        }
+        if (MythicRuneRegistry.isMythicRune(stack)) {
             return true;
         }
         RuneStats stats = RuneStats.get(stack);

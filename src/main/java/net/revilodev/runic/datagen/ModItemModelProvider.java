@@ -30,6 +30,24 @@ public class ModItemModelProvider extends ItemModelProvider {
         basicItem(ModItems.WILD_INSCRIPTION.get());
         basicItem(ModItems.CURSED_INSCRIPTION.get());
         basicItem(ModItems.EXTRACTION_INSCRIPTION.get());
+        withExistingParent("item/resonance_inscription", "minecraft:item/generated")
+                .texture("layer0", modLoc("item/blank_inscription"));
+        withExistingParent("item/purification_inscription", "minecraft:item/generated")
+                .texture("layer0", modLoc("item/blank_inscription"));
+        withExistingParent("item/stabilization_inscription", "minecraft:item/generated")
+                .texture("layer0", modLoc("item/blank_inscription"));
+        withExistingParent("item/tempering_inscription", "minecraft:item/generated")
+                .texture("layer0", modLoc("item/blank_inscription"));
+        withExistingParent("item/relic_socket_inscription", "minecraft:item/generated")
+                .texture("layer0", modLoc("item/blank_inscription"));
+        withExistingParent("item/dragon_heart", "minecraft:item/generated")
+                .texture("layer0", mcLoc("item/blaze_powder"));
+        withExistingParent("item/elder_guardians_eye", "minecraft:item/generated")
+                .texture("layer0", mcLoc("item/heart_of_the_sea"));
+        withExistingParent("item/wither_charge", "minecraft:item/generated")
+                .texture("layer0", mcLoc("item/nether_star"));
+        withExistingParent("item/wardens_soul", "minecraft:item/generated")
+                .texture("layer0", mcLoc("item/echo_shard"));
 
         generateLayeredRuneAndEtchingModels();
     }

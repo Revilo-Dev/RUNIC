@@ -11,6 +11,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.revilodev.runic.RunicConfig;
+import net.revilodev.runic.gear.RunicItemData;
 import net.revilodev.runic.item.custom.RuneItem;
 import net.revilodev.runic.stat.RuneStats;
 import net.revilodev.runic.registry.ModDataComponents;
@@ -52,6 +53,9 @@ public final class RuneSlots {
                 }
             }
         }
+
+        total += RunicItemData.getSynergies(stack).size();
+        total += RunicItemData.getMythicRunes(stack).size();
 
         return total;
     }

@@ -10,6 +10,7 @@ import net.minecraft.world.item.crafting.Ingredient;
 import net.revilodev.runic.RunicMod;
 import net.revilodev.runic.item.custom.EtchingItem;
 import net.revilodev.runic.recipe.EtchingTableRecipe;
+import net.revilodev.runic.runes.UniqueRuneSources;
 import net.revilodev.runic.stat.RuneStatType;
 
 import java.util.ArrayList;
@@ -44,6 +45,9 @@ public final class RunicEtchingRecipeProvider extends RecipeProvider {
         ItemStack result = new ItemStack(itemOrThrow(RunicMod.MOD_ID, "etching"), 1);
 
         for (RuneStatType stat : RuneStatType.values()) {
+            if (UniqueRuneSources.isUniqueEtchingStat(stat)) {
+                continue;
+            }
             ResourceLocation id = ResourceLocation.fromNamespaceAndPath(RunicMod.MOD_ID, "etching_table/etchings/stats/" + stat.id());
             EtchingTableRecipe recipe = new EtchingTableRecipe(
                     statBase,
@@ -60,7 +64,7 @@ public final class RunicEtchingRecipeProvider extends RecipeProvider {
         effects.sort(Comparator.comparing(ResourceLocation::toString));
 
         for (ResourceLocation effectId : effects) {
-            if (DISABLED_EFFECT_ETCHING_RECIPES.contains(effectId)) {
+            if (DISABLED_EFFECT_ETCHING_RECIPES.contains(effectId) || UniqueRuneSources.isUniqueEtchingEffect(effectId)) {
                 continue;
             }
 

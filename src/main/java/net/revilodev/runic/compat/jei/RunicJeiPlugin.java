@@ -20,8 +20,12 @@ import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.revilodev.runic.RunicMod;
 import net.revilodev.runic.block.ModBlocks;
+import net.revilodev.runic.item.ModItems;
 import net.revilodev.runic.item.custom.EtchingItem;
 import net.revilodev.runic.item.custom.RuneItem;
+import net.revilodev.runic.mythic.MythicRuneRegistry;
+import net.revilodev.runic.relic.RelicRegistry;
+import net.revilodev.runic.runes.UniqueRuneSources;
 import net.revilodev.runic.recipe.EtchingTableRecipe;
 import net.revilodev.runic.recipe.ModRecipeTypes;
 import net.revilodev.runic.stat.RuneStatType;
@@ -57,6 +61,7 @@ public final class RunicJeiPlugin implements IModPlugin {
         }
 
         registerRuneInfo(registration);
+        registerRelicInfo(registration);
     }
 
     @Override
@@ -113,6 +118,35 @@ public final class RunicJeiPlugin implements IModPlugin {
                     desc
             );
         }
+
+        for (ResourceLocation id : MythicRuneRegistry.ids()) {
+            ItemStack stack = RuneItem.createMythicRune(id);
+            if (!stack.isEmpty()) {
+                registration.addIngredientInfo(
+                        List.of(stack),
+                        VanillaTypes.ITEM_STACK,
+                        Component.translatable("tooltip.runic.mythic_desc." + id.getPath().substring("mythic/".length()))
+                );
+            }
+        }
+    }
+
+    private static void registerRelicInfo(IRecipeRegistration registration) {
+        List<ItemStack> relics = List.of(
+                new ItemStack(ModItems.DRAGON_HEART.get()),
+                new ItemStack(ModItems.ELDER_GUARDIANS_EYE.get()),
+                new ItemStack(ModItems.WITHER_CHARGE.get()),
+                new ItemStack(ModItems.WARDENS_SOUL.get())
+        );
+
+        for (ItemStack stack : relics) {
+            ResourceLocation relicId = RelicRegistry.relicItemId(stack);
+            if (relicId == null) continue;
+
+            List<Component> lines = new ArrayList<>();
+            RelicRegistry.appendRelicItemTooltip(relicId, lines, true);
+            registration.addIngredientInfo(List.of(stack), VanillaTypes.ITEM_STACK, lines.toArray(Component[]::new));
+        }
     }
 
     private static List<ItemStack> buildRuneStacks(net.minecraft.core.Registry<Enchantment> registry) {
@@ -132,6 +166,11 @@ public final class RunicJeiPlugin implements IModPlugin {
             if (!stack.isEmpty()) out.add(stack);
         }
 
+        for (ResourceLocation id : MythicRuneRegistry.ids()) {
+            ItemStack stack = RuneItem.createMythicRune(id);
+            if (!stack.isEmpty()) out.add(stack);
+        }
+
         return out;
     }
 
@@ -139,11 +178,13 @@ public final class RunicJeiPlugin implements IModPlugin {
         List<ItemStack> out = new ArrayList<>();
 
         for (RuneStatType type : RuneStatType.values()) {
+            if (UniqueRuneSources.isUniqueEtchingStat(type)) continue;
             ItemStack stack = EtchingItem.createStatEtching(RandomSource.create(), type);
             if (!stack.isEmpty()) out.add(stack);
         }
 
         for (ResourceLocation id : RuneItem.allowedEffectIds()) {
+            if (UniqueRuneSources.isUniqueEtchingEffect(id)) continue;
             ResourceKey<Enchantment> key = ResourceKey.create(Registries.ENCHANTMENT, id);
             Holder<Enchantment> holder = registry.getHolder(key).orElse(null);
             if (holder == null) continue;

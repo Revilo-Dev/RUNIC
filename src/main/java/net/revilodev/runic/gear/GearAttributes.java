@@ -5,6 +5,8 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
+import net.revilodev.runic.RunicConfig;
+import net.revilodev.runic.mythic.MythicRuneRegistry;
 
 import java.util.EnumMap;
 import java.util.Map;
@@ -95,7 +97,20 @@ public final class GearAttributes {
     public static float ancientMultiplier(ItemStack stack) {
         int lvl = getLevel(stack, GearAttribute.ANCIENT);
         if (lvl <= 0) return 1.0F;
-        return 1.0F + (0.05F * lvl);
+        return 1.0F + ((float) RunicConfig.ancientEnhancementPowerBonusPercent() / 100.0F * lvl);
+    }
+
+    public static float harmonizedMultiplier(ItemStack stack) {
+        int lvl = getLevel(stack, GearAttribute.HARMONIZED);
+        if (lvl <= 0) return (float) MythicRuneRegistry.dominionSynergyMultiplier(stack);
+        return (1.0F + ((float) RunicConfig.harmonizedSynergyPowerBonusPercent() / 100.0F * lvl))
+                * (float) MythicRuneRegistry.dominionSynergyMultiplier(stack);
+    }
+
+    public static float enhancementMultiplier(ItemStack stack) {
+        return cursedMultiplier(stack)
+                * ancientMultiplier(stack)
+                * (float) MythicRuneRegistry.dominionMultiplier(stack);
     }
 
     public static float nextCurseChance(ItemStack stack, float baseChance) {

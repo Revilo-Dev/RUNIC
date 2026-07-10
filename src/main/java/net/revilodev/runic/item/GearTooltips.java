@@ -1,10 +1,12 @@
 package net.revilodev.runic.item;
 
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
@@ -13,10 +15,13 @@ import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.revilodev.runic.gear.GearAttribute;
 import net.revilodev.runic.gear.GearAttributes;
+import net.revilodev.runic.gear.RunicItemData;
 import net.revilodev.runic.item.custom.EtchingItem;
 import net.revilodev.runic.item.custom.RuneItem;
 import net.revilodev.runic.loot.rarity.EnhancementRarities;
 import net.revilodev.runic.loot.rarity.EnhancementRarity;
+import net.revilodev.runic.mythic.MythicRuneRegistry;
+import net.revilodev.runic.relic.RelicRegistry;
 import net.revilodev.runic.runes.RuneSlots;
 import net.revilodev.runic.stat.RuneStatType;
 import net.revilodev.runic.stat.RuneStats;
@@ -45,11 +50,16 @@ public final class GearTooltips {
 
         RuneStats stats = RuneStats.get(stack);
         boolean hasRunicStats = stats != null && !stats.isEmpty();
-        List<Component> runicStats = hasRunicStats
-                ? buildStatLines(stats, showDetails)
-                : List.of();
+        List<Component> runicStats = hasRunicStats ? buildStatLines(stats, showDetails) : List.of();
 
         List<Component> enchLines = buildEnchantmentLines(stack, showDetails);
+        List<Component> synergyLines = buildSynergyLines(stack, showDetails);
+        List<Component> relicLines = buildRelicLines(stack, showDetails);
+        List<Component> mythicLines = MythicRuneRegistry.buildTooltip(stack, showDetails || Screen.hasShiftDown());
+        List<Component> slots = buildRuneSlots(stack);
+        List<Component> updateFive = buildUpdateFiveLines(stack);
+        boolean hasAttributes = !GearAttributes.getAll(stack).isEmpty();
+        List<Component> attrs = buildAttributeIndicators(stack, showDetails);
 
         int insertAt = afterVanillaStatLines(tooltip);
 
@@ -58,35 +68,50 @@ public final class GearTooltips {
             insertAt++;
         }
 
-        if (hasRunicStats) {
-            tooltip.add(insertAt, Component.literal("Stats:").withStyle(ChatFormatting.GRAY));
-            insertAt++;
-            tooltip.addAll(insertAt, runicStats);
-            insertAt += runicStats.size();
-        }
-
-        if (!enchLines.isEmpty()) {
-            tooltip.add(insertAt, Component.literal("Enchants:").withStyle(ChatFormatting.GRAY));
-            insertAt++;
-            tooltip.addAll(insertAt, enchLines);
-            insertAt += enchLines.size();
-        }
-
-        List<Component> slots = buildRuneSlots(stack);
         if (!slots.isEmpty()) {
             tooltip.addAll(insertAt, slots);
             insertAt += slots.size();
         }
 
-        boolean hasAttributes = !GearAttributes.getAll(stack).isEmpty();
-        List<Component> attrs = buildAttributeIndicators(stack, showDetails);
+        if (hasRunicStats || !enchLines.isEmpty() || !synergyLines.isEmpty() || !mythicLines.isEmpty()) {
+            tooltip.add(insertAt, Component.translatable("tooltip.runic.enhancements_header").withStyle(ChatFormatting.GRAY));
+            insertAt++;
+
+            if (!synergyLines.isEmpty()) {
+                tooltip.addAll(insertAt, synergyLines);
+                insertAt += synergyLines.size();
+            }
+            if (hasRunicStats) {
+                tooltip.addAll(insertAt, runicStats);
+                insertAt += runicStats.size();
+            }
+            if (!enchLines.isEmpty()) {
+                tooltip.addAll(insertAt, enchLines);
+                insertAt += enchLines.size();
+            }
+            if (!mythicLines.isEmpty()) {
+                tooltip.addAll(insertAt, mythicLines);
+                insertAt += mythicLines.size();
+            }
+        }
+
+        if (!relicLines.isEmpty()) {
+            tooltip.addAll(insertAt, relicLines);
+            insertAt += relicLines.size();
+        }
+
+        if (!updateFive.isEmpty()) {
+            tooltip.addAll(insertAt, updateFive);
+            insertAt += updateFive.size();
+        }
+
         if (!attrs.isEmpty()) {
             tooltip.addAll(insertAt, attrs);
             insertAt += attrs.size();
         }
 
-        if (!showDetails && (hasRunicStats || !enchLines.isEmpty() || hasAttributes)) {
-            tooltip.add(insertAt, Component.literal("(Ctrl for details)").withStyle(ChatFormatting.DARK_GRAY));
+        if (!showDetails && (hasRunicStats || !enchLines.isEmpty() || !synergyLines.isEmpty() || !mythicLines.isEmpty() || hasAttributes || !relicLines.isEmpty())) {
+            tooltip.add(insertAt, Component.translatable("tooltip.runic.details_hint").withStyle(ChatFormatting.DARK_GRAY));
         }
 
         return true;
@@ -113,7 +138,13 @@ public final class GearTooltips {
         RuneStats stats = RuneStats.get(stack);
         if (stats != null && !stats.isEmpty()) return true;
 
-        return !GearAttributes.getAll(stack).isEmpty();
+        return !GearAttributes.getAll(stack).isEmpty()
+                || RunicItemData.getCorruption(stack) > 0
+                || RunicItemData.getSynergyPotential(stack) > 0
+                || !RunicItemData.getSynergies(stack).isEmpty()
+                || !RunicItemData.getMythicRunes(stack).isEmpty()
+                || RunicItemData.hasRelicSocket(stack)
+                || RunicItemData.hasRelic(stack);
     }
 
     private static int findFirstVanillaStatLine(List<Component> tooltip) {
@@ -301,10 +332,68 @@ public final class GearTooltips {
         for (int i = 0; i < u; i++) sb.append(SLOT_FILLED);
         for (int i = 0; i < rem; i++) sb.append(SLOT_EMPTY);
 
-        return List.of(
-                Component.literal("Rune Slots: ").withStyle(ChatFormatting.GRAY)
-                        .append(Component.literal(sb.toString()).withStyle(ChatFormatting.WHITE))
-        );
+        return List.of(Component.translatable("tooltip.runic.enhancement_slots", used, cap)
+                .withStyle(ChatFormatting.GRAY)
+                .append(Component.literal(" "))
+                .append(Component.literal(sb.toString()).withStyle(ChatFormatting.WHITE)));
+    }
+
+    private static List<Component> buildSynergyLines(ItemStack stack, boolean showDetails) {
+        List<ResourceLocation> synergies = RunicItemData.getSynergies(stack);
+        if (synergies.isEmpty()) return List.of();
+        List<Component> out = new ArrayList<>();
+        for (ResourceLocation id : synergies) {
+            if (!id.getPath().startsWith("synergy/")) continue;
+            String path = id.getPath().substring("synergy/".length());
+            out.add(Component.literal("  ")
+                    .append(Component.translatable("tooltip.runic.synergy." + path).withStyle(ChatFormatting.LIGHT_PURPLE)));
+            if (showDetails) {
+                out.add(Component.literal("  ")
+                        .append(Component.translatable("tooltip.runic.synergy_enhancement").withStyle(ChatFormatting.DARK_PURPLE)));
+                out.add(Component.literal("  ")
+                        .append(Component.translatable("tooltip.runic.category_line", Component.translatable("tooltip.runic.category.synergy"))
+                                .withStyle(ChatFormatting.LIGHT_PURPLE)));
+                out.add(Component.literal("  ")
+                        .append(Component.translatable("tooltip.runic.synergy_desc." + path).withStyle(ChatFormatting.DARK_GRAY)));
+            }
+        }
+        return out;
+    }
+
+    private static List<Component> buildUpdateFiveLines(ItemStack stack) {
+        List<Component> out = new ArrayList<>();
+        if (RunicItemData.isExhausted(stack)) {
+            out.add(Component.translatable("tooltip.runic.attribute.exhausted").withStyle(ChatFormatting.DARK_RED));
+            out.add(Component.translatable("tooltip.runic.attribute_desc.exhausted").withStyle(ChatFormatting.GRAY));
+        }
+        int corruption = RunicItemData.getCorruption(stack);
+        if (corruption > 0 || RunicItemData.isExhausted(stack)) {
+            out.add(Component.translatable("tooltip.runic.corruption_band_line",
+                    corruption,
+                    RunicItemData.getCorruptionBand(stack).displayName()).withStyle(ChatFormatting.DARK_PURPLE));
+        }
+
+        int potential = RunicItemData.getSynergyPotential(stack);
+        if (potential > 0) {
+            out.add(Component.translatable("tooltip.runic.synergy_potential", toRoman(potential)).withStyle(ChatFormatting.LIGHT_PURPLE));
+            int chance = (int) Math.round(RunicItemData.getSynergyChance(stack) * 100.0D);
+            out.add(Component.translatable("tooltip.runic.synergy_chance", chance).withStyle(ChatFormatting.GRAY));
+        }
+        return out;
+    }
+
+    private static List<Component> buildRelicLines(ItemStack stack, boolean showDetails) {
+        List<Component> relicLines = RelicRegistry.buildGearTooltipLines(stack, showDetails || Screen.hasShiftDown());
+        if (!relicLines.isEmpty() && RunicItemData.hasRelic(stack) && Minecraft.getInstance().player != null) {
+            ResourceLocation relicId = RunicItemData.getRelicId(stack);
+            if (relicId != null) {
+                relicLines = new ArrayList<>(relicLines);
+                relicLines.add(Math.min(3, relicLines.size()), Component.translatable("tooltip.runic.relic_set",
+                        RelicRegistry.countEquippedRelics(Minecraft.getInstance().player, relicId),
+                        net.revilodev.runic.RunicConfig.relicFullSetRequiredCount()).withStyle(ChatFormatting.BLUE));
+            }
+        }
+        return relicLines;
     }
 
     private static List<Component> buildAttributeIndicators(ItemStack stack, boolean showDetails) {
@@ -312,7 +401,7 @@ public final class GearTooltips {
         if (attrs.isEmpty()) return List.of();
 
         List<Component> out = new ArrayList<>();
-        out.add(Component.literal("Attributes:").withStyle(ChatFormatting.GRAY));
+        out.add(Component.translatable("tooltip.runic.attributes_header").withStyle(ChatFormatting.GRAY));
 
         for (GearAttribute attr : GearAttribute.values()) {
             int lvl = attrs.getOrDefault(attr, 0);
@@ -329,21 +418,28 @@ public final class GearTooltips {
 
             if (showDetails) {
                 out.add(Component.literal("  ")
-                        .append(Component.literal(attributeDescription(attr)).withStyle(ChatFormatting.DARK_GRAY)));
+                        .append(attributeDescription(attr).withStyle(ChatFormatting.DARK_GRAY)));
             }
         }
 
         return out;
     }
 
-    private static String attributeDescription(GearAttribute attr) {
+    private static MutableComponent attributeDescription(GearAttribute attr) {
         return switch (attr) {
-            case CURSED -> "Reduces all runic stat values by 5% per stack.";
-            case INSTABLE -> "Raises forging risk and weakens future rerolls.";
-            case NEGATIVE -> "Reduces effective rune slot capacity by 1 per stack.";
-            case SEALED -> "Prevents further modifications at the Artisan's Workbench.";
-            case ANCIENT -> "Boosts all rune power on the item by 5% per stack.";
-            case BRITTLE -> "This item loses durability 10% faster.";
+            case CURSED -> Component.literal("Reduces all runic stat values by 5% per stack.");
+            case INSTABLE -> Component.literal("Raises forging risk and weakens future rerolls.");
+            case NEGATIVE -> Component.literal("Reduces effective rune slot capacity by 1 per stack.");
+            case SEALED -> Component.literal("Prevents further modifications at the Artisan's Workbench.");
+            case ANCIENT -> Component.literal("Boosts all rune power on the item by 5% per stack.");
+            case BRITTLE -> Component.literal("This item loses durability 10% faster.");
+            case FRACTURED -> Component.translatable("tooltip.runic.attribute_desc.fractured");
+            case EXHAUSTED -> Component.translatable("tooltip.runic.attribute_desc.exhausted");
+            case OVERFORGED -> Component.translatable("tooltip.runic.attribute_desc.overforged");
+            case CHAOTIC -> Component.translatable("tooltip.runic.attribute_desc.chaotic");
+            case REINFORCED -> Component.translatable("tooltip.runic.attribute_desc.reinforced");
+            case TEMPERED -> Component.translatable("tooltip.runic.attribute_desc.tempered");
+            case HARMONIZED -> Component.translatable("tooltip.runic.attribute_desc.harmonized");
         };
     }
 
@@ -405,7 +501,7 @@ public final class GearTooltips {
             case DRAW_SPEED -> "Increases bow draw speed.";
             case TOUGHNESS -> "Increases toughness.";
             case FREEZING_CHANCE -> "Chance to apply freezing.";
-            case LEECHING_CHANCE -> "Chance to leach 10% max health.";
+            case LEECHING_CHANCE -> "Chance to leach 10% max health on critical hit.";
             case FANGS -> "Chance to summon evoker fangs on hit.";
             case STONE -> "Gain temporary resistance after a heavy hit.";
             case AEGIS -> "Chance to negate an incoming hit.";

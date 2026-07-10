@@ -16,6 +16,8 @@ import net.revilodev.runic.item.custom.EtchingItem;
 import net.revilodev.runic.item.custom.RuneItem;
 import net.revilodev.runic.loot.rarity.EnhancementRarities;
 import net.revilodev.runic.loot.rarity.EnhancementRarity;
+import net.revilodev.runic.mythic.MythicRuneDefinition;
+import net.revilodev.runic.mythic.MythicRuneRegistry;
 import net.revilodev.runic.stat.RuneStatType;
 import net.revilodev.runic.stat.RuneStats;
 
@@ -39,6 +41,10 @@ public final class EnhancementToolTips {
 
         RuneStats stats = RuneStats.get(stack);
         boolean hasStats = stats != null && !stats.isEmpty();
+        if (MythicRuneRegistry.isMythicRune(stack)) {
+            appendMythicRune(tooltip, stack);
+            return true;
+        }
 
         List<EnchLine> enchLines = collectEnchantments(stack);
         boolean hasEnchants = !enchLines.isEmpty();
@@ -88,6 +94,7 @@ public final class EnhancementToolTips {
             }
 
             out.add(rarityLine(rarity));
+            out.add(EnhancementCategory.forStat(type).line());
             out.add(rangeLine(range));
         }
 
@@ -136,6 +143,7 @@ public final class EnhancementToolTips {
             }
 
             out.add(rarityLine(e.rarity));
+            out.add(EnhancementCategory.forEnchantment(e.id).line());
 
             String roman = toRoman(e.level);
             if (!roman.isEmpty()) {
@@ -146,6 +154,24 @@ public final class EnhancementToolTips {
     }
 
     private record EnchLine(Component name, int level, EnhancementRarity rarity, ResourceLocation id) {}
+
+    private static void appendMythicRune(List<Component> tooltip, ItemStack stack) {
+        ResourceLocation id = MythicRuneRegistry.getItemRuneId(stack);
+        MythicRuneDefinition definition = MythicRuneRegistry.get(id);
+        if (definition == null) {
+            tooltip.add(Component.translatable("tooltip.runic.mythic_unknown").withStyle(ChatFormatting.RED));
+            tooltip.add(rarityLine(EnhancementRarity.MYTHIC));
+            tooltip.add(EnhancementCategory.FORBIDDEN.line());
+            return;
+        }
+
+        tooltip.add(Component.translatable(definition.translationKey()).withStyle(ChatFormatting.RED));
+        if (Screen.hasAltDown()) {
+            tooltip.add(Component.translatable("tooltip.runic.mythic_desc." + id.getPath().substring("mythic/".length())).withStyle(ChatFormatting.DARK_GRAY));
+        }
+        tooltip.add(rarityLine(EnhancementRarity.MYTHIC));
+        tooltip.add(EnhancementCategory.FORBIDDEN.line());
+    }
 
     private static Component rarityLine(EnhancementRarity rarity) {
         String label = titleize(rarity.key());
@@ -227,7 +253,7 @@ public final class EnhancementToolTips {
             case DRAW_SPEED -> "Increases bow draw speed.";
             case TOUGHNESS -> "Increases toughness.";
             case FREEZING_CHANCE -> "Chance to apply freezing.";
-            case LEECHING_CHANCE -> "Chance to leach 10% max health.";
+            case LEECHING_CHANCE -> "Chance to leach 10% max health on critical hit.";
             case FANGS -> "Chance to summon evoker fangs on hit.";
             case STONE -> "Gain temporary resistance after a heavy hit.";
             case AEGIS -> "Chance to negate an incoming hit.";

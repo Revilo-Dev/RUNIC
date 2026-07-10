@@ -11,7 +11,9 @@ import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.revilodev.runic.RunicMod;
 import net.revilodev.runic.item.custom.EtchingItem;
+import net.revilodev.runic.item.custom.RelicItem;
 import net.revilodev.runic.item.custom.RuneItem;
+import net.revilodev.runic.relic.RelicRegistry;
 
 import java.util.List;
 
@@ -114,6 +116,49 @@ public final class ModItems {
                     tooltip.add(Component.translatable("tooltip.runic.extraction_inscription").withStyle(ChatFormatting.GRAY));
                 }
             });
+
+    public static final DeferredHolder<Item, Item> RESONANCE_INSCRIPTION =
+            ITEMS.register("resonance_inscription", () -> new Item(new Item.Properties().stacksTo(64)) {
+                @Override
+                public void appendHoverText(ItemStack stack, TooltipContext ctx, List<Component> tooltip, TooltipFlag flag) {
+                    tooltip.add(Component.literal("Apply in an Artisan's Workbench").withStyle(ChatFormatting.DARK_GRAY));
+                    tooltip.add(Component.translatable("tooltip.runic.resonance_inscription").withStyle(ChatFormatting.GRAY));
+                }
+            });
+
+    public static final DeferredHolder<Item, Item> PURIFICATION_INSCRIPTION =
+            ITEMS.register("purification_inscription", () -> inscription("tooltip.runic.purification_inscription"));
+
+    public static final DeferredHolder<Item, Item> STABILIZATION_INSCRIPTION =
+            ITEMS.register("stabilization_inscription", () -> inscription("tooltip.runic.stabilization_inscription"));
+
+    public static final DeferredHolder<Item, Item> TEMPERING_INSCRIPTION =
+            ITEMS.register("tempering_inscription", () -> inscription("tooltip.runic.tempering_inscription"));
+
+    public static final DeferredHolder<Item, Item> RELIC_SOCKET_INSCRIPTION =
+            ITEMS.register("relic_socket_inscription", () -> inscription("tooltip.runic.relic_socket_inscription"));
+
+    public static final DeferredHolder<Item, RelicItem> DRAGON_HEART =
+            ITEMS.register("dragon_heart", () -> new RelicItem(new Item.Properties().stacksTo(16), RelicRegistry.DRAGON_HEART));
+
+    public static final DeferredHolder<Item, RelicItem> ELDER_GUARDIANS_EYE =
+            ITEMS.register("elder_guardians_eye", () -> new RelicItem(new Item.Properties().stacksTo(16), RelicRegistry.ELDER_GUARDIANS_EYE));
+
+    public static final DeferredHolder<Item, RelicItem> WITHER_CHARGE =
+            ITEMS.register("wither_charge", () -> new RelicItem(new Item.Properties().stacksTo(16), RelicRegistry.WITHER_CHARGE));
+
+    public static final DeferredHolder<Item, RelicItem> WARDENS_SOUL =
+            ITEMS.register("wardens_soul", () -> new RelicItem(new Item.Properties().stacksTo(16), RelicRegistry.WARDENS_SOUL));
+
+    private static Item inscription(String tooltipKey) {
+        return new Item(new Item.Properties().stacksTo(64)) {
+            @Override
+            public void appendHoverText(ItemStack stack, TooltipContext ctx, List<Component> tooltip, TooltipFlag flag) {
+                tooltip.add(Component.literal("Apply in an Artisan's Workbench").withStyle(ChatFormatting.DARK_GRAY));
+                tooltip.add(Component.translatable(tooltipKey).withStyle(ChatFormatting.GRAY));
+            }
+        };
+    }
 
     public static void register(IEventBus bus) {
         ITEMS.register(bus);

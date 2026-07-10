@@ -3,11 +3,14 @@ package net.revilodev.runic.screen.custom;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -27,17 +30,28 @@ import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.revilodev.runic.RunicConfig;
+import net.revilodev.runic.RunicMod;
 import net.revilodev.runic.block.ModBlocks;
 import net.revilodev.runic.event.EnchantBlacklist;
+import net.revilodev.runic.gear.CorruptionBand;
 import net.revilodev.runic.gear.GearAttribute;
 import net.revilodev.runic.gear.GearAttributes;
+import net.revilodev.runic.gear.RunicItemData;
 import net.revilodev.runic.item.ModItems;
+import net.revilodev.runic.item.EnhancementCategory;
 import net.revilodev.runic.item.custom.EtchingItem;
+import net.revilodev.runic.item.custom.RelicItem;
 import net.revilodev.runic.item.custom.RuneItem;
+import net.revilodev.runic.loot.rarity.EnhancementRarity;
+import net.revilodev.runic.loot.rarity.EnhancementRarities;
+import net.revilodev.runic.relic.RelicDefinition;
+import net.revilodev.runic.relic.RelicRegistry;
 import net.revilodev.runic.registry.ModDataComponents;
+import net.revilodev.runic.mythic.MythicRuneRegistry;
 import net.revilodev.runic.runes.RuneSlots;
 import net.revilodev.runic.stat.RuneStatType;
 import net.revilodev.runic.stat.RuneStats;
+import net.revilodev.runic.synergy.SynergyRegistry;
 
 import java.util.*;
 
@@ -46,6 +60,7 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
 
     private static final String ROOT = "runic";
     private static final String PREVIEW_DELTA = "preview_delta";
+    private static final String PREVIEW_INVALID = "preview_invalid";
     private static final String LEECHING_FROM_ETCHING = "leeching_from_etching";
     private static final int MAX_ATTR_LEVEL = 10;
 
@@ -139,13 +154,22 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
 
         ItemStack outView = this.preview.getItem(0);
         if (outView.isEmpty()) return false;
+        if (isPreviewInvalid(outView)) {
+            String failureKey = getPreviewFailureKey(outView);
+            if (failureKey != null && !failureKey.isBlank()) {
+                player.displayClientMessage(net.minecraft.network.chat.Component.translatable(failureKey), true);
+            }
+            return false;
+        }
 
         ItemStack enh = this.input.getItem(0);
         ItemStack gear = this.input.getItem(1);
         if (enh.isEmpty() || gear.isEmpty()) return false;
 
-        if (GearAttributes.has(gear, GearAttribute.SEALED)) return false;
-        if (isInscription(enh) && !isCursedApplyingInscription(enh) && anyAttrAtMax(gear)) return false;
+        if (RunicItemData.isExhausted(gear)) {
+            player.displayClientMessage(net.minecraft.network.chat.Component.translatable("message.runic.exhausted"), true);
+            return false;
+        }
 
         if (enh.is(ModItems.EXTRACTION_INSCRIPTION.get())) {
             ItemStack extracted = createExtractionEtching(gear);
@@ -156,8 +180,13 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
             }
         }
 
-        ItemStack applied = outView.copy();
+        ItemStack applied = gear.copy();
+        applied.setCount(1);
+        applyRuneOnTake(applied, enh, true);
         stripPreviewDelta(applied);
+        if (ItemStack.isSameItemSameComponents(gear, applied) && gear.getDamageValue() == applied.getDamageValue()) {
+            return false;
+        }
 
         this.input.setItem(1, applied);
         consumeEnhancement();
@@ -200,7 +229,9 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
     }
 
     private static boolean isEnhancementItem(ItemStack stack) {
-        return stack.getItem() instanceof RuneItem || stack.getItem() instanceof EtchingItem;
+        return stack.getItem() instanceof RuneItem
+                || stack.getItem() instanceof EtchingItem
+                || stack.getItem() instanceof RelicItem;
     }
 
     private static boolean isEtching(ItemStack stack) {
@@ -215,12 +246,12 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
                 || stack.is(ModItems.REROLL_INSCRIPTION.get())
                 || stack.is(ModItems.CURSED_INSCRIPTION.get())
                 || stack.is(ModItems.WILD_INSCRIPTION.get())
-                || stack.is(ModItems.EXTRACTION_INSCRIPTION.get());
-    }
-
-    private static boolean isCursedApplyingInscription(ItemStack stack) {
-        return stack.is(ModItems.CURSED_INSCRIPTION.get())
-                || stack.is(ModItems.WILD_INSCRIPTION.get());
+                || stack.is(ModItems.EXTRACTION_INSCRIPTION.get())
+                || stack.is(ModItems.RESONANCE_INSCRIPTION.get())
+                || stack.is(ModItems.PURIFICATION_INSCRIPTION.get())
+                || stack.is(ModItems.STABILIZATION_INSCRIPTION.get())
+                || stack.is(ModItems.TEMPERING_INSCRIPTION.get())
+                || stack.is(ModItems.RELIC_SOCKET_INSCRIPTION.get());
     }
 
     private boolean anyAttrAtMax(ItemStack stack) {
@@ -329,7 +360,7 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
     }
 
     private boolean canApplyNullification(ItemStack target) {
-        if (GearAttributes.getLevel(target, GearAttribute.NEGATIVE) >= MAX_ATTR_LEVEL) return false;
+        if (GearAttributes.has(target, GearAttribute.SEALED)) return false;
 
         boolean hasAnyEnchants =
                 !target.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY).isEmpty()
@@ -348,7 +379,9 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
             }
         }
 
-        return hasAnyEnchants || hasUsedSlots || hasAnyStats;
+        boolean hasSynergies = RunicConfig.nullificationInscriptionCanRemoveSynergies() && !RunicItemData.getSynergies(target).isEmpty();
+
+        return hasAnyEnchants || hasUsedSlots || hasAnyStats || hasSynergies;
     }
 
     private boolean canApplyUpgrade(ItemStack target) {
@@ -392,7 +425,7 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
     private boolean canApplyRepair(ItemStack target) {
         if (!target.isDamageableItem()) return false;
         if (target.getMaxDamage() <= 1) return false;
-        return target.getDamageValue() > 0;
+        return RunicItemData.getCorruption(target) > 0;
     }
 
     private boolean canApplyExpansion(ItemStack target) {
@@ -412,31 +445,58 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
     }
 
     private boolean canApplyCursed(ItemStack target) {
-        return GearAttributes.getLevel(target, GearAttribute.CURSED) < MAX_ATTR_LEVEL;
+        if (GearAttributes.getLevel(target, GearAttribute.CURSED) >= MAX_ATTR_LEVEL) return false;
+        RuneStats st = RuneStats.get(target);
+        return st != null && !st.isEmpty();
     }
 
     private boolean canApplyWild(ItemStack target) {
-        return GearAttributes.getLevel(target, GearAttribute.CURSED) < MAX_ATTR_LEVEL;
+        List<ResourceLocation> refs = new ArrayList<>(SynergyRegistry.EnhancementRefs.collectApplied(target));
+        if (!RunicConfig.wildInscriptionCanMutateSynergies()) refs.removeIf(SynergyRegistry::isSynergy);
+        return !refs.isEmpty();
     }
 
     private boolean canApplyExtraction(ItemStack target) {
-        if (GearAttributes.getLevel(target, GearAttribute.SEALED) >= MAX_ATTR_LEVEL) return false;
+        if (GearAttributes.has(target, GearAttribute.SEALED)) return false;
+        return selectExtractionTarget(target) != null;
+    }
 
-        if (!target.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY).isEmpty()) return true;
+    private boolean canApplyResonance(ItemStack target) {
+        return !RunicItemData.isExhausted(target)
+                && (!RuneSlots.enabled() || RuneSlots.capacity(target) > 0)
+                && RunicItemData.getSynergyPotential(target) < RunicConfig.maxSynergyPotential();
+    }
 
-        RuneStats st = RuneStats.get(target);
-        if (st != null && !st.isEmpty()) {
-            for (float v : st.view().values()) if (v != 0.0F) return true;
-        }
+    private boolean canApplyPurification(ItemStack target) {
+        return removableNegativeAttribute(target) != null;
+    }
 
-        return false;
+    private boolean canApplyStabilization(ItemStack target) {
+        return GearAttributes.has(target, GearAttribute.INSTABLE);
+    }
+
+    private boolean canApplyTempering(ItemStack target) {
+        return GearAttributes.getLevel(target, GearAttribute.REINFORCED) < MAX_ATTR_LEVEL;
+    }
+
+    private boolean canApplyRelicSocket(ItemStack target) {
+        return !RunicItemData.hasRelicSocket(target);
     }
 
     private ItemStack computePreview(ItemStack gear, ItemStack enhancement) {
         if (gear.isEmpty() || enhancement.isEmpty()) return ItemStack.EMPTY;
         if (!isEnhancementItem(enhancement) && !isInscription(enhancement)) return ItemStack.EMPTY;
-        if (GearAttributes.has(gear, GearAttribute.SEALED)) return ItemStack.EMPTY;
-        if (isInscription(enhancement) && !isCursedApplyingInscription(enhancement) && anyAttrAtMax(gear)) return ItemStack.EMPTY;
+        if (enhancement.getItem() instanceof RelicItem) return computeRelicPreview(gear, enhancement);
+        if (RunicItemData.isExhausted(gear)) return ItemStack.EMPTY;
+        if (MythicRuneRegistry.isMythicRune(enhancement) && !RunicConfig.mythicRunesEnabled()) {
+            return createInvalidPreview(gear, "message.runic.mythic_disabled");
+        }
+        if (MythicRuneRegistry.isMythicRune(enhancement)) {
+            ResourceLocation mythicId = MythicRuneRegistry.getItemRuneId(enhancement);
+            if (mythicId != null && RunicItemData.hasMythicRune(gear, mythicId)) {
+                return createInvalidPreview(gear, "message.runic.mythic_already_present");
+            }
+        }
 
         RuneSlots.syncUsedToContents(gear);
 
@@ -448,28 +508,43 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
 
         if (enhancement.is(ModItems.REPAIR_INSCRIPTION.get())) {
             if (!canApplyRepair(out)) return ItemStack.EMPTY;
-            applyRuneOnTake(out, enhancement);
+            applyRuneOnTake(out, enhancement, false);
         } else if (enhancement.is(ModItems.EXPANSION_INSCRIPTION.get())) {
             if (!canApplyExpansion(out)) return ItemStack.EMPTY;
-            applyRuneOnTake(out, enhancement);
+            applyRuneOnTake(out, enhancement, false);
         } else if (enhancement.is(ModItems.NULLIFICATION_INSCRIPTION.get())) {
             if (!canApplyNullification(out)) return ItemStack.EMPTY;
-            applyRuneOnTake(out, enhancement);
+            applyRuneOnTake(out, enhancement, false);
         } else if (enhancement.is(ModItems.UPGRADE_INSCRIPTION.get())) {
             if (!canApplyUpgrade(out)) return ItemStack.EMPTY;
-            applyRuneOnTake(out, enhancement);
+            applyRuneOnTake(out, enhancement, false);
         } else if (enhancement.is(ModItems.REROLL_INSCRIPTION.get())) {
             if (!canApplyReroll(out)) return ItemStack.EMPTY;
-            applyRuneOnTake(out, enhancement);
+            applyRuneOnTake(out, enhancement, false);
         } else if (enhancement.is(ModItems.CURSED_INSCRIPTION.get())) {
             if (!canApplyCursed(out)) return ItemStack.EMPTY;
-            applyRuneOnTake(out, enhancement);
+            applyRuneOnTake(out, enhancement, false);
         } else if (enhancement.is(ModItems.WILD_INSCRIPTION.get())) {
             if (!canApplyWild(out)) return ItemStack.EMPTY;
-            applyRuneOnTake(out, enhancement);
+            applyRuneOnTake(out, enhancement, false);
         } else if (enhancement.is(ModItems.EXTRACTION_INSCRIPTION.get())) {
             if (!canApplyExtraction(out)) return ItemStack.EMPTY;
-            applyRuneOnTake(out, enhancement);
+            applyRuneOnTake(out, enhancement, false);
+        } else if (enhancement.is(ModItems.RESONANCE_INSCRIPTION.get())) {
+            if (!canApplyResonance(out)) return ItemStack.EMPTY;
+            applyRuneOnTake(out, enhancement, false);
+        } else if (enhancement.is(ModItems.PURIFICATION_INSCRIPTION.get())) {
+            if (!canApplyPurification(out)) return ItemStack.EMPTY;
+            applyRuneOnTake(out, enhancement, false);
+        } else if (enhancement.is(ModItems.STABILIZATION_INSCRIPTION.get())) {
+            if (!canApplyStabilization(out)) return ItemStack.EMPTY;
+            applyRuneOnTake(out, enhancement, false);
+        } else if (enhancement.is(ModItems.TEMPERING_INSCRIPTION.get())) {
+            if (!canApplyTempering(out)) return ItemStack.EMPTY;
+            applyRuneOnTake(out, enhancement, false);
+        } else if (enhancement.is(ModItems.RELIC_SOCKET_INSCRIPTION.get())) {
+            if (!canApplyRelicSocket(out)) return ItemStack.EMPTY;
+            applyRuneOnTake(out, enhancement, false);
         } else {
             if (!isEnhancementItem(enhancement)) return ItemStack.EMPTY;
             if (effectiveRemaining(out) <= 0) return ItemStack.EMPTY;
@@ -483,13 +558,50 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
 
             if (!statApplicable && !effectApplicable) return ItemStack.EMPTY;
 
-            applyRuneOnTake(out, enhancement);
+            applyRuneOnTake(out, enhancement, false);
         }
 
         boolean unchanged = ItemStack.isSameItemSameComponents(base, out) && base.getDamageValue() == out.getDamageValue();
         if (unchanged) return ItemStack.EMPTY;
 
         writePreviewDelta(base, out);
+        if (!RunicItemData.isExhausted(base) && RunicItemData.isExhausted(out)) {
+            addPreviewFeedback(out, "warning.runic.this_will_exhaust");
+        }
+        return out;
+    }
+
+    private ItemStack computeRelicPreview(ItemStack gear, ItemStack relicStack) {
+        ItemStack base = gear.copy();
+        base.setCount(1);
+
+        ResourceLocation relicId = RelicRegistry.relicItemId(relicStack);
+        if (RunicItemData.isExhausted(gear)) {
+            return createInvalidPreview(base, "message.runic.exhausted");
+        }
+        if (!RelicRegistry.supportsRunicModification(gear)) {
+            return createInvalidPreview(base, "tooltip.runic.requires_empty_relic_socket");
+        }
+        if (!RunicItemData.hasRelicSocket(gear)) {
+            return createInvalidPreview(base, "message.runic.no_relic_socket");
+        }
+        if (RunicItemData.hasRelic(gear)) {
+            return createInvalidPreview(base, "message.runic.relic_socket_filled");
+        }
+        if (relicId == null || !RelicRegistry.canApplyTo(gear, relicId)) {
+            return createInvalidPreview(base, "tooltip.runic.requires_empty_relic_socket");
+        }
+
+        ItemStack out = gear.copy();
+        out.setCount(1);
+        if (!applyRelic(out, relicId)) {
+            return createInvalidPreview(base, "tooltip.runic.requires_empty_relic_socket");
+        }
+
+        writePreviewDelta(base, out);
+        if (!RunicItemData.isExhausted(base) && RunicItemData.isExhausted(out)) {
+            addPreviewFeedback(out, "warning.runic.this_will_exhaust");
+        }
         return out;
     }
 
@@ -507,6 +619,7 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
         CompoundTag root = getRootCopy(stack);
 
         root.remove(PREVIEW_DELTA);
+        root.remove(PREVIEW_INVALID);
 
         if (root.contains(ROOT, Tag.TAG_COMPOUND)) {
             CompoundTag runic = root.getCompound(ROOT);
@@ -516,6 +629,59 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
         }
 
         setRoot(stack, root);
+    }
+
+    private boolean applyRelic(ItemStack target, ResourceLocation relicId) {
+        RelicDefinition definition = RelicRegistry.get(relicId);
+        if (definition == null || !RunicItemData.hasEmptyRelicSocket(target) || !definition.canApplyTo(target)) {
+            return false;
+        }
+
+        RunicItemData.setRelic(target, relicId);
+        RunicItemData.addCorruption(target, definition.corruptionValue());
+        updateGlintAfter(target);
+        return true;
+    }
+
+    private ItemStack createInvalidPreview(ItemStack base, String failureKey) {
+        ItemStack preview = base.copy();
+        CompoundTag delta = new CompoundTag();
+        delta.putString("failure_key", failureKey);
+
+        CompoundTag root = getRootCopy(preview);
+        root.put(PREVIEW_DELTA, delta);
+        root.putBoolean(PREVIEW_INVALID, true);
+
+        CompoundTag runic = root.contains(ROOT, Tag.TAG_COMPOUND) ? root.getCompound(ROOT) : new CompoundTag();
+        runic.put(PREVIEW_DELTA, delta);
+        root.put(ROOT, runic);
+        setRoot(preview, root);
+        return preview;
+    }
+
+    private void addPreviewFeedback(ItemStack preview, String warningKey) {
+        CompoundTag root = getRootCopy(preview);
+        CompoundTag delta = root.contains(PREVIEW_DELTA, Tag.TAG_COMPOUND) ? root.getCompound(PREVIEW_DELTA) : new CompoundTag();
+        delta.putString("warning_key", warningKey);
+        root.put(PREVIEW_DELTA, delta);
+
+        CompoundTag runic = root.contains(ROOT, Tag.TAG_COMPOUND) ? root.getCompound(ROOT) : new CompoundTag();
+        runic.put(PREVIEW_DELTA, delta);
+        root.put(ROOT, runic);
+        setRoot(preview, root);
+    }
+
+    private boolean isPreviewInvalid(ItemStack preview) {
+        return getRootCopy(preview).getBoolean(PREVIEW_INVALID);
+    }
+
+    private String getPreviewFailureKey(ItemStack preview) {
+        CompoundTag root = getRootCopy(preview);
+        if (!root.contains(PREVIEW_DELTA, Tag.TAG_COMPOUND)) {
+            return null;
+        }
+        CompoundTag delta = root.getCompound(PREVIEW_DELTA);
+        return delta.contains("failure_key", Tag.TAG_STRING) ? delta.getString("failure_key") : null;
     }
 
     private static void setLeechingSource(ItemStack stack, boolean fromEtching) {
@@ -582,6 +748,47 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
 
         int dUsed = RuneSlots.used(out) - RuneSlots.used(base);
         if (dUsed != 0) delta.putInt("slot_used", dUsed);
+
+        int dCorruption = RunicItemData.getCorruption(out) - RunicItemData.getCorruption(base);
+        if (dCorruption != 0) delta.putInt("corruption", dCorruption);
+        delta.putString("corruption_band", RunicItemData.getCorruptionBand(out).id());
+        if (RunicItemData.getCorruptionBand(out) == CorruptionBand.TAINTED) {
+            delta.putBoolean("corruption_risk_negative", true);
+        } else if (RunicItemData.getCorruptionBand(out) == CorruptionBand.CRITICAL) {
+            delta.putBoolean("corruption_risk_negative", true);
+        } else if (RunicItemData.getCorruptionBand(out) == CorruptionBand.CORRUPTED) {
+            delta.putBoolean("corruption_risk_negative", true);
+            delta.putBoolean("corruption_risk_positive", true);
+        }
+
+        int dPotential = RunicItemData.getSynergyPotential(out) - RunicItemData.getSynergyPotential(base);
+        if (dPotential != 0) delta.putInt("synergy_potential", dPotential);
+
+        int dSynergies = RunicItemData.getSynergies(out).size() - RunicItemData.getSynergies(base).size();
+        if (dSynergies != 0) delta.putInt("synergies", dSynergies);
+
+        if (RunicItemData.hasRelicSocket(out) != RunicItemData.hasRelicSocket(base)) {
+            delta.putInt("relic_socket", RunicItemData.hasRelicSocket(out) ? 1 : -1);
+        }
+        if (!Objects.equals(RunicItemData.getRelicId(base), RunicItemData.getRelicId(out)) && RunicItemData.hasRelic(out)) {
+            ResourceLocation relicId = RunicItemData.getRelicId(out);
+            if (relicId != null) {
+                delta.putString("relic_id", relicId.toString());
+                RelicDefinition definition = RelicRegistry.get(relicId);
+                if (definition != null) {
+                    delta.putInt("relic_corruption", definition.corruptionValue());
+                    delta.putDouble("relic_durability_use", definition.durabilityUseIncreasePercentValue());
+                }
+            }
+        }
+        List<ResourceLocation> baseMythics = RunicItemData.getMythicRunes(base);
+        List<ResourceLocation> outMythics = RunicItemData.getMythicRunes(out);
+        if (outMythics.size() > baseMythics.size()) {
+            ResourceLocation added = outMythics.stream().filter(id -> !baseMythics.contains(id)).findFirst().orElse(null);
+            if (added != null) {
+                delta.putString("mythic_rune_id", added.toString());
+            }
+        }
 
         CompoundTag attrDelta = new CompoundTag();
         for (GearAttribute a : GearAttribute.values()) {
@@ -841,10 +1048,28 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
         return true;
     }
 
+    private static boolean reduceMaxDurabilityPercent(ItemStack stack, double percent) {
+        return reduceMaxDurability(stack, Math.max(0.0D, percent) / 100.0D);
+    }
+
+    private static void addInscriptionCorruption(ItemStack stack, int amount) {
+        int adjusted = Math.max(0, amount);
+        int tempered = GearAttributes.getLevel(stack, GearAttribute.TEMPERED);
+        if (tempered > 0) {
+            double reduction = (RunicConfig.temperedInscriptionCorruptionReductionPercent() / 100.0D) * tempered;
+            adjusted = Math.max(0, (int) Math.round(adjusted * Math.max(0.0D, 1.0D - reduction)));
+        }
+        RunicItemData.addCorruption(stack, adjusted);
+    }
+
     private void updateGlintAfter(ItemStack stack) {
         RuneStats stats = RuneStats.get(stack);
         ItemEnchantments ex = stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
-        if ((stats == null || stats.isEmpty()) && ex.isEmpty()) {
+        if ((stats == null || stats.isEmpty())
+                && ex.isEmpty()
+                && RunicItemData.getSynergies(stack).isEmpty()
+                && RunicItemData.getMythicRunes(stack).isEmpty()
+                && !RunicItemData.hasRelic(stack)) {
             stack.remove(DataComponents.ENCHANTMENT_GLINT_OVERRIDE);
         }
     }
@@ -855,8 +1080,15 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
         taken.remove(DataComponents.ENCHANTMENT_GLINT_OVERRIDE);
 
         RuneStats.set(taken, RuneStats.empty());
+        if (RunicConfig.nullificationInscriptionCanRemoveSynergies()) {
+            RunicItemData.clearSynergies(taken);
+        }
         clearLeechingSource(taken);
-        taken.set(ModDataComponents.RUNE_SLOTS_USED.get(), 0);
+        RuneSlots.syncUsedToContents(taken);
+        taken.set(ModDataComponents.RUNE_SLOTS_USED.get(), Math.min(RuneSlots.used(taken), RuneSlots.countAppliedEnhancements(taken)));
+        if (RunicConfig.nullificationInscriptionRemovesSlot()) {
+            RuneSlots.removeOneSlot(taken);
+        }
 
         updateGlintAfter(taken);
     }
@@ -912,11 +1144,11 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
     }
 
     private float powerAdjusted(ItemStack stack, float value) {
-        return value * GearAttributes.cursedMultiplier(stack) * GearAttributes.ancientMultiplier(stack);
+        return value * GearAttributes.enhancementMultiplier(stack);
     }
 
     public float powerMultiplierForPreview(ItemStack stack) {
-        return GearAttributes.cursedMultiplier(stack) * GearAttributes.ancientMultiplier(stack);
+        return GearAttributes.enhancementMultiplier(stack);
     }
 
     private boolean applyUpgrade(ItemStack taken) {
@@ -969,7 +1201,7 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
         int maxInc = allowed.getOrDefault(chosen, 0);
         if (maxInc < 1) return false;
 
-        int inc = 1 + RNG.nextInt(maxInc);
+        int inc = Math.max(1, Math.min(maxInc, (int) Math.round(RunicConfig.upgradeInscriptionStatIncreasePercent())));
 
         EnumMap<RuneStatType, Float> map = new EnumMap<>(RuneStatType.class);
         map.putAll(st.view());
@@ -980,14 +1212,13 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
         RuneStats.set(taken, new RuneStats(map));
         taken.set(DataComponents.DAMAGE, dmg + inc);
         taken.set(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, true);
+        GearAttributes.addLevel(taken, GearAttribute.OVERFORGED, 1);
 
         updateGlintAfter(taken);
         return true;
     }
 
     private boolean applyReroll(ItemStack taken) {
-        if (GearAttributes.getLevel(taken, GearAttribute.INSTABLE) >= MAX_ATTR_LEVEL) return false;
-
         RuneStats st = RuneStats.get(taken);
         if (st == null || st.isEmpty()) return false;
 
@@ -997,12 +1228,13 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
         }
         if (options.isEmpty()) return false;
 
-        GearAttributes.addLevel(taken, GearAttribute.INSTABLE, 1);
-
         RuneStatType chosen = options.get(RNG.nextInt(options.size()));
+        float oldValue = st.get(chosen);
         int shift = instableShift(taken);
         float base = rollBaseStat(chosen, false, shift);
         float val = powerAdjusted(taken, base);
+
+        if (Math.abs(val - oldValue) < 0.0001F) return false;
 
         EnumMap<RuneStatType, Float> map = new EnumMap<>(RuneStatType.class);
         map.putAll(st.view());
@@ -1010,6 +1242,9 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
 
         RuneStats.set(taken, new RuneStats(map));
         taken.set(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, true);
+        if (RunicConfig.rerollInscriptionAddUnstableOnHigherRoll() && val > oldValue) {
+            GearAttributes.addLevel(taken, GearAttribute.INSTABLE, 1);
+        }
 
         updateGlintAfter(taken);
         return true;
@@ -1031,7 +1266,7 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
             }
         }
 
-        float overChance = GearAttributes.nextCurseChance(taken, 0.50F);
+        float overChance = GearAttributes.nextCurseChance(taken, (float) RunicConfig.cursedInscriptionSuccessChance());
         if (canOver && RNG.nextFloat() < overChance) {
             List<RuneStatType> opts = new ArrayList<>();
             for (Map.Entry<RuneStatType, Float> e : st.view().entrySet()) {
@@ -1041,8 +1276,8 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
             if (opts.isEmpty()) return false;
 
             RuneStatType chosen = opts.get(RNG.nextInt(opts.size()));
-            float cap = chosen.cap();
-            float val = powerAdjusted(taken, cap * 1.10F);
+            float cur = st.get(chosen);
+            float val = cur + (float) RunicConfig.cursedInscriptionOverupgradePercent();
 
             EnumMap<RuneStatType, Float> map = new EnumMap<>(RuneStatType.class);
             map.putAll(st.view());
@@ -1050,6 +1285,8 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
 
             RuneStats.set(taken, new RuneStats(map));
             taken.set(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, true);
+            GearAttributes.addLevel(taken, GearAttribute.OVERFORGED, 1);
+            GearAttributes.addLevel(taken, GearAttribute.CURSED, 1);
 
             updateGlintAfter(taken);
             return true;
@@ -1060,65 +1297,161 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
             GearAttributes.addLevel(taken, GearAttribute.CURSED, 1);
             applyCursedDelta(taken, 1);
             GearAttributes.setCursedAppliedLevel(taken, Math.min(MAX_ATTR_LEVEL, before + 1));
+            if (RunicConfig.cursedInscriptionFailureAddsBrittle()) {
+                GearAttributes.addLevel(taken, GearAttribute.BRITTLE, 1);
+            }
             return true;
         }
     }
 
     private boolean applyWild(ItemStack taken) {
-        if (GearAttributes.getLevel(taken, GearAttribute.CURSED) >= MAX_ATTR_LEVEL) return false;
-
-        applyNullification(taken);
-
-        int before = GearAttributes.getLevel(taken, GearAttribute.CURSED);
-        if (before >= MAX_ATTR_LEVEL) return false;
-
-        GearAttributes.addLevel(taken, GearAttribute.CURSED, 1);
-        applyCursedDelta(taken, 1);
-
-        int cap = effectiveCapacity(taken);
-        if (cap <= 0) {
-            updateGlintAfter(taken);
-            return true;
-        }
-
-        int shift = instableShift(taken);
-
-        EnumMap<RuneStatType, Float> map = new EnumMap<>(RuneStatType.class);
-        List<RuneStatType> pool = new ArrayList<>(Arrays.asList(RuneStatType.values()));
-        Collections.shuffle(pool, RNG);
-
-        int applied = 0;
-        for (RuneStatType t : pool) {
-            if (applied >= cap) break;
-            if (!canApplyStatTo(taken, t)) continue;
-            float base = rollBaseStat(t, false, shift);
-            map.put(t, powerAdjusted(taken, base));
-            RuneSlots.tryConsumeSlot(taken);
-            applied++;
-        }
-
-        if (!map.isEmpty()) {
-            RuneStats.set(taken, new RuneStats(map));
-            if (map.containsKey(RuneStatType.LEECHING_CHANCE)) {
-                setLeechingSource(taken, false);
-            } else {
-                clearLeechingSource(taken);
-            }
-            taken.set(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, true);
-        }
-
+        if (!mutateOneEnhancement(taken)) return false;
+        GearAttributes.addLevel(taken, GearAttribute.CHAOTIC, 1);
         updateGlintAfter(taken);
+        return true;
+    }
+
+    private GearAttribute removableNegativeAttribute(ItemStack stack) {
+        List<GearAttribute> removable = List.of(
+                GearAttribute.BRITTLE,
+                GearAttribute.FRACTURED,
+                GearAttribute.INSTABLE,
+                GearAttribute.CHAOTIC,
+                GearAttribute.CURSED,
+                GearAttribute.OVERFORGED
+        );
+        for (GearAttribute attr : removable) {
+            if (GearAttributes.has(stack, attr)) return attr;
+        }
+        return null;
+    }
+
+    private boolean applyPurification(ItemStack taken) {
+        GearAttribute attr = removableNegativeAttribute(taken);
+        if (attr == null) return false;
+        GearAttributes.addLevel(taken, attr, -1);
+        if (taken.isDamageableItem() && this.level.random.nextDouble() < RunicConfig.purificationInscriptionDurabilityLossChance()) {
+            reduceMaxDurabilityPercent(taken, RunicConfig.purificationInscriptionMaxDurabilityLossPercent());
+        }
+        updateGlintAfter(taken);
+        return true;
+    }
+
+    private boolean applyStabilization(ItemStack taken) {
+        if (!GearAttributes.has(taken, GearAttribute.INSTABLE)) return false;
+        GearAttributes.addLevel(taken, GearAttribute.INSTABLE, -1);
+        if (RunicConfig.stabilizationInscriptionAddsBrittle()) {
+            GearAttributes.addLevel(taken, GearAttribute.BRITTLE, 1);
+        }
+        updateGlintAfter(taken);
+        return true;
+    }
+
+    private boolean applyTempering(ItemStack taken) {
+        if (GearAttributes.getLevel(taken, GearAttribute.REINFORCED) >= MAX_ATTR_LEVEL) return false;
+        GearAttributes.addLevel(taken, GearAttribute.REINFORCED, 1);
+        updateGlintAfter(taken);
+        return true;
+    }
+
+    private boolean applyRelicSocket(ItemStack taken) {
+        if (RunicItemData.hasRelicSocket(taken)) return false;
+        RunicItemData.setRelicSocket(taken, true);
+        if (RunicConfig.relicSocketInscriptionAddsBrittle()) {
+            GearAttributes.addLevel(taken, GearAttribute.BRITTLE, 1);
+        }
+        updateGlintAfter(taken);
+        return true;
+    }
+
+    private boolean mutateOneEnhancement(ItemStack taken) {
+        List<ResourceLocation> refs = new ArrayList<>(SynergyRegistry.EnhancementRefs.collectApplied(taken));
+        if (!RunicConfig.wildInscriptionCanMutateSynergies()) {
+            refs.removeIf(SynergyRegistry::isSynergy);
+        }
+        Collections.shuffle(refs, RNG);
+
+        for (ResourceLocation ref : refs) {
+            EnhancementCategory category = EnhancementCategory.getCategory(ref);
+            ResourceLocation replacement = randomReplacement(ref, category);
+            if (replacement == null) continue;
+
+            removeEnhancement(taken, ref);
+            if (replacement.getNamespace().equals(RunicMod.MOD_ID) && replacement.getPath().startsWith("stat/")) {
+                RuneStatType stat = RuneStatType.byId(replacement.getPath().substring("stat/".length()));
+                if (stat == null || !canApplyStatTo(taken, stat)) continue;
+                EnumMap<RuneStatType, Float> map = new EnumMap<>(RuneStatType.class);
+                RuneStats current = RuneStats.get(taken);
+                if (current != null && !current.isEmpty()) map.putAll(current.view());
+                map.put(stat, powerAdjusted(taken, rollBaseStat(stat, false, instableShift(taken))));
+                RuneStats.set(taken, new RuneStats(map));
+                taken.set(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, true);
+                return true;
+            }
+
+            if (SynergyRegistry.isSynergy(replacement)) {
+                RunicItemData.addSynergy(taken, replacement);
+                taken.set(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, true);
+                return true;
+            }
+
+            if (addEffectById(taken, replacement, false)) {
+                taken.set(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, true);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private ResourceLocation randomReplacement(ResourceLocation original, EnhancementCategory category) {
+        List<ResourceLocation> candidates = new ArrayList<>();
+        for (RuneStatType stat : RuneStatType.values()) {
+            if (EnchantBlacklist.isStatBlacklisted(stat)) continue;
+            ResourceLocation id = SynergyRegistry.statId(stat);
+            if (!id.equals(original) && EnhancementCategory.getCategory(id) == category) candidates.add(id);
+        }
+        for (ResourceLocation id : RuneItem.allowedEffectIds()) {
+            if (id.equals(original)) continue;
+            if (EnchantBlacklist.isBlacklisted(id)) continue;
+            if (EnhancementCategory.getCategory(id) == EnhancementCategory.FORBIDDEN && category != EnhancementCategory.FORBIDDEN) continue;
+            if (EnhancementCategory.getCategory(id) == category) candidates.add(id);
+        }
+        if (RunicConfig.wildInscriptionCanMutateSynergies()) {
+            for (ResourceLocation id : RunicItemData.getSynergies(getGearStack())) {
+                if (!id.equals(original) && SynergyRegistry.isSynergy(id)) candidates.add(id);
+            }
+        }
+        if (candidates.isEmpty()) return null;
+        return candidates.get(this.level.random.nextInt(candidates.size()));
+    }
+
+    private boolean addEffectById(ItemStack target, ResourceLocation id, boolean fromEtching) {
+        var registry = this.level.registryAccess().registryOrThrow(Registries.ENCHANTMENT);
+        Holder<Enchantment> holder = registry.getHolder(ResourceKey.create(Registries.ENCHANTMENT, id)).orElse(null);
+        if (holder == null || EnchantBlacklist.isBlacklisted(holder)) return false;
+        ItemEnchantments.Mutable mut = new ItemEnchantments.Mutable(target.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY));
+        if (mut.getLevel(holder) > 0) return false;
+        List<Holder<Enchantment>> existing = new ArrayList<>(mut.keySet());
+        if (!EnchantmentHelper.isEnchantmentCompatible(existing, holder)) return false;
+        mut.set(holder, cappedDesiredEffectLevel(holder, fromEtching ? RuneItem.EFFECT_LEVEL_ETCHING : RuneItem.EFFECT_LEVEL_RUNE, fromEtching));
+        target.set(DataComponents.ENCHANTMENTS, mut.toImmutable());
         return true;
     }
 
     private static final class ExtractionTarget {
         final RuneStatType stat;
         final Holder<Enchantment> enchant;
+        final ResourceLocation synergy;
         final int level;
 
         ExtractionTarget(RuneStatType stat, Holder<Enchantment> enchant, int level) {
+            this(stat, enchant, null, level);
+        }
+
+        ExtractionTarget(RuneStatType stat, Holder<Enchantment> enchant, ResourceLocation synergy, int level) {
             this.stat = stat;
             this.enchant = enchant;
+            this.synergy = synergy;
             this.level = level;
         }
 
@@ -1129,12 +1462,18 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
         boolean isEnchant() {
             return enchant != null && level > 0;
         }
+
+        boolean isSynergy() {
+            return synergy != null;
+        }
     }
 
     private ExtractionTarget selectExtractionTarget(ItemStack stack) {
         ItemEnchantments ex = stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
         if (!ex.isEmpty()) {
             for (Object2IntMap.Entry<Holder<Enchantment>> e : ex.entrySet()) {
+                if (!RunicConfig.extractionInscriptionCanExtractMythic()
+                        && EnhancementRarities.get(e.getKey()) == EnhancementRarity.MYTHIC) continue;
                 if (e.getIntValue() > 0) return new ExtractionTarget(null, e.getKey(), e.getIntValue());
             }
         }
@@ -1143,18 +1482,26 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
         if (st != null && !st.isEmpty()) {
             for (RuneStatType t : RuneStatType.values()) {
                 float v = st.get(t);
+                if (!RunicConfig.extractionInscriptionCanExtractMythic()
+                        && EnhancementRarities.getStat(t.id()) == EnhancementRarity.MYTHIC) continue;
                 if (v != 0.0F) return new ExtractionTarget(t, null, 0);
+            }
+        }
+
+        if (RunicConfig.extractionInscriptionCanExtractSynergies()) {
+            for (ResourceLocation id : RunicItemData.getSynergies(stack)) {
+                return new ExtractionTarget(null, null, id, 0);
             }
         }
 
         return null;
     }
 
-    private void applyExtraction(ItemStack taken) {
-        if (GearAttributes.getLevel(taken, GearAttribute.SEALED) >= MAX_ATTR_LEVEL) return;
+    private boolean applyExtraction(ItemStack taken) {
+        if (GearAttributes.has(taken, GearAttribute.SEALED)) return false;
 
         ExtractionTarget t = selectExtractionTarget(taken);
-        if (t == null) return;
+        if (t == null) return false;
 
         if (t.isEnchant()) {
             ItemEnchantments ex = taken.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
@@ -1177,10 +1524,13 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
                     clearLeechingSource(taken);
                 }
             }
+        } else if (t.isSynergy()) {
+            RunicItemData.removeSynergy(taken, t.synergy);
         }
 
         GearAttributes.addLevel(taken, GearAttribute.SEALED, 1);
         updateGlintAfter(taken);
+        return true;
     }
 
     private ItemStack createExtractionEtching(ItemStack gear) {
@@ -1206,66 +1556,131 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
             return out;
         }
 
+        if (t.isSynergy()) {
+            RunicItemData.addSynergy(out, t.synergy);
+            return out;
+        }
+
         return ItemStack.EMPTY;
     }
 
-    private void applyRuneOnTake(ItemStack taken, ItemStack enhancement) {
-        if (GearAttributes.has(taken, GearAttribute.SEALED)) return;
+    private void applyRuneOnTake(ItemStack taken, ItemStack enhancement, boolean allowSynergy) {
+        if (RunicItemData.isExhausted(taken)) return;
+
+        if (enhancement.getItem() instanceof RelicItem) {
+            ResourceLocation relicId = RelicRegistry.relicItemId(enhancement);
+            applyRelic(taken, relicId);
+            return;
+        }
 
         if (enhancement.is(ModItems.REPAIR_INSCRIPTION.get())) {
             if (!canApplyRepair(taken)) return;
-            if (!reduceMaxDurability(taken, 0.05D)) return;
-            taken.set(DataComponents.DAMAGE, 0);
+            if (!reduceMaxDurabilityPercent(taken, RunicConfig.restorationInscriptionMaxDurabilityLossPercent())) return;
+            RunicItemData.addCorruption(taken, -RunicConfig.restorationInscriptionCorruptionReduction());
+            if (RunicConfig.restorationInscriptionAddsBrittle()) {
+                GearAttributes.addLevel(taken, GearAttribute.BRITTLE, 1);
+            }
             updateGlintAfter(taken);
             return;
         }
 
         if (enhancement.is(ModItems.EXPANSION_INSCRIPTION.get())) {
             if (!canApplyExpansion(taken)) return;
-            if (!reduceMaxDurability(taken, 0.20D)) return;
+            if (!reduceMaxDurabilityPercent(taken, RunicConfig.expansionInscriptionMaxDurabilityLossPercent())) return;
             applyExpansion(taken);
+            addInscriptionCorruption(taken, RunicConfig.expansionInscriptionCorruption());
             updateGlintAfter(taken);
             return;
         }
 
         if (enhancement.is(ModItems.NULLIFICATION_INSCRIPTION.get())) {
             if (!canApplyNullification(taken)) return;
-            if (GearAttributes.getLevel(taken, GearAttribute.NEGATIVE) >= MAX_ATTR_LEVEL) return;
 
             applyNullification(taken);
-            GearAttributes.addLevel(taken, GearAttribute.NEGATIVE, 1);
+            addInscriptionCorruption(taken, RunicConfig.nullificationInscriptionCorruption());
             updateGlintAfter(taken);
             return;
         }
 
         if (enhancement.is(ModItems.UPGRADE_INSCRIPTION.get())) {
-            if (applyUpgrade(taken)) updateGlintAfter(taken);
+            boolean alreadyOverforged = GearAttributes.has(taken, GearAttribute.OVERFORGED);
+            if (applyUpgrade(taken)) {
+                addInscriptionCorruption(taken, RunicConfig.upgradeInscriptionCorruption());
+                if (alreadyOverforged) addInscriptionCorruption(taken, RunicConfig.upgradeInscriptionExtraCorruptionIfOverforged());
+                updateGlintAfter(taken);
+            }
             return;
         }
 
         if (enhancement.is(ModItems.REROLL_INSCRIPTION.get())) {
-            applyReroll(taken);
+            if (applyReroll(taken)) addInscriptionCorruption(taken, RunicConfig.rerollInscriptionCorruption());
             return;
         }
 
         if (enhancement.is(ModItems.CURSED_INSCRIPTION.get())) {
-            applyCursedInscription(taken);
+            if (applyCursedInscription(taken)) addInscriptionCorruption(taken, RunicConfig.cursedInscriptionCorruption());
             return;
         }
 
         if (enhancement.is(ModItems.WILD_INSCRIPTION.get())) {
-            applyWild(taken);
+            if (applyWild(taken)) addInscriptionCorruption(taken, RunicConfig.wildInscriptionCorruption());
             return;
         }
 
         if (enhancement.is(ModItems.EXTRACTION_INSCRIPTION.get())) {
-            applyExtraction(taken);
+            if (applyExtraction(taken)) addInscriptionCorruption(taken, RunicConfig.extractionInscriptionCorruption());
+            return;
+        }
+
+        if (enhancement.is(ModItems.RESONANCE_INSCRIPTION.get())) {
+            if (!canApplyResonance(taken)) return;
+            RunicItemData.addSynergyPotential(taken, 1);
+            GearAttributes.addLevel(taken, GearAttribute.FRACTURED, 1);
+            RunicItemData.addCorruption(taken, RunicConfig.resonanceInscriptionCorruption());
+            updateGlintAfter(taken);
+            return;
+        }
+
+        if (enhancement.is(ModItems.PURIFICATION_INSCRIPTION.get())) {
+            if (applyPurification(taken)) addInscriptionCorruption(taken, RunicConfig.purificationInscriptionCorruption());
+            return;
+        }
+
+        if (enhancement.is(ModItems.STABILIZATION_INSCRIPTION.get())) {
+            if (applyStabilization(taken)) addInscriptionCorruption(taken, RunicConfig.stabilizationInscriptionCorruption());
+            return;
+        }
+
+        if (enhancement.is(ModItems.TEMPERING_INSCRIPTION.get())) {
+            if (applyTempering(taken)) addInscriptionCorruption(taken, RunicConfig.temperingInscriptionCorruption());
+            return;
+        }
+
+        if (enhancement.is(ModItems.RELIC_SOCKET_INSCRIPTION.get())) {
+            if (applyRelicSocket(taken)) addInscriptionCorruption(taken, RunicConfig.relicSocketInscriptionCorruption());
             return;
         }
 
         if (!isEnhancementItem(enhancement)) return;
         RuneSlots.syncUsedToContents(taken);
         if (effectiveRemaining(taken) <= 0) return;
+
+        if (MythicRuneRegistry.isMythicRune(enhancement)) {
+            ResourceLocation mythicId = MythicRuneRegistry.getItemRuneId(enhancement);
+            if (mythicId == null || RunicItemData.hasMythicRune(taken, mythicId)) {
+                return;
+            }
+            MythicRuneRegistry.add(taken, mythicId);
+            RuneSlots.tryConsumeSlot(taken);
+            RunicItemData.addCorruption(taken, corruptionFor(enhancement));
+            if (RunicConfig.mythicRuneApplyCurseOnSuccess()
+                    && this.level.random.nextDouble() < RunicConfig.mythicRuneExtraCurseChance()) {
+                GearAttributes.addLevel(taken, GearAttribute.CURSED, 1);
+            }
+            taken.set(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, true);
+            updateGlintAfter(taken);
+            return;
+        }
 
         RuneStats templateStats = RuneStats.get(enhancement);
         RuneStatType stat = (templateStats != null && !templateStats.isEmpty()) ? getEnhancementStatType(enhancement) : null;
@@ -1322,7 +1737,119 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
 
         if (applied) {
             RuneSlots.tryConsumeSlot(taken);
+            RunicItemData.addCorruption(taken, corruptionFor(enhancement));
+            if (allowSynergy && !RunicItemData.isExhausted(taken)) {
+                tryApplySynergy(taken, enhancement);
+            }
         }
+    }
+
+    private int corruptionFor(ItemStack enhancement) {
+        if (isEtching(enhancement)) return RunicConfig.etchingCorruption();
+        if (MythicRuneRegistry.isMythicRune(enhancement)) return RunicConfig.mythicCorruption();
+
+        ResourceLocation ref = enhancementRef(enhancement);
+        EnhancementRarity rarity = EnhancementRarity.COMMON;
+        if (ref != null) {
+            if (ref.getNamespace().equals(RunicMod.MOD_ID) && ref.getPath().startsWith("stat/")) {
+                rarity = EnhancementRarities.getStat(ref.getPath().substring("stat/".length()));
+            } else {
+                rarity = EnhancementRarities.get(ref);
+            }
+        }
+
+        return switch (rarity) {
+            case COMMON -> RunicConfig.commonCorruption();
+            case UNCOMMON -> RunicConfig.uncommonCorruption();
+            case RARE -> RunicConfig.rareCorruption();
+            case EPIC -> RunicConfig.epicCorruption();
+            case LEGENDARY -> RunicConfig.legendaryCorruption();
+            case MYTHIC -> RunicConfig.mythicCorruption();
+            case CURSED -> RunicConfig.rareCorruption();
+        };
+    }
+
+    private void tryApplySynergy(ItemStack taken, ItemStack enhancement) {
+        ResourceLocation newlyApplied = enhancementRef(enhancement);
+        if (newlyApplied == null) return;
+
+        List<SynergyRegistry.Definition> possible = SynergyRegistry.possibleSynergies(newlyApplied, taken);
+        if (possible.isEmpty()) return;
+
+        SynergyRegistry.Definition chosen = possible.get(this.level.random.nextInt(possible.size()));
+        if (this.level.random.nextDouble() < RunicItemData.getSynergyChance(taken)) {
+            ResourceLocation matched = chosen.other(newlyApplied);
+            removeEnhancement(taken, newlyApplied);
+            removeEnhancement(taken, matched);
+            RunicItemData.addSynergy(taken, chosen.result());
+            taken.set(ModDataComponents.RUNE_SLOTS_USED.get(), Math.min(RuneSlots.capacity(taken), RuneSlots.countAppliedEnhancements(taken)));
+            RunicItemData.addCorruption(taken, RunicConfig.successfulSynergyCorruption());
+            taken.set(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, true);
+        } else {
+            RunicItemData.addCorruption(taken, RunicConfig.failedSynergyCorruption());
+            if (RunicItemData.hasFractured(taken)) {
+                RunicItemData.addCorruption(taken, RunicConfig.fracturedExtraFailureCorruption());
+            }
+        }
+        updateGlintAfter(taken);
+    }
+
+    private ResourceLocation enhancementRef(ItemStack enhancement) {
+        ResourceLocation mythicId = MythicRuneRegistry.getItemRuneId(enhancement);
+        if (mythicId != null) {
+            return mythicId;
+        }
+
+        RuneStats stats = RuneStats.get(enhancement);
+        if (stats != null && !stats.isEmpty()) {
+            RuneStatType stat = getEnhancementStatType(enhancement);
+            return stat == null ? null : SynergyRegistry.statId(stat);
+        }
+
+        ItemEnchantments enchants = getEnhancementEnchantments(enhancement);
+        if (enchants != null && !enchants.isEmpty()) {
+            for (Object2IntMap.Entry<Holder<Enchantment>> entry : enchants.entrySet()) {
+                if (entry.getIntValue() <= 0) continue;
+                Optional<ResourceLocation> id = entry.getKey().unwrapKey().map(ResourceKey::location);
+                if (id.isPresent()) return id.get();
+            }
+        }
+
+        return null;
+    }
+
+    private void removeEnhancement(ItemStack stack, ResourceLocation id) {
+        if (id == null) return;
+
+        if (id.getNamespace().equals(RunicMod.MOD_ID) && id.getPath().startsWith("stat/")) {
+            RuneStatType stat = RuneStatType.byId(id.getPath().substring("stat/".length()));
+            if (stat == null) return;
+            RuneStats current = RuneStats.get(stack);
+            if (current == null || current.isEmpty()) return;
+            EnumMap<RuneStatType, Float> map = new EnumMap<>(RuneStatType.class);
+            map.putAll(current.view());
+            map.remove(stat);
+            RuneStats.set(stack, map.isEmpty() ? RuneStats.empty() : new RuneStats(map));
+            if (stat == RuneStatType.LEECHING_CHANCE) clearLeechingSource(stack);
+            return;
+        }
+
+        if (SynergyRegistry.isSynergy(id)) {
+            RunicItemData.removeSynergy(stack, id);
+            return;
+        }
+
+        ItemEnchantments current = stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
+        if (current.isEmpty()) return;
+        ItemEnchantments.Mutable mut = new ItemEnchantments.Mutable(ItemEnchantments.EMPTY);
+        for (Object2IntMap.Entry<Holder<Enchantment>> entry : current.entrySet()) {
+            Optional<ResourceLocation> currentId = entry.getKey().unwrapKey().map(ResourceKey::location);
+            if (currentId.isPresent() && currentId.get().equals(id)) continue;
+            if (entry.getIntValue() > 0) mut.set(entry.getKey(), entry.getIntValue());
+        }
+        ItemEnchantments out = mut.toImmutable();
+        if (out.isEmpty()) stack.remove(DataComponents.ENCHANTMENTS);
+        else stack.set(DataComponents.ENCHANTMENTS, out);
     }
 
     private boolean applyEffectEnchant(ItemStack target, ItemEnchantments enchants, boolean fromEtching) {
@@ -1395,7 +1922,12 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
                     || stack.is(ModItems.REROLL_INSCRIPTION.get())
                     || stack.is(ModItems.CURSED_INSCRIPTION.get())
                     || stack.is(ModItems.WILD_INSCRIPTION.get())
-                    || stack.is(ModItems.EXTRACTION_INSCRIPTION.get())) {
+                    || stack.is(ModItems.EXTRACTION_INSCRIPTION.get())
+                    || stack.is(ModItems.RESONANCE_INSCRIPTION.get())
+                    || stack.is(ModItems.PURIFICATION_INSCRIPTION.get())
+                    || stack.is(ModItems.STABILIZATION_INSCRIPTION.get())
+                    || stack.is(ModItems.TEMPERING_INSCRIPTION.get())
+                    || stack.is(ModItems.RELIC_SOCKET_INSCRIPTION.get())) {
                 if (!this.moveItemStackTo(stack, enhIdx, enhIdx + 1, false)) return ItemStack.EMPTY;
             } else {
                 if (!this.moveItemStackTo(stack, gearIdx, gearIdx + 1, false)) return ItemStack.EMPTY;

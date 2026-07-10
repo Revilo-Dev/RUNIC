@@ -14,6 +14,7 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -22,6 +23,7 @@ import net.neoforged.neoforge.event.entity.player.AttackEntityEvent;
 import net.revilodev.runic.RunicMod;
 import net.revilodev.runic.stat.RuneStatType;
 import net.revilodev.runic.stat.RuneStats;
+import net.revilodev.runic.synergy.SynergyEffects;
 
 @EventBusSubscriber(modid = RunicMod.MOD_ID)
 public final class RuneOnHitHandler {
@@ -45,35 +47,44 @@ public final class RuneOnHitHandler {
         if (weapon.isEmpty()) return;
 
         RuneStats stats = RuneStats.get(weapon);
-        if (stats == null || stats.isEmpty()) return;
 
         RandomSource rand = player.getRandom();
 
-        tryRollEffect(stats, RuneStatType.BLEEDING_CHANCE, rand,
-                () -> applyCustomEffectOrSkip(target, BLEEDING_ID, 100, 0));
+        if (stats != null && !stats.isEmpty()) {
+            tryRollEffect(stats, RuneStatType.BLEEDING_CHANCE, rand,
+                    () -> applyCustomEffectOrSkip(target, BLEEDING_ID, 100, 0));
 
-        tryRollEffect(stats, RuneStatType.STUN_CHANCE, rand,
-                () -> applyCustomEffectOrSkip(target, STUN_ID, 60, 0));
+            tryRollEffect(stats, RuneStatType.STUN_CHANCE, rand,
+                    () -> applyCustomEffectOrSkip(target, STUN_ID, 60, 0));
 
-        tryRollEffect(stats, RuneStatType.SHOCKING_CHANCE, rand,
-                () -> {
-                    summonShockingLightning(player, target);
-                    if (!applyCustomEffectOrSkip(target, SHOCK_ID, 80, 0)) {
-                        target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 80, 1));
-                    }
-                });
+            tryRollEffect(stats, RuneStatType.SHOCKING_CHANCE, rand,
+                    () -> {
+                        summonShockingLightning(player, target);
+                        if (!applyCustomEffectOrSkip(target, SHOCK_ID, 80, 0)) {
+                            target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 80, 1));
+                        }
+                    });
 
-        tryRollEffect(stats, RuneStatType.POISON_CHANCE, rand,
-                () -> target.addEffect(new MobEffectInstance(MobEffects.POISON, 100, 0)));
+            tryRollEffect(stats, RuneStatType.POISON_CHANCE, rand,
+                    () -> target.addEffect(new MobEffectInstance(MobEffects.POISON, 100, 0)));
 
-        tryRollEffect(stats, RuneStatType.WEAKENING_CHANCE, rand,
-                () -> target.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 120, 0)));
+            tryRollEffect(stats, RuneStatType.WEAKENING_CHANCE, rand,
+                    () -> target.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 120, 0)));
 
-        tryRollEffect(stats, RuneStatType.FLAME_CHANCE, rand,
-                () -> target.setRemainingFireTicks(80));
+            tryRollEffect(stats, RuneStatType.FLAME_CHANCE, rand,
+                    () -> target.setRemainingFireTicks(80));
 
-        tryRollEffect(stats, RuneStatType.WITHERING_CHANCE, rand,
-                () -> target.addEffect(new MobEffectInstance(MobEffects.WITHER, 100, 0)));
+            tryRollEffect(stats, RuneStatType.WITHERING_CHANCE, rand,
+                    () -> target.addEffect(new MobEffectInstance(MobEffects.WITHER, 100, 0)));
+
+            tryRollEffect(stats, RuneStatType.FREEZING_CHANCE, rand,
+                    () -> {
+                        target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, 2));
+                        SynergyEffects.markFrozen(target, 100);
+                    });
+        }
+
+        SynergyEffects.onWeaponAttack(player, target, weapon, (float) player.getAttributeValue(Attributes.ATTACK_DAMAGE));
     }
 
     private static void tryRollEffect(RuneStats stats,

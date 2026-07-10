@@ -536,7 +536,7 @@ public final class RunicCommandHelper {
     }
 
     private static float powerAdjusted(ItemStack stack, float value) {
-        return value * GearAttributes.cursedMultiplier(stack) * GearAttributes.ancientMultiplier(stack);
+        return value * GearAttributes.enhancementMultiplier(stack);
     }
 
     private static void applyCursedDelta(ItemStack stack, int deltaLevels) {

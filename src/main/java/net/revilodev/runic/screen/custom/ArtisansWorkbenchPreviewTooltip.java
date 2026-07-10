@@ -33,6 +33,7 @@ public final class ArtisansWorkbenchPreviewTooltip {
         addRuneStats(lines, delta);
         addEnchantChanges(lines, base, out);
         addRuneSlotChanges(lines, delta);
+        addUpdateFiveChanges(lines, delta);
         addAttributeChanges(lines, delta);
 
         if (lines.size() == 1) {
@@ -165,6 +166,63 @@ public final class ArtisansWorkbenchPreviewTooltip {
                                 .append(Component.literal(formatSignedInt(v)).withStyle(colorForSign(v)))
                                 .withStyle(ChatFormatting.WHITE)
                 );
+            }
+        }
+    }
+
+    private static void addUpdateFiveChanges(List<Component> out, CompoundTag delta) {
+        if (delta.contains("corruption", Tag.TAG_INT)) {
+            int v = delta.getInt("corruption");
+            if (v != 0) {
+                out.add(Component.literal("  Corruption ")
+                        .append(Component.literal(formatSignedInt(v) + "%").withStyle(colorForSign(v)))
+                        .withStyle(ChatFormatting.WHITE));
+            }
+        }
+        if (delta.contains("corruption_band", Tag.TAG_STRING)) {
+            out.add(Component.literal("  Result ")
+                    .append(Component.translatable("tooltip.runic.corruption_band." + delta.getString("corruption_band")).withStyle(ChatFormatting.DARK_PURPLE))
+                    .withStyle(ChatFormatting.WHITE));
+        }
+        if (delta.getBoolean("corruption_risk_negative")) {
+            out.add(Component.translatable("tooltip.runic.preview_risk_negative").withStyle(ChatFormatting.RED));
+        }
+        if (delta.getBoolean("corruption_risk_positive")) {
+            out.add(Component.translatable("tooltip.runic.preview_risk_positive").withStyle(ChatFormatting.AQUA));
+        }
+
+        if (delta.contains("synergy_potential", Tag.TAG_INT)) {
+            int v = delta.getInt("synergy_potential");
+            if (v != 0) {
+                out.add(Component.literal("  Synergy Potential ")
+                        .append(Component.literal(formatSignedInt(v)).withStyle(colorForSign(v)))
+                        .withStyle(ChatFormatting.WHITE));
+            }
+        }
+
+        if (delta.contains("synergies", Tag.TAG_INT)) {
+            int v = delta.getInt("synergies");
+            if (v != 0) {
+                out.add(Component.literal("  Synergy Enhancements ")
+                        .append(Component.literal(formatSignedInt(v)).withStyle(colorForSign(v)))
+                        .withStyle(ChatFormatting.WHITE));
+            }
+        }
+
+        if (delta.contains("relic_socket", Tag.TAG_INT)) {
+            int v = delta.getInt("relic_socket");
+            if (v != 0) {
+                out.add(Component.literal("  Relic Socket ")
+                        .append(Component.literal(v > 0 ? "Added" : "Removed").withStyle(colorForSign(v)))
+                        .withStyle(ChatFormatting.WHITE));
+            }
+        }
+        if (delta.contains("mythic_rune_id", Tag.TAG_STRING)) {
+            net.minecraft.resources.ResourceLocation id = net.minecraft.resources.ResourceLocation.tryParse(delta.getString("mythic_rune_id"));
+            if (id != null) {
+                out.add(Component.literal("  Mythic Rune ")
+                        .append(Component.translatable("tooltip.runic.mythic_name." + id.getPath().substring("mythic/".length())).withStyle(ChatFormatting.RED))
+                        .withStyle(ChatFormatting.WHITE));
             }
         }
     }
