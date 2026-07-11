@@ -29,6 +29,7 @@ public final class ArtisansWorkbenchPreviewTooltip {
         List<Component> lines = new ArrayList<>();
         lines.add(Component.literal("Changes:").withStyle(ChatFormatting.GRAY));
 
+        addCorruptionChanges(lines, delta);
         addItemStats(lines, delta);
         addRuneStats(lines, delta);
         addEnchantChanges(lines, base, out);
@@ -138,66 +139,38 @@ public final class ArtisansWorkbenchPreviewTooltip {
 
     private static Component enchantChangeLine(String sign, Holder<Enchantment> h, int level) {
         Component name = h.value().description().copy().withStyle(ChatFormatting.GRAY);
-        Component roman = Component.literal(" " + toRoman(level)).withStyle(ChatFormatting.LIGHT_PURPLE);
 
-        return Component.literal("  " + sign + " ")
+        return Component.literal("  " + sign)
                 .append(name)
-                .append(roman)
                 .withStyle(ChatFormatting.WHITE);
     }
 
     private static void addRuneSlotChanges(List<Component> out, CompoundTag delta) {
-        if (delta.contains("slot_cap", Tag.TAG_INT)) {
-            int v = delta.getInt("slot_cap");
-            if (v != 0) {
-                out.add(
-                        Component.literal("  Rune Slots ")
-                                .append(Component.literal(formatSignedInt(v)).withStyle(colorForSign(v)))
-                                .withStyle(ChatFormatting.WHITE)
-                );
-            }
+        int cap = delta.getInt("slot_cap_result");
+        int used = delta.getInt("slot_used_result");
+        if (delta.contains("slot_cap_result", Tag.TAG_INT)) {
+            out.add(Component.literal("  " + slotIcons(used, cap)).withStyle(ChatFormatting.AQUA));
         }
+    }
 
-        if (delta.contains("slot_used", Tag.TAG_INT)) {
-            int v = delta.getInt("slot_used");
+    private static void addCorruptionChanges(List<Component> out, CompoundTag delta) {
+        if (delta.contains("corruption", Tag.TAG_INT)) {
+            int v = delta.getInt("corruption");
             if (v != 0) {
-                out.add(
-                        Component.literal("  Slots Used ")
-                                .append(Component.literal(formatSignedInt(v)).withStyle(colorForSign(v)))
-                                .withStyle(ChatFormatting.WHITE)
-                );
+                int result = delta.getInt("corruption_result");
+                out.add(Component.literal("  Corruption " + result + "%: ")
+                        .append(Component.literal(formatSignedInt(v) + "%").withStyle(colorForSign(v)))
+                        .withStyle(ChatFormatting.WHITE));
             }
         }
     }
 
     private static void addUpdateFiveChanges(List<Component> out, CompoundTag delta) {
-        if (delta.contains("corruption", Tag.TAG_INT)) {
-            int v = delta.getInt("corruption");
-            if (v != 0) {
-                out.add(Component.literal("  Corruption ")
-                        .append(Component.literal(formatSignedInt(v) + "%").withStyle(colorForSign(v)))
-                        .withStyle(ChatFormatting.WHITE));
-            }
-        }
-        if (delta.contains("corruption_band", Tag.TAG_STRING)) {
-            out.add(Component.literal("  Result ")
-                    .append(Component.translatable("tooltip.runic.corruption_band." + delta.getString("corruption_band")).withStyle(ChatFormatting.DARK_PURPLE))
-                    .withStyle(ChatFormatting.WHITE));
-        }
         if (delta.getBoolean("corruption_risk_negative")) {
             out.add(Component.translatable("tooltip.runic.preview_risk_negative").withStyle(ChatFormatting.RED));
         }
         if (delta.getBoolean("corruption_risk_positive")) {
             out.add(Component.translatable("tooltip.runic.preview_risk_positive").withStyle(ChatFormatting.AQUA));
-        }
-
-        if (delta.contains("synergy_potential", Tag.TAG_INT)) {
-            int v = delta.getInt("synergy_potential");
-            if (v != 0) {
-                out.add(Component.literal("  Synergy Potential ")
-                        .append(Component.literal(formatSignedInt(v)).withStyle(colorForSign(v)))
-                        .withStyle(ChatFormatting.WHITE));
-            }
         }
 
         if (delta.contains("synergies", Tag.TAG_INT)) {
@@ -228,22 +201,29 @@ public final class ArtisansWorkbenchPreviewTooltip {
     }
 
     private static void addAttributeChanges(List<Component> out, CompoundTag delta) {
-        if (!delta.contains("attrs", Tag.TAG_COMPOUND)) return;
-        CompoundTag attrs = delta.getCompound("attrs");
-        if (attrs.isEmpty()) return;
+        CompoundTag attrs = delta.contains("attrs", Tag.TAG_COMPOUND) ? delta.getCompound("attrs") : new CompoundTag();
+        boolean hasPotential = delta.contains("synergy_potential", Tag.TAG_INT) && delta.getInt("synergy_potential") != 0;
+        if (attrs.isEmpty() && !hasPotential) return;
 
+        if (hasPotential) {
+            int v = delta.getInt("synergy_potential");
+            out.add(Component.literal("  Synergy Potential ")
+                    .append(Component.literal(formatSignedInt(v)).withStyle(colorForSign(v)))
+                    .withStyle(ChatFormatting.WHITE));
+        }
         for (GearAttribute a : GearAttribute.values()) {
             String id = a.id();
             if (!attrs.contains(id, Tag.TAG_INT)) continue;
             int v = attrs.getInt(id);
             if (v == 0) continue;
 
+            String prefix = v > 0 ? "+" : "-";
+            String suffix = Math.abs(v) > 1 ? " " + toRoman(Math.abs(v)) : "";
             out.add(
-                    Component.literal("  ")
+                    Component.literal("  " + prefix)
                             .append(a.displayName().copy())
-                            .append(Component.literal(" "))
-                            .append(Component.literal(formatSignedInt(v)).withStyle(colorForSign(v)))
-                            .withStyle(ChatFormatting.WHITE)
+                            .append(Component.literal(suffix))
+                            .withStyle(colorForSign(v))
             );
         }
     }
@@ -282,6 +262,15 @@ public final class ArtisansWorkbenchPreviewTooltip {
                 ? String.format(Locale.ROOT, "%.0f", av)
                 : String.format(Locale.ROOT, "%.1f", av);
         return (v >= 0 ? "+" : "-") + num + "%";
+    }
+
+    private static String slotIcons(int used, int capacity) {
+        int cap = Math.max(0, capacity);
+        int filled = Math.max(0, Math.min(used, cap));
+        StringBuilder sb = new StringBuilder(cap);
+        for (int i = 0; i < filled; i++) sb.append('O');
+        for (int i = filled; i < cap; i++) sb.append('o');
+        return sb.toString();
     }
 
     private static String toRoman(int v) {

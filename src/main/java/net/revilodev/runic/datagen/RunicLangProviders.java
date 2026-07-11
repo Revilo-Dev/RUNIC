@@ -165,7 +165,7 @@ public final class RunicLangProviders {
             add("tooltip.runic.purification_inscription", "Removes one negative attribute, but increases corruption and may reduce durability.");
             add("tooltip.runic.stabilization_inscription", "Stabilizes an item at the cost of brittleness and corruption.");
             add("tooltip.runic.tempering_inscription", "Reinforces an item, reducing durability loss but increasing corruption.");
-            add("tooltip.runic.relic_socket_inscription", "Adds a relic socket, allowing one future relic or tome to be bound to the item.");
+            add("tooltip.runic.relic_socket_inscription", "Adds a relic socket, allowing one future relic to be bound to the item.");
             add("tooltip.runic.use_artisans_workbench", "Apply in an Artisan's Workbench");
 
             add("tooltip.runic.attribute.fractured", "Fractured");
@@ -197,21 +197,21 @@ public final class RunicLangProviders {
             add("warning.runic.this_will_exhaust", "Warning: This will Exhaust the item.");
             add("message.runic.no_corruption", "This item has no corruption to restore.");
             add("tooltip.runic.corruption", "Corruption: %s%%");
-            add("tooltip.runic.corruption_band_line", "Corruption: %s%% - %s");
+            add("tooltip.runic.corruption_band_line", "Corruption: %s%%");
             add("tooltip.runic.corruption_band.stable", "Stable");
             add("tooltip.runic.corruption_band.tainted", "Tainted");
             add("tooltip.runic.corruption_band.corrupted", "Corrupted");
             add("tooltip.runic.corruption_band.critical", "Critical");
             add("tooltip.runic.corruption_band.exhausted", "Exhausted");
             add("tooltip.runic.enhancements_header", "Enhancements");
-            add("tooltip.runic.enhancement_slots", "Enhancements: %s / %s");
+            add("tooltip.runic.enhancement_slots", "%s / %s");
             add("tooltip.runic.attributes_header", "Attributes");
             add("tooltip.runic.details_hint", "(Ctrl for details)");
             add("tooltip.runic.preview_changes_header", "Changes");
             add("tooltip.runic.preview_stat_roll_header", "Stat Roll");
             add("tooltip.runic.preview_corruption_delta", "Corruption: %s");
-            add("tooltip.runic.preview_result_band", "Result: %s%% - %s");
-            add("tooltip.runic.preview_slots_result", "Enhancements: %s -> %s");
+            add("tooltip.runic.preview_result_band", "%s%%");
+            add("tooltip.runic.preview_slots_result", "%s");
             add("tooltip.runic.preview_synergy_potential_result", "Synergy Potential: %s -> %s");
             add("tooltip.runic.preview_synergy_failure", "Failure: +%s%% Corruption");
             add("tooltip.runic.preview_synergy_failure_fractured", "Fractured Failure: +%s%% Corruption");
@@ -220,7 +220,6 @@ public final class RunicLangProviders {
             add("tooltip.runic.preview_risk_positive", "  Opportunity: May gain positive attributes");
             add("tooltip.runic.synergy_potential", "Synergy Potential: %s");
             add("tooltip.runic.synergy_chance", "Synergy Chance: %s%%");
-            add("tooltip.runic.possible_synergy_detected", "Possible Synergy Detected");
             add("tooltip.runic.synergies", "Synergies:");
             add("tooltip.runic.synergy_enhancement", "Synergy Enhancement");
             add("tooltip.runic.category_line", "Category: %s");

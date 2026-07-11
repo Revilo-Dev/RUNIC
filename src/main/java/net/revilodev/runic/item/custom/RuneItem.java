@@ -1,5 +1,6 @@
 package net.revilodev.runic.item.custom;
 
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.resources.ResourceKey;
@@ -12,6 +13,7 @@ import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.revilodev.runic.event.EnchantBlacklist;
 import net.revilodev.runic.item.ModItems;
+import net.revilodev.runic.item.RarityTintedItemName;
 import net.revilodev.runic.loot.rarity.EnhancementRarities;
 import net.revilodev.runic.mythic.MythicRuneRegistry;
 import net.revilodev.runic.stat.RuneStatType;
@@ -21,7 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-public class RuneItem extends Item {
+public class RuneItem extends Item implements RarityTintedItemName {
 
     public static final int EFFECT_LEVEL_ETCHING = 1;
     public static final int EFFECT_LEVEL_RUNE = 2;
@@ -108,9 +110,15 @@ public class RuneItem extends Item {
     public Component getName(ItemStack stack) {
         ResourceLocation mythicId = MythicRuneRegistry.getItemRuneId(stack);
         if (mythicId != null) {
-            return Component.translatable("tooltip.runic.mythic_name." + mythicId.getPath().substring("mythic/".length()));
+            return RarityTintedItemName.super.tintedName(stack,
+                    Component.translatable("tooltip.runic.mythic_name." + mythicId.getPath().substring("mythic/".length())));
         }
         return super.getName(stack);
+    }
+
+    @Override
+    public ChatFormatting nameColor() {
+        return ChatFormatting.GOLD;
     }
 
     public static Set<ResourceLocation> allowedEffectIds() {

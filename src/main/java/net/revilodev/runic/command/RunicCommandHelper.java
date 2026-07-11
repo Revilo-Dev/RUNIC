@@ -16,6 +16,7 @@ import net.revilodev.runic.RunicConfig;
 import net.revilodev.runic.event.EnchantBlacklist;
 import net.revilodev.runic.gear.GearAttribute;
 import net.revilodev.runic.gear.GearAttributes;
+import net.revilodev.runic.gear.RunicItemData;
 import net.revilodev.runic.item.custom.RuneItem;
 import net.revilodev.runic.registry.ModDataComponents;
 import net.revilodev.runic.runes.RuneSlots;
@@ -237,7 +238,7 @@ public final class RunicCommandHelper {
         if (!RuneSlots.enabled()) {
             return false;
         }
-        if (!stack.isDamageableItem() || stack.getMaxDamage() <= 1 || RuneSlots.expansionsUsed(stack) >= 3) {
+        if (!stack.isDamageableItem() || stack.getMaxDamage() <= 1) {
             return false;
         }
         if (!reduceMaxDurability(stack, 0.20D)) {
@@ -245,6 +246,7 @@ public final class RunicCommandHelper {
         }
         RuneSlots.addOneSlot(stack);
         RuneSlots.incrementExpansion(stack);
+        RunicItemData.addCorruption(stack, 20);
         updateGlintAfter(stack);
         return true;
     }

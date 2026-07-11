@@ -182,7 +182,7 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
 
         ItemStack applied = gear.copy();
         applied.setCount(1);
-        applyRuneOnTake(applied, enh, true);
+        applyRuneOnTake(applied, enh);
         stripPreviewDelta(applied);
         if (ItemStack.isSameItemSameComponents(gear, applied) && gear.getDamageValue() == applied.getDamageValue()) {
             return false;
@@ -431,8 +431,7 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
     private boolean canApplyExpansion(ItemStack target) {
         if (!RuneSlots.enabled()) return false;
         if (!target.isDamageableItem()) return false;
-        if (target.getMaxDamage() <= 1) return false;
-        return RuneSlots.expansionsUsed(target) < 3;
+        return target.getMaxDamage() > 1;
     }
 
     private boolean canApplyReroll(ItemStack target) {
@@ -508,43 +507,43 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
 
         if (enhancement.is(ModItems.REPAIR_INSCRIPTION.get())) {
             if (!canApplyRepair(out)) return ItemStack.EMPTY;
-            applyRuneOnTake(out, enhancement, false);
+            applyRuneOnTake(out, enhancement);
         } else if (enhancement.is(ModItems.EXPANSION_INSCRIPTION.get())) {
             if (!canApplyExpansion(out)) return ItemStack.EMPTY;
-            applyRuneOnTake(out, enhancement, false);
+            applyRuneOnTake(out, enhancement);
         } else if (enhancement.is(ModItems.NULLIFICATION_INSCRIPTION.get())) {
             if (!canApplyNullification(out)) return ItemStack.EMPTY;
-            applyRuneOnTake(out, enhancement, false);
+            applyRuneOnTake(out, enhancement);
         } else if (enhancement.is(ModItems.UPGRADE_INSCRIPTION.get())) {
             if (!canApplyUpgrade(out)) return ItemStack.EMPTY;
-            applyRuneOnTake(out, enhancement, false);
+            applyRuneOnTake(out, enhancement);
         } else if (enhancement.is(ModItems.REROLL_INSCRIPTION.get())) {
             if (!canApplyReroll(out)) return ItemStack.EMPTY;
-            applyRuneOnTake(out, enhancement, false);
+            applyRuneOnTake(out, enhancement);
         } else if (enhancement.is(ModItems.CURSED_INSCRIPTION.get())) {
             if (!canApplyCursed(out)) return ItemStack.EMPTY;
-            applyRuneOnTake(out, enhancement, false);
+            applyRuneOnTake(out, enhancement);
         } else if (enhancement.is(ModItems.WILD_INSCRIPTION.get())) {
             if (!canApplyWild(out)) return ItemStack.EMPTY;
-            applyRuneOnTake(out, enhancement, false);
+            applyRuneOnTake(out, enhancement);
         } else if (enhancement.is(ModItems.EXTRACTION_INSCRIPTION.get())) {
             if (!canApplyExtraction(out)) return ItemStack.EMPTY;
-            applyRuneOnTake(out, enhancement, false);
+            applyRuneOnTake(out, enhancement);
         } else if (enhancement.is(ModItems.RESONANCE_INSCRIPTION.get())) {
             if (!canApplyResonance(out)) return ItemStack.EMPTY;
-            applyRuneOnTake(out, enhancement, false);
+            applyRuneOnTake(out, enhancement);
         } else if (enhancement.is(ModItems.PURIFICATION_INSCRIPTION.get())) {
             if (!canApplyPurification(out)) return ItemStack.EMPTY;
-            applyRuneOnTake(out, enhancement, false);
+            applyRuneOnTake(out, enhancement);
         } else if (enhancement.is(ModItems.STABILIZATION_INSCRIPTION.get())) {
             if (!canApplyStabilization(out)) return ItemStack.EMPTY;
-            applyRuneOnTake(out, enhancement, false);
+            applyRuneOnTake(out, enhancement);
         } else if (enhancement.is(ModItems.TEMPERING_INSCRIPTION.get())) {
             if (!canApplyTempering(out)) return ItemStack.EMPTY;
-            applyRuneOnTake(out, enhancement, false);
+            applyRuneOnTake(out, enhancement);
         } else if (enhancement.is(ModItems.RELIC_SOCKET_INSCRIPTION.get())) {
             if (!canApplyRelicSocket(out)) return ItemStack.EMPTY;
-            applyRuneOnTake(out, enhancement, false);
+            applyRuneOnTake(out, enhancement);
         } else {
             if (!isEnhancementItem(enhancement)) return ItemStack.EMPTY;
             if (effectiveRemaining(out) <= 0) return ItemStack.EMPTY;
@@ -558,7 +557,7 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
 
             if (!statApplicable && !effectApplicable) return ItemStack.EMPTY;
 
-            applyRuneOnTake(out, enhancement, false);
+            applyRuneOnTake(out, enhancement);
         }
 
         boolean unchanged = ItemStack.isSameItemSameComponents(base, out) && base.getDamageValue() == out.getDamageValue();
@@ -748,9 +747,16 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
 
         int dUsed = RuneSlots.used(out) - RuneSlots.used(base);
         if (dUsed != 0) delta.putInt("slot_used", dUsed);
+        if (dCap != 0 || dUsed != 0) {
+            delta.putInt("slot_cap_result", outCap);
+            delta.putInt("slot_used_result", RuneSlots.used(out));
+        }
 
         int dCorruption = RunicItemData.getCorruption(out) - RunicItemData.getCorruption(base);
-        if (dCorruption != 0) delta.putInt("corruption", dCorruption);
+        if (dCorruption != 0) {
+            delta.putInt("corruption", dCorruption);
+            delta.putInt("corruption_result", RunicItemData.getCorruption(out));
+        }
         delta.putString("corruption_band", RunicItemData.getCorruptionBand(out).id());
         if (RunicItemData.getCorruptionBand(out) == CorruptionBand.TAINTED) {
             delta.putBoolean("corruption_risk_negative", true);
@@ -1094,7 +1100,6 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
     }
 
     private void applyExpansion(ItemStack taken) {
-        if (RuneSlots.expansionsUsed(taken) >= 3) return;
         RuneSlots.addOneSlot(taken);
         RuneSlots.incrementExpansion(taken);
     }
@@ -1564,7 +1569,7 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
         return ItemStack.EMPTY;
     }
 
-    private void applyRuneOnTake(ItemStack taken, ItemStack enhancement, boolean allowSynergy) {
+    private void applyRuneOnTake(ItemStack taken, ItemStack enhancement) {
         if (RunicItemData.isExhausted(taken)) return;
 
         if (enhancement.getItem() instanceof RelicItem) {
@@ -1588,7 +1593,7 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
             if (!canApplyExpansion(taken)) return;
             if (!reduceMaxDurabilityPercent(taken, RunicConfig.expansionInscriptionMaxDurabilityLossPercent())) return;
             applyExpansion(taken);
-            addInscriptionCorruption(taken, RunicConfig.expansionInscriptionCorruption());
+            addInscriptionCorruption(taken, 20);
             updateGlintAfter(taken);
             return;
         }
@@ -1738,9 +1743,6 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
         if (applied) {
             RuneSlots.tryConsumeSlot(taken);
             RunicItemData.addCorruption(taken, corruptionFor(enhancement));
-            if (allowSynergy && !RunicItemData.isExhausted(taken)) {
-                tryApplySynergy(taken, enhancement);
-            }
         }
     }
 
@@ -1767,31 +1769,6 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
             case MYTHIC -> RunicConfig.mythicCorruption();
             case CURSED -> RunicConfig.rareCorruption();
         };
-    }
-
-    private void tryApplySynergy(ItemStack taken, ItemStack enhancement) {
-        ResourceLocation newlyApplied = enhancementRef(enhancement);
-        if (newlyApplied == null) return;
-
-        List<SynergyRegistry.Definition> possible = SynergyRegistry.possibleSynergies(newlyApplied, taken);
-        if (possible.isEmpty()) return;
-
-        SynergyRegistry.Definition chosen = possible.get(this.level.random.nextInt(possible.size()));
-        if (this.level.random.nextDouble() < RunicItemData.getSynergyChance(taken)) {
-            ResourceLocation matched = chosen.other(newlyApplied);
-            removeEnhancement(taken, newlyApplied);
-            removeEnhancement(taken, matched);
-            RunicItemData.addSynergy(taken, chosen.result());
-            taken.set(ModDataComponents.RUNE_SLOTS_USED.get(), Math.min(RuneSlots.capacity(taken), RuneSlots.countAppliedEnhancements(taken)));
-            RunicItemData.addCorruption(taken, RunicConfig.successfulSynergyCorruption());
-            taken.set(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, true);
-        } else {
-            RunicItemData.addCorruption(taken, RunicConfig.failedSynergyCorruption());
-            if (RunicItemData.hasFractured(taken)) {
-                RunicItemData.addCorruption(taken, RunicConfig.fracturedExtraFailureCorruption());
-            }
-        }
-        updateGlintAfter(taken);
     }
 
     private ResourceLocation enhancementRef(ItemStack enhancement) {

@@ -58,10 +58,15 @@ public final class GearTooltips {
         List<Component> mythicLines = MythicRuneRegistry.buildTooltip(stack, showDetails || Screen.hasShiftDown());
         List<Component> slots = buildRuneSlots(stack);
         List<Component> updateFive = buildUpdateFiveLines(stack);
-        boolean hasAttributes = !GearAttributes.getAll(stack).isEmpty();
+        boolean hasAttributes = !GearAttributes.getAll(stack).isEmpty() || RunicItemData.getSynergyPotential(stack) > 0;
         List<Component> attrs = buildAttributeIndicators(stack, showDetails);
 
         int insertAt = afterVanillaStatLines(tooltip);
+
+        if (!updateFive.isEmpty()) {
+            tooltip.addAll(insertAt, updateFive);
+            insertAt += updateFive.size();
+        }
 
         if (stack.getMaxDamage() > 0) {
             tooltip.add(insertAt, buildDurabilityLine(stack));
@@ -98,11 +103,6 @@ public final class GearTooltips {
         if (!relicLines.isEmpty()) {
             tooltip.addAll(insertAt, relicLines);
             insertAt += relicLines.size();
-        }
-
-        if (!updateFive.isEmpty()) {
-            tooltip.addAll(insertAt, updateFive);
-            insertAt += updateFive.size();
         }
 
         if (!attrs.isEmpty()) {
@@ -332,7 +332,7 @@ public final class GearTooltips {
         for (int i = 0; i < u; i++) sb.append(SLOT_FILLED);
         for (int i = 0; i < rem; i++) sb.append(SLOT_EMPTY);
 
-        return List.of(Component.translatable("tooltip.runic.enhancement_slots", used, cap)
+        return List.of(Component.literal(used + " / " + cap)
                 .withStyle(ChatFormatting.GRAY)
                 .append(Component.literal(" "))
                 .append(Component.literal(sb.toString()).withStyle(ChatFormatting.WHITE)));
@@ -346,7 +346,7 @@ public final class GearTooltips {
             if (!id.getPath().startsWith("synergy/")) continue;
             String path = id.getPath().substring("synergy/".length());
             out.add(Component.literal("  ")
-                    .append(Component.translatable("tooltip.runic.synergy." + path).withStyle(ChatFormatting.LIGHT_PURPLE)));
+                    .append(RarityTintedItemName.tintedName(ChatFormatting.GOLD, stack, Component.translatable("tooltip.runic.synergy." + path))));
             if (showDetails) {
                 out.add(Component.literal("  ")
                         .append(Component.translatable("tooltip.runic.synergy_enhancement").withStyle(ChatFormatting.DARK_PURPLE)));
@@ -362,22 +362,13 @@ public final class GearTooltips {
 
     private static List<Component> buildUpdateFiveLines(ItemStack stack) {
         List<Component> out = new ArrayList<>();
+        int corruption = RunicItemData.getCorruption(stack);
+        if (corruption > 0 || RunicItemData.isExhausted(stack)) {
+            out.add(Component.translatable("tooltip.runic.corruption", corruption).withStyle(ChatFormatting.DARK_PURPLE));
+        }
         if (RunicItemData.isExhausted(stack)) {
             out.add(Component.translatable("tooltip.runic.attribute.exhausted").withStyle(ChatFormatting.DARK_RED));
             out.add(Component.translatable("tooltip.runic.attribute_desc.exhausted").withStyle(ChatFormatting.GRAY));
-        }
-        int corruption = RunicItemData.getCorruption(stack);
-        if (corruption > 0 || RunicItemData.isExhausted(stack)) {
-            out.add(Component.translatable("tooltip.runic.corruption_band_line",
-                    corruption,
-                    RunicItemData.getCorruptionBand(stack).displayName()).withStyle(ChatFormatting.DARK_PURPLE));
-        }
-
-        int potential = RunicItemData.getSynergyPotential(stack);
-        if (potential > 0) {
-            out.add(Component.translatable("tooltip.runic.synergy_potential", toRoman(potential)).withStyle(ChatFormatting.LIGHT_PURPLE));
-            int chance = (int) Math.round(RunicItemData.getSynergyChance(stack) * 100.0D);
-            out.add(Component.translatable("tooltip.runic.synergy_chance", chance).withStyle(ChatFormatting.GRAY));
         }
         return out;
     }
@@ -398,10 +389,16 @@ public final class GearTooltips {
 
     private static List<Component> buildAttributeIndicators(ItemStack stack, boolean showDetails) {
         Map<GearAttribute, Integer> attrs = GearAttributes.getAll(stack);
-        if (attrs.isEmpty()) return List.of();
+        int potential = RunicItemData.getSynergyPotential(stack);
+        if (attrs.isEmpty() && potential <= 0) return List.of();
 
         List<Component> out = new ArrayList<>();
         out.add(Component.translatable("tooltip.runic.attributes_header").withStyle(ChatFormatting.GRAY));
+
+        if (potential > 0) {
+            out.add(Component.literal("  ")
+                    .append(Component.translatable("tooltip.runic.synergy_potential", toRoman(potential)).withStyle(ChatFormatting.LIGHT_PURPLE)));
+        }
 
         for (GearAttribute attr : GearAttribute.values()) {
             int lvl = attrs.getOrDefault(attr, 0);

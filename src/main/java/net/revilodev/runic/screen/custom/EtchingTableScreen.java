@@ -62,11 +62,12 @@ public final class EtchingTableScreen extends AbstractContainerScreen<EtchingTab
         this.recipeBook.visible = false;
 
         this.recipeButton = this.addRenderableWidget(new RecipeBookButton(0, 0, () -> {
-            this.recipeBookVisible = !this.recipeBookVisible;
+            this.recipeBookVisible = false;
             this.ghostRecipe = null;
             updateLayout();
-            if (this.recipeBookVisible) this.recipeBook.refresh();
         }));
+        this.recipeButton.visible = false;
+        this.recipeButton.active = false;
 
         this.searchBox = new EditBox(this.font, 0, 0, 81, 9, Component.empty());
         this.searchBox.setBordered(false);
@@ -99,6 +100,7 @@ public final class EtchingTableScreen extends AbstractContainerScreen<EtchingTab
 
     private void updateLayout() {
         this.topPos = (this.height - this.imageHeight) / 2;
+        this.recipeBookVisible = false;
 
         if (this.recipeBookVisible) {
             int total = this.imageWidth + PANEL_W;
@@ -113,6 +115,8 @@ public final class EtchingTableScreen extends AbstractContainerScreen<EtchingTab
         this.recipeButton.setX(btnX);
         this.recipeButton.setY(btnY);
         this.recipeButton.setSelected(this.recipeBookVisible);
+        this.recipeButton.visible = false;
+        this.recipeButton.active = false;
 
         int panelX = this.leftPos - PANEL_W - 5;
         int panelY = this.topPos - 1;

@@ -14,19 +14,15 @@ import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.enchantment.ItemEnchantments;
-import net.revilodev.runic.RunicConfig;
 import net.revilodev.runic.RunicMod;
 import net.revilodev.runic.client.ArtisansPreviewRenderer;
 import net.revilodev.runic.gear.GearAttribute;
-import net.revilodev.runic.gear.GearAttributes;
 import net.revilodev.runic.gear.RunicItemData;
 import net.revilodev.runic.item.ModItems;
 import net.revilodev.runic.relic.RelicRegistry;
 import net.revilodev.runic.runes.RuneSlots;
 import net.revilodev.runic.stat.RuneStatType;
 import net.revilodev.runic.stat.RuneStats;
-import net.revilodev.runic.synergy.SynergyRegistry;
 
 import java.util.*;
 
@@ -184,21 +180,16 @@ public final class ArtisansWorkbenchScreen extends AbstractContainerScreen<Artis
         int baseUsed = RuneSlots.used(base);
         int prevUsed = RuneSlots.used(preview);
 
-        if (baseCap != prevCap || baseUsed != prevUsed) {
-            out.add(Component.translatable("tooltip.runic.preview_slots_result",
-                    baseUsed + "/" + baseCap,
-                    prevUsed + "/" + prevCap).withStyle(ChatFormatting.AQUA));
-        }
-
         int baseCorruption = RunicItemData.getCorruption(base);
         int prevCorruption = RunicItemData.getCorruption(preview);
         if (baseCorruption != prevCorruption) {
             int deltaCorruption = prevCorruption - baseCorruption;
-            out.add(Component.translatable("tooltip.runic.preview_corruption_delta", signedPercent(deltaCorruption))
+            out.add(Component.literal("Corruption " + prevCorruption + "%: " + signedPercent(deltaCorruption))
                     .withStyle(deltaCorruption > 0 ? ChatFormatting.DARK_PURPLE : ChatFormatting.GREEN));
-            out.add(Component.translatable("tooltip.runic.preview_result_band",
-                    prevCorruption,
-                    RunicItemData.getCorruptionBand(preview).displayName()).withStyle(ChatFormatting.DARK_PURPLE));
+        }
+
+        if (baseCap != prevCap || baseUsed != prevUsed) {
+            out.add(Component.literal(slotIcons(prevUsed, prevCap)).withStyle(ChatFormatting.AQUA));
         }
         if (delta != null && delta.contains("relic_id", Tag.TAG_STRING)) {
             ResourceLocation relicId = ResourceLocation.tryParse(delta.getString("relic_id"));
@@ -219,16 +210,7 @@ public final class ArtisansWorkbenchScreen extends AbstractContainerScreen<Artis
                     toRoman(prevPotential)).withStyle(ChatFormatting.LIGHT_PURPLE));
         }
 
-        ResourceLocation newEnhancement = enhancementRef(enhancement);
-        if (newEnhancement != null && !SynergyRegistry.possibleSynergies(newEnhancement, base).isEmpty()) {
-            int chance = (int) Math.round(RunicItemData.getSynergyChance(base) * 100.0D);
-            out.add(Component.translatable("tooltip.runic.possible_synergy_detected").withStyle(ChatFormatting.LIGHT_PURPLE));
-            out.add(Component.translatable("tooltip.runic.synergy_chance", chance).withStyle(ChatFormatting.GRAY));
-            out.add(Component.translatable("tooltip.runic.preview_synergy_failure", RunicConfig.failedSynergyCorruption()).withStyle(ChatFormatting.RED));
-            if (GearAttributes.has(base, GearAttribute.FRACTURED)) {
-                out.add(Component.translatable("tooltip.runic.preview_synergy_failure_fractured", RunicConfig.fracturedExtraFailureCorruption()).withStyle(ChatFormatting.RED));
-            }
-        }
+        addAttributeDeltaLines(out, delta);
 
         if (base.isDamageableItem() && preview.isDamageableItem()) {
             int baseMax = base.getMaxDamage();
@@ -260,7 +242,7 @@ public final class ArtisansWorkbenchScreen extends AbstractContainerScreen<Artis
                 float dv = pv - bv;
                 if (Math.abs(dv) <= 0.0001F) continue;
                 out.add(hideStatRoll
-                        ? Component.literal(pretty(t.id()) + ": Added").withStyle(ChatFormatting.GREEN)
+                        ? statAddedLine(t, dv)
                         : coloredValue(pretty(t.id()), t, dv));
             }
         }
@@ -284,6 +266,34 @@ public final class ArtisansWorkbenchScreen extends AbstractContainerScreen<Artis
 
     private static String signedPercent(int value) {
         return (value > 0 ? "+" : "") + value + "%";
+    }
+
+    private static String slotIcons(int used, int capacity) {
+        int cap = Math.max(0, capacity);
+        int filled = Math.max(0, Math.min(used, cap));
+        StringBuilder sb = new StringBuilder(cap);
+        for (int i = 0; i < filled; i++) sb.append('O');
+        for (int i = filled; i < cap; i++) sb.append('o');
+        return sb.toString();
+    }
+
+    private static void addAttributeDeltaLines(List<Component> out, CompoundTag delta) {
+        if (delta == null || !delta.contains("attrs", Tag.TAG_COMPOUND)) return;
+        CompoundTag attrs = delta.getCompound("attrs");
+        if (attrs.isEmpty()) return;
+
+        for (GearAttribute attr : GearAttribute.values()) {
+            if (!attrs.contains(attr.id(), Tag.TAG_INT)) continue;
+            int value = attrs.getInt(attr.id());
+            if (value == 0) continue;
+
+            String prefix = value > 0 ? "+" : "-";
+            String suffix = Math.abs(value) > 1 ? " " + toRoman(Math.abs(value)) : "";
+            out.add(Component.literal(prefix)
+                    .append(attr.displayName().copy())
+                    .append(Component.literal(suffix))
+                    .withStyle(value > 0 ? ChatFormatting.GREEN : ChatFormatting.RED));
+        }
     }
 
     private record CustomDataAccessor(ItemStack stack) {
@@ -355,8 +365,14 @@ public final class ArtisansWorkbenchScreen extends AbstractContainerScreen<Artis
 
     private static Component coloredValue(String label, RuneStatType type, float delta) {
         ChatFormatting fmt = delta > 0 ? ChatFormatting.GREEN : ChatFormatting.RED;
-        String s = formatSignedValue(type, delta);
-        return Component.literal(label + ": " + s).withStyle(fmt);
+        return Component.literal((delta > 0 ? "+" : "-") + label).withStyle(fmt);
+    }
+
+    private static Component statAddedLine(RuneStatType type, float delta) {
+        ChatFormatting fmt = delta > 0 ? ChatFormatting.GREEN : ChatFormatting.RED;
+        return Component.literal(delta > 0 ? "+" : "-")
+                .append(Component.translatable("tooltip.runic.stat." + type.id()))
+                .withStyle(fmt);
     }
 
     private static String trimDouble(double v) {
@@ -386,25 +402,6 @@ public final class ArtisansWorkbenchScreen extends AbstractContainerScreen<Artis
             sb.append(Character.toUpperCase(p.charAt(0))).append(p.substring(1)).append(' ');
         }
         return sb.toString().trim();
-    }
-
-    private static ResourceLocation enhancementRef(ItemStack enhancement) {
-        RuneStats stats = RuneStats.get(enhancement);
-        if (stats != null && !stats.isEmpty()) {
-            RuneStatType type = stats.view().keySet().stream().findFirst().orElse(null);
-            return type == null ? null : SynergyRegistry.statId(type);
-        }
-
-        ItemEnchantments enchants = enhancement.getOrDefault(net.minecraft.core.component.DataComponents.STORED_ENCHANTMENTS, ItemEnchantments.EMPTY);
-        if (enchants.isEmpty()) {
-            enchants = enhancement.getOrDefault(net.minecraft.core.component.DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
-        }
-        for (var entry : enchants.entrySet()) {
-            if (entry.getIntValue() <= 0) continue;
-            Optional<ResourceLocation> id = entry.getKey().unwrapKey().map(k -> k.location());
-            if (id.isPresent()) return id.get();
-        }
-        return null;
     }
 
     private static String toRoman(int v) {
