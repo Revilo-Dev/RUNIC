@@ -18,6 +18,7 @@ import net.revilodev.runic.loot.rarity.EnhancementRarities;
 import net.revilodev.runic.loot.rarity.EnhancementRarity;
 import net.revilodev.runic.mythic.MythicRuneDefinition;
 import net.revilodev.runic.mythic.MythicRuneRegistry;
+import net.revilodev.runic.runes.UniqueRuneSources;
 import net.revilodev.runic.stat.RuneStatType;
 import net.revilodev.runic.stat.RuneStats;
 
@@ -45,6 +46,11 @@ public final class EnhancementToolTips {
             appendMythicRune(tooltip, stack);
             return true;
         }
+        ResourceLocation synergyId = RuneItem.getItemSynergyId(stack);
+        if (synergyId != null) {
+            appendSynergyRune(tooltip, synergyId);
+            return true;
+        }
 
         List<EnchLine> enchLines = collectEnchantments(stack);
         boolean hasEnchants = !enchLines.isEmpty();
@@ -56,7 +62,7 @@ public final class EnhancementToolTips {
         }
 
         if (hasEnchants) {
-            tooltip.addAll(buildEnchantBlocks(enchLines));
+            tooltip.addAll(buildEnchantBlocks(enchLines, isRune));
         }
 
         return true;
@@ -125,7 +131,7 @@ public final class EnhancementToolTips {
         });
     }
 
-    private static List<Component> buildEnchantBlocks(List<EnchLine> enchLines) {
+    private static List<Component> buildEnchantBlocks(List<EnchLine> enchLines, boolean isRune) {
         List<Component> out = new ArrayList<>();
         for (EnchLine e : enchLines) {
             boolean showDesc = Screen.hasAltDown();
@@ -145,7 +151,7 @@ public final class EnhancementToolTips {
             out.add(rarityLine(e.rarity));
             out.add(EnhancementCategory.forEnchantment(e.id).line());
 
-            String roman = toRoman(e.level);
+            String roman = hideRuneOnlyLevel(isRune, e.id) ? "" : toRoman(e.level);
             if (!roman.isEmpty()) {
                 out.add(levelLine(roman, e.rarity));
             }
@@ -154,6 +160,10 @@ public final class EnhancementToolTips {
     }
 
     private record EnchLine(Component name, int level, EnhancementRarity rarity, ResourceLocation id) {}
+
+    private static boolean hideRuneOnlyLevel(boolean isRune, ResourceLocation id) {
+        return isRune && UniqueRuneSources.isUniqueEtchingEffect(id);
+    }
 
     private static void appendMythicRune(List<Component> tooltip, ItemStack stack) {
         ResourceLocation id = MythicRuneRegistry.getItemRuneId(stack);
@@ -165,12 +175,23 @@ public final class EnhancementToolTips {
             return;
         }
 
-        tooltip.add(Component.translatable(definition.translationKey()).withStyle(ChatFormatting.RED));
+        tooltip.add(RarityTintedItemName.tintedName(ChatFormatting.DARK_PURPLE, stack, Component.translatable(definition.translationKey())));
         if (Screen.hasAltDown()) {
             tooltip.add(Component.translatable("tooltip.runic.mythic_desc." + id.getPath().substring("mythic/".length())).withStyle(ChatFormatting.DARK_GRAY));
         }
         tooltip.add(rarityLine(EnhancementRarity.MYTHIC));
         tooltip.add(EnhancementCategory.FORBIDDEN.line());
+    }
+
+    private static void appendSynergyRune(List<Component> tooltip, ResourceLocation id) {
+        String path = id.getPath().substring("synergy/".length());
+        tooltip.add(Component.literal(STAR + " ").withStyle(ChatFormatting.GOLD)
+                .append(RarityTintedItemName.tintedName(ChatFormatting.GOLD, ItemStack.EMPTY, Component.translatable("tooltip.runic.synergy." + path))));
+        if (Screen.hasAltDown()) {
+            tooltip.add(Component.translatable("tooltip.runic.synergy_desc." + path).withStyle(ChatFormatting.DARK_GRAY));
+        }
+        tooltip.add(rarityLine(EnhancementRarity.SYNERGY));
+        tooltip.add(EnhancementCategory.SYNERGY.line());
     }
 
     private static Component rarityLine(EnhancementRarity rarity) {

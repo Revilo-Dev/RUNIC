@@ -37,11 +37,14 @@ public final class SynergyEffects {
 
     public static void markFrozen(LivingEntity target, int durationTicks) {
         if (target == null || target.level().isClientSide) return;
-        target.getPersistentData().putLong(FROZEN_UNTIL, target.level().getGameTime() + Math.max(0, durationTicks));
+        int duration = Math.max(0, durationTicks);
+        target.getPersistentData().putLong(FROZEN_UNTIL, target.level().getGameTime() + duration);
+        target.addEffect(new MobEffectInstance(ModMobEffects.FROZEN, duration, 0, false, false, false));
     }
 
     public static boolean isFrozenOrChilled(LivingEntity target) {
         if (target == null) return false;
+        if (target.hasEffect(ModMobEffects.FROZEN)) return true;
         long now = target.level().getGameTime();
         if (target.getPersistentData().getLong(FROZEN_UNTIL) > now) return true;
         return target.hasEffect(MobEffects.MOVEMENT_SLOWDOWN);

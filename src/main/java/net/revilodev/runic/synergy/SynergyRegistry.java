@@ -61,6 +61,29 @@ public final class SynergyRegistry {
         return def == null ? Optional.empty() : Optional.of(def.result());
     }
 
+    public static List<ResourceLocation> ids() {
+        return DEFINITIONS.values().stream()
+                .map(Definition::result)
+                .distinct()
+                .sorted((a, b) -> a.toString().compareTo(b.toString()))
+                .toList();
+    }
+
+    public static List<Definition> possibleSynergies(ItemStack stack) {
+        if (stack == null || stack.isEmpty()) return List.of();
+        List<ResourceLocation> applied = EnhancementRefs.collectApplied(stack);
+        if (applied.isEmpty()) return List.of();
+
+        List<Definition> out = new ArrayList<>();
+        for (Definition def : DEFINITIONS.values()) {
+            if (!def.enabled() || RunicItemData.hasSynergy(stack, def.result())) continue;
+            if (applied.contains(def.inputA()) && applied.contains(def.inputB())) {
+                out.add(def);
+            }
+        }
+        return List.copyOf(out);
+    }
+
     public static List<Definition> possibleSynergies(ResourceLocation newlyApplied, ItemStack stack) {
         if (newlyApplied == null || stack == null || stack.isEmpty()) return List.of();
         List<Definition> out = new ArrayList<>();

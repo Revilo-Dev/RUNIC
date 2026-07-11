@@ -10,6 +10,7 @@ import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.SimpleJsonResourceReloadListener;
 import net.minecraft.util.GsonHelper;
 import net.minecraft.util.profiling.ProfilerFiller;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.*;
 import net.revilodev.runic.RunicMod;
 
@@ -116,6 +117,16 @@ public final class RuneSlotCapacityData extends SimpleJsonResourceReloadListener
         return 0;
     }
 
+    public static int capacity(ItemStack stack) {
+        Integer direct = CAPACITIES.get(stack.getItem());
+        if (direct != null) return direct;
+        String type = classify(stack);
+        if (type != null && DEFAULTS.containsKey(type)) {
+            return DEFAULTS.get(type);
+        }
+        return 0;
+    }
+
     private static String classify(Item item) {
         if (item instanceof ArmorItem armor) {
             return switch (armor.getType()) {
@@ -137,6 +148,28 @@ public final class RuneSlotCapacityData extends SimpleJsonResourceReloadListener
         if (item instanceof TridentItem) return "trident";
         if (item instanceof ElytraItem) return "elytra";
         if (item instanceof FishingRodItem) return "fishing_rod";
+        return null;
+    }
+
+    private static String classify(ItemStack stack) {
+        Item item = stack.getItem();
+        String vanilla = classify(item);
+        if (vanilla != null) return vanilla;
+
+        EquipmentSlot armorSlot = RunicItemTargets.armorSlot(stack);
+        if (armorSlot != null) {
+            return switch (armorSlot) {
+                case HEAD -> "helmet";
+                case CHEST -> "chestplate";
+                case LEGS -> "leggings";
+                case FEET -> "boots";
+                default -> null;
+            };
+        }
+
+        if (RunicItemTargets.isRangedWeapon(stack)) return "bow";
+        if (RunicItemTargets.isWeapon(stack)) return "sword";
+        if (RunicItemTargets.isMiningTool(stack)) return "pickaxe";
         return null;
     }
 

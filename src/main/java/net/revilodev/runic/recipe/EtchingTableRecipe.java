@@ -21,6 +21,7 @@ import net.revilodev.runic.RunicConfig;
 import net.revilodev.runic.event.EnchantBlacklist;
 import net.revilodev.runic.item.custom.EtchingItem;
 import net.revilodev.runic.item.custom.RuneItem;
+import net.revilodev.runic.mythic.MythicRuneRegistry;
 import net.revilodev.runic.stat.RuneStatType;
 import net.revilodev.runic.stat.RuneStats;
 
@@ -35,7 +36,8 @@ public final class EtchingTableRecipe implements Recipe<EtchingTableInput> {
             Ingredient.CODEC.fieldOf("material").forGetter(EtchingTableRecipe::material),
             ItemStack.CODEC.fieldOf("result").forGetter(EtchingTableRecipe::result),
             RuneStatType.CODEC.optionalFieldOf("stat").forGetter(EtchingTableRecipe::stat),
-            ResourceLocation.CODEC.optionalFieldOf("effect").forGetter(EtchingTableRecipe::effect)
+            ResourceLocation.CODEC.optionalFieldOf("effect").forGetter(EtchingTableRecipe::effect),
+            ResourceLocation.CODEC.optionalFieldOf("mythic").forGetter(EtchingTableRecipe::mythic)
     ).apply(inst, EtchingTableRecipe::new));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, EtchingTableRecipe> STREAM_CODEC = StreamCodec.composite(
@@ -44,6 +46,7 @@ public final class EtchingTableRecipe implements Recipe<EtchingTableInput> {
             ItemStack.STREAM_CODEC, EtchingTableRecipe::result,
             net.minecraft.network.codec.ByteBufCodecs.optional(RuneStatType.STREAM_CODEC), EtchingTableRecipe::stat,
             net.minecraft.network.codec.ByteBufCodecs.optional(ResourceLocation.STREAM_CODEC), EtchingTableRecipe::effect,
+            net.minecraft.network.codec.ByteBufCodecs.optional(ResourceLocation.STREAM_CODEC), EtchingTableRecipe::mythic,
             EtchingTableRecipe::new
     );
 
@@ -52,13 +55,15 @@ public final class EtchingTableRecipe implements Recipe<EtchingTableInput> {
     private final ItemStack result;
     private final Optional<RuneStatType> stat;
     private final Optional<ResourceLocation> effect;
+    private final Optional<ResourceLocation> mythic;
 
-    public EtchingTableRecipe(Ingredient base, Ingredient material, ItemStack result, Optional<RuneStatType> stat, Optional<ResourceLocation> effect) {
+    public EtchingTableRecipe(Ingredient base, Ingredient material, ItemStack result, Optional<RuneStatType> stat, Optional<ResourceLocation> effect, Optional<ResourceLocation> mythic) {
         this.base = base;
         this.material = material;
         this.result = result;
         this.stat = stat;
         this.effect = effect;
+        this.mythic = mythic;
     }
 
     public Ingredient base() {
@@ -79,6 +84,10 @@ public final class EtchingTableRecipe implements Recipe<EtchingTableInput> {
 
     public Optional<ResourceLocation> effect() {
         return effect;
+    }
+
+    public Optional<ResourceLocation> mythic() {
+        return mythic;
     }
 
     @Override
@@ -108,6 +117,9 @@ public final class EtchingTableRecipe implements Recipe<EtchingTableInput> {
         if (effect.map(EnchantBlacklist::isBlacklisted).orElse(false)) {
             return ItemStack.EMPTY;
         }
+        if (mythic.isPresent() && !MythicRuneRegistry.isKnown(mythic.get())) {
+            return ItemStack.EMPTY;
+        }
         ItemStack out = result.copy();
 
         if (stat.isPresent()) {
@@ -120,6 +132,8 @@ public final class EtchingTableRecipe implements Recipe<EtchingTableInput> {
                 out.enchant(ench, RuneItem.forcedEtchingEffectLevel(ench));
             }
         }
+
+        mythic.ifPresent(id -> MythicRuneRegistry.setItemRuneId(out, id));
 
         return out;
     }
@@ -166,7 +180,9 @@ public final class EtchingTableRecipe implements Recipe<EtchingTableInput> {
 
     @Override
     public ItemStack getResultItem(HolderLookup.Provider registries) {
-        return result.copy();
+        ItemStack out = result.copy();
+        mythic.ifPresent(id -> MythicRuneRegistry.setItemRuneId(out, id));
+        return out;
     }
 
     @Override

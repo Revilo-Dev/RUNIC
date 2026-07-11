@@ -18,6 +18,9 @@ public final class ModMobEffects {
     public static final DeferredHolder<MobEffect, MobEffect> STUNNING =
             MOB_EFFECTS.register("stunning", StunningMobEffect::new);
 
+    public static final DeferredHolder<MobEffect, MobEffect> FROZEN =
+            MOB_EFFECTS.register("frozen", FrozenMobEffect::new);
+
     public static void register(IEventBus bus) {
         MOB_EFFECTS.register(bus);
     }

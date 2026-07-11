@@ -19,7 +19,9 @@ import net.revilodev.runic.gear.GearAttributes;
 import net.revilodev.runic.gear.RunicItemData;
 import net.revilodev.runic.item.custom.RuneItem;
 import net.revilodev.runic.registry.ModDataComponents;
+import net.revilodev.runic.runes.RunicItemTargets;
 import net.revilodev.runic.runes.RuneSlots;
+import net.revilodev.runic.synergy.SynergyRegistry;
 import net.revilodev.runic.stat.RuneStatType;
 import net.revilodev.runic.stat.RuneStats;
 
@@ -90,6 +92,18 @@ public final class RunicCommandHelper {
         stack.set(DataComponents.ENCHANTMENTS, mutable.toImmutable());
         stack.set(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, true);
         RuneSlots.syncUsedToContents(stack);
+        return true;
+    }
+
+    public static boolean applySynergy(ItemStack stack, net.minecraft.resources.ResourceLocation synergyId) {
+        if (stack.isEmpty() || !SynergyRegistry.isRegisteredResult(synergyId) || RunicItemData.hasSynergy(stack, synergyId)) {
+            return false;
+        }
+
+        RunicItemData.addSynergy(stack, synergyId);
+        stack.set(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, true);
+        RuneSlots.syncUsedToContents(stack);
+        updateGlintAfter(stack);
         return true;
     }
 
@@ -195,8 +209,7 @@ public final class RunicCommandHelper {
     }
 
     private static boolean canApplyStatTo(ItemStack target, RuneStatType stat) {
-        Item item = target.getItem();
-        ArmorItem armor = item instanceof ArmorItem armorItem ? armorItem : null;
+        EquipmentSlot armorSlot = RunicItemTargets.armorSlot(target);
 
         return switch (stat) {
             case ATTACK_DAMAGE, ATTACK_SPEED, ATTACK_RANGE, SWEEPING_RANGE,
@@ -204,20 +217,17 @@ public final class RunicCommandHelper {
                     STUN_CHANCE, FLAME_CHANCE, BLEEDING_CHANCE, SHOCKING_CHANCE,
                     POISON_CHANCE, WITHERING_CHANCE, WEAKENING_CHANCE,
                     FREEZING_CHANCE, LEECHING_CHANCE, FANGS ->
-                    item instanceof SwordItem
-                            || item instanceof AxeItem
-                            || item instanceof TridentItem
-                            || item instanceof MaceItem;
+                    RunicItemTargets.isWeapon(target);
 
             case POWER, DRAW_SPEED, ABILITY_POWER ->
-                    item instanceof BowItem || item instanceof CrossbowItem;
+                    RunicItemTargets.isRangedWeapon(target);
 
-            case MINING_SPEED -> item instanceof DiggerItem;
-            case MOVEMENT_SPEED -> armor != null && armor.getEquipmentSlot() == EquipmentSlot.FEET;
-            case JUMP_HEIGHT -> armor != null && armor.getEquipmentSlot() == EquipmentSlot.LEGS;
+            case MINING_SPEED -> RunicItemTargets.isMiningTool(target);
+            case MOVEMENT_SPEED -> armorSlot == EquipmentSlot.FEET;
+            case JUMP_HEIGHT -> armorSlot == EquipmentSlot.LEGS;
             case HEALTH, RESISTANCE, FIRE_RESISTANCE, BLAST_RESISTANCE,
                     PROJECTILE_RESISTANCE, KNOCKBACK_RESISTANCE,
-                    TOUGHNESS, STONE, AEGIS -> armor != null;
+                    TOUGHNESS, STONE, AEGIS -> armorSlot != null;
             case DURABILITY -> target.isDamageableItem();
         };
     }
@@ -276,24 +286,12 @@ public final class RunicCommandHelper {
     }
 
     private static boolean applyUpgrade(ItemStack stack) {
-        if (!stack.isDamageableItem()) {
-            return false;
-        }
-
         RuneStats stats = RuneStats.get(stack);
         if (stats.isEmpty()) {
             return false;
         }
 
         float curseMult = GearAttributes.cursedMultiplier(stack);
-        int max = stack.getMaxDamage();
-        int damage = stack.getDamageValue();
-        int minRemaining = (int) Math.ceil(max * 0.25D);
-        int maxCost = (max - minRemaining) - damage;
-        if (maxCost < 1) {
-            return false;
-        }
-
         List<RuneStatType> candidates = new ArrayList<>();
         Map<RuneStatType, Integer> allowed = new EnumMap<>(RuneStatType.class);
 
@@ -307,7 +305,7 @@ public final class RunicCommandHelper {
 
             float effectiveCap = cap * curseMult;
             int byCap = (int) Math.floor(effectiveCap - value + 1e-6);
-            int maxIncrease = Math.min(10, Math.min(byCap, maxCost));
+            int maxIncrease = Math.min(10, byCap);
             if (maxIncrease >= 1) {
                 candidates.add(type);
                 allowed.put(type, maxIncrease);
@@ -326,7 +324,6 @@ public final class RunicCommandHelper {
         map.put(chosen, map.getOrDefault(chosen, 0.0F) + increase);
 
         RuneStats.set(stack, new RuneStats(map));
-        stack.set(DataComponents.DAMAGE, damage + increase);
         stack.set(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, true);
         updateGlintAfter(stack);
         return true;

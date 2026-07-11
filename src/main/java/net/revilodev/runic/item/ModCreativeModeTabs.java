@@ -19,6 +19,7 @@ import net.revilodev.runic.item.custom.EtchingItem;
 import net.revilodev.runic.item.custom.RuneItem;
 import net.revilodev.runic.mythic.MythicRuneRegistry;
 import net.revilodev.runic.runes.UniqueRuneSources;
+import net.revilodev.runic.synergy.SynergyRegistry;
 import net.revilodev.runic.stat.RuneStatType;
 
 public class ModCreativeModeTabs {
@@ -54,6 +55,10 @@ public class ModCreativeModeTabs {
                         for (ResourceLocation id : MythicRuneRegistry.ids()) {
                             ItemStack mythic = RuneItem.createMythicRune(id);
                             if (!mythic.isEmpty()) output.accept(mythic);
+                        }
+                        for (ResourceLocation id : SynergyRegistry.ids()) {
+                            ItemStack synergy = RuneItem.createSynergyRune(id);
+                            if (!synergy.isEmpty()) output.accept(synergy);
                         }
                         RandomSource random = RandomSource.create();
 

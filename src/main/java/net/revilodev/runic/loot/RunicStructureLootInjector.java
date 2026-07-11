@@ -29,6 +29,7 @@ import net.revilodev.runic.item.custom.RuneItem;
 import net.revilodev.runic.loot.rarity.EnhancementRarities;
 import net.revilodev.runic.mythic.MythicRuneRegistry;
 import net.revilodev.runic.runes.RuneSlots;
+import net.revilodev.runic.runes.RunicItemTargets;
 import net.revilodev.runic.runes.UniqueRuneSources;
 import net.revilodev.runic.stat.RuneStatType;
 
@@ -499,12 +500,6 @@ public class RunicStructureLootInjector extends LootModifier {
         if (stack.isEmpty() || !stack.isDamageableItem()) {
             return false;
         }
-        return stack.getItem() instanceof TieredItem
-                || stack.getItem() instanceof ShieldItem
-                || stack.getItem() instanceof net.minecraft.world.item.ArmorItem
-                || stack.getItem() instanceof net.minecraft.world.item.BowItem
-                || stack.getItem() instanceof net.minecraft.world.item.CrossbowItem
-                || stack.getItem() instanceof net.minecraft.world.item.TridentItem
-                || stack.getItem() instanceof net.minecraft.world.item.MaceItem;
+        return RunicItemTargets.isRunicGear(stack);
     }
 }

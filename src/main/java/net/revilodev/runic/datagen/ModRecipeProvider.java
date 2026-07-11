@@ -14,6 +14,7 @@ import net.minecraft.world.item.crafting.Ingredient;
 import net.neoforged.neoforge.common.conditions.ModLoadedCondition;
 import net.revilodev.runic.RunicMod;
 import net.revilodev.runic.item.ModItems;
+import net.revilodev.runic.mythic.MythicRuneRegistry;
 import net.revilodev.runic.recipe.EtchingTableRecipe;
 import net.revilodev.runic.runes.UniqueRuneSources;
 import net.revilodev.runic.stat.RuneStatType;
@@ -238,6 +239,7 @@ public final class ModRecipeProvider extends RecipeProvider {
                     Ingredient.of(mat),
                     etchingResult.copy(),
                     Optional.of(type),
+                    Optional.empty(),
                     Optional.empty()
             );
 
@@ -258,7 +260,8 @@ public final class ModRecipeProvider extends RecipeProvider {
                     Ingredient.of(effectMaterialOrThrow(effectId)),
                     etchingResult.copy(),
                     Optional.empty(),
-                    Optional.of(effectId)
+                    Optional.of(effectId),
+                    Optional.empty()
             );
 
             String ns = effectId.getNamespace();
@@ -270,6 +273,16 @@ public final class ModRecipeProvider extends RecipeProvider {
         }
 
         buildUtilityInscriptions(output);
+        buildMythicRunes(output);
+    }
+
+    private void buildMythicRunes(RecipeOutput output) {
+        Ingredient base = Ingredient.of(ModItems.BLANK_ETCHING.get());
+        addMythic(output, base, Items.NETHERITE_SWORD, MythicRuneRegistry.RUIN);
+        addMythic(output, base, Items.NETHER_STAR, MythicRuneRegistry.DOMINION);
+        addMythic(output, base, Items.ROTTEN_FLESH, MythicRuneRegistry.HUNGER);
+        addMythic(output, base, Items.ECHO_SHARD, MythicRuneRegistry.VOID);
+        addMythic(output, base, Items.TOTEM_OF_UNDYING, MythicRuneRegistry.ASCENDANCE);
     }
 
     private void buildUtilityInscriptions(RecipeOutput output) {
@@ -304,7 +317,26 @@ public final class ModRecipeProvider extends RecipeProvider {
                 Ingredient.of(material),
                 new ItemStack(resultItem, 1),
                 Optional.empty(),
+                Optional.empty(),
                 Optional.empty()
+        );
+
+        output.accept(id, recipe, null);
+    }
+
+    private static void addMythic(RecipeOutput output, Ingredient base, ItemLike material, ResourceLocation mythicId) {
+        ResourceLocation id = ResourceLocation.fromNamespaceAndPath(
+                RunicMod.MOD_ID,
+                "etching_table/mythic/" + mythicId.getPath().substring("mythic/".length())
+        );
+
+        EtchingTableRecipe recipe = new EtchingTableRecipe(
+                base,
+                Ingredient.of(material),
+                new ItemStack(ModItems.ENHANCED_RUNE.get(), 1),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.of(mythicId)
         );
 
         output.accept(id, recipe, null);

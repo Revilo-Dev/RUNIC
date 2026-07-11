@@ -189,7 +189,8 @@ public final class ArtisansWorkbenchScreen extends AbstractContainerScreen<Artis
         }
 
         if (baseCap != prevCap || baseUsed != prevUsed) {
-            out.add(Component.literal(slotIcons(prevUsed, prevCap)).withStyle(ChatFormatting.AQUA));
+            out.add(Component.literal(slotIcons(prevUsed, prevCap))
+                    .withStyle(RunicItemData.getSynergies(preview).isEmpty() ? ChatFormatting.AQUA : ChatFormatting.GOLD));
         }
         if (delta != null && delta.contains("relic_id", Tag.TAG_STRING)) {
             ResourceLocation relicId = ResourceLocation.tryParse(delta.getString("relic_id"));

@@ -10,6 +10,8 @@ import java.util.Map;
 public final class RuneModelMappings {
     private static final Map<String, Float> STAT_PREDICATES = new LinkedHashMap<>();
     private static final Map<String, Float> ENCHANT_PREDICATES = new LinkedHashMap<>();
+    private static final Map<String, Float> MYTHIC_PREDICATES = new LinkedHashMap<>();
+    private static final Map<String, Float> SYNERGY_PREDICATES = new LinkedHashMap<>();
     private static final List<ModelDef> MODEL_DEFS;
 
     static {
@@ -96,6 +98,23 @@ public final class RuneModelMappings {
         addEnchant("minecraft:depth_strider", 81f, "effect/depth_strider");
         addEnchant("minecraft:feather_falling", 82f, "effect/feather_falling");
         addStat("ability_power", 83f, "stat/ability_power");
+        addMythic("ruin", 84f, "stat/attack_damage");
+        addMythic("dominion", 85f, "stat/durability");
+        addMythic("hunger", 86f, "stat/leeching_chance");
+        addMythic("void", 87f, "stat/withering_chance");
+        addMythic("ascendance", 88f, "stat/health");
+        addSynergy("shatter", 89f, "effect/binding_curse");
+        addSynergy("bloodfire", 90f, "effect/binding_curse");
+        addSynergy("corrosion", 91f, "effect/binding_curse");
+        addSynergy("executioners_fury", 92f, "effect/binding_curse");
+        addSynergy("juggernaut", 93f, "effect/binding_curse");
+        addSynergy("tempest", 94f, "effect/binding_curse");
+        addSynergy("reaper", 95f, "effect/binding_curse");
+        addSynergy("soulburn", 96f, "effect/binding_curse");
+        addSynergy("frostbite", 97f, "effect/binding_curse");
+        addSynergy("venom_burst", 98f, "effect/binding_curse");
+        addSynergy("berserk", 99f, "effect/binding_curse");
+        addSynergy("ice_prison", 100f, "effect/binding_curse");
 
         MODEL_DEFS = List.copyOf(buildModelDefs());
     }
@@ -114,6 +133,16 @@ public final class RuneModelMappings {
         return enchantId == null ? 0.0F : ENCHANT_PREDICATES.getOrDefault(enchantId.toString(), 0.0F);
     }
 
+    public static float predicateForMythic(ResourceLocation mythicId) {
+        if (mythicId == null || !mythicId.getPath().startsWith("mythic/")) return 0.0F;
+        return MYTHIC_PREDICATES.getOrDefault(mythicId.getPath().substring("mythic/".length()), 0.0F);
+    }
+
+    public static float predicateForSynergy(ResourceLocation synergyId) {
+        if (synergyId == null || !synergyId.getPath().startsWith("synergy/")) return 0.0F;
+        return SYNERGY_PREDICATES.getOrDefault(synergyId.getPath().substring("synergy/".length()), 0.0F);
+    }
+
     public static List<ModelDef> modelDefs() {
         return MODEL_DEFS;
     }
@@ -125,6 +154,16 @@ public final class RuneModelMappings {
 
     private static void addEnchant(String enchantId, float predicate, String modelPath) {
         ENCHANT_PREDICATES.put(enchantId, predicate);
+        buildModelDefs().add(new ModelDef(predicate, modelPath));
+    }
+
+    private static void addMythic(String mythicId, float predicate, String modelPath) {
+        MYTHIC_PREDICATES.put(mythicId, predicate);
+        buildModelDefs().add(new ModelDef(predicate, modelPath));
+    }
+
+    private static void addSynergy(String synergyId, float predicate, String modelPath) {
+        SYNERGY_PREDICATES.put(synergyId, predicate);
         buildModelDefs().add(new ModelDef(predicate, modelPath));
     }
 

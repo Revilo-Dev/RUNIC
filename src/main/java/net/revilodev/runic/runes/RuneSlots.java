@@ -27,8 +27,7 @@ public final class RuneSlots {
         if (!enabled()) return 0;
         Integer stored = stack.get(ModDataComponents.RUNE_SLOTS_CAPACITY.get());
         if (stored != null) return Math.max(0, stored);
-        Item item = stack.getItem();
-        return RuneSlotCapacityData.capacity(item);
+        return RuneSlotCapacityData.capacity(stack);
     }
 
     public static int used(ItemStack stack) {

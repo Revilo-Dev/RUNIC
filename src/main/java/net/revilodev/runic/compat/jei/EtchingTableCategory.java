@@ -20,6 +20,7 @@ import net.revilodev.runic.RunicMod;
 import net.revilodev.runic.block.ModBlocks;
 import net.revilodev.runic.item.custom.EtchingItem;
 import net.revilodev.runic.item.custom.RuneItem;
+import net.revilodev.runic.mythic.MythicRuneRegistry;
 import net.revilodev.runic.recipe.EtchingTableRecipe;
 import net.revilodev.runic.stat.RuneStats;
 
@@ -78,6 +79,7 @@ public final class EtchingTableCategory implements IRecipeCategory<EtchingTableR
 
         recipe.stat().ifPresent(stat -> RuneStats.set(out, RuneStats.singleUnrolled(stat)));
         recipe.effect().ifPresent(effect -> applyEffect(out, effect));
+        recipe.mythic().ifPresent(id -> MythicRuneRegistry.setItemRuneId(out, id));
 
         return out;
     }

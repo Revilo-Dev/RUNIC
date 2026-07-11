@@ -62,6 +62,7 @@ public class RunicMod {
         if (FMLEnvironment.dist == Dist.CLIENT) {
             modEventBus.addListener(RunicClient::onRegisterScreens);
             modEventBus.addListener(RunicClient::onRegisterParticleProviders);
+            modEventBus.addListener(RunicClient::onAddEntityLayers);
             modEventBus.addListener(RunicClientModels::onClientSetup);
         }
 

@@ -1,6 +1,7 @@
 package net.revilodev.runic.item;
 
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Item;
@@ -13,6 +14,7 @@ import net.revilodev.runic.RunicMod;
 import net.revilodev.runic.item.custom.EtchingItem;
 import net.revilodev.runic.item.custom.RelicItem;
 import net.revilodev.runic.item.custom.RuneItem;
+import net.revilodev.runic.loot.rarity.EnhancementRarity;
 import net.revilodev.runic.relic.RelicRegistry;
 
 import java.util.List;
@@ -46,97 +48,43 @@ public final class ModItems {
             ITEMS.register("etching", () -> new EtchingItem(new Item.Properties().stacksTo(64)));
 
     public static final DeferredHolder<Item, Item> REPAIR_INSCRIPTION =
-            ITEMS.register("repair_rune", () -> new Item(new Item.Properties().stacksTo(64)) {
-                @Override
-                public void appendHoverText(ItemStack stack, TooltipContext ctx, List<Component> tooltip, TooltipFlag flag) {
-                    tooltip.add(Component.literal("Apply in an Artisan's Workbench").withStyle(ChatFormatting.DARK_GRAY));
-                    tooltip.add(Component.translatable("tooltip.runic.repair_rune").withStyle(ChatFormatting.GRAY));
-                }
-            });
+            ITEMS.register("repair_rune", () -> inscription("tooltip.runic.repair_rune", EnhancementRarity.COMMON, true, "brittle"));
 
     public static final DeferredHolder<Item, Item> EXPANSION_INSCRIPTION =
-            ITEMS.register("expansion_rune", () -> new Item(new Item.Properties().stacksTo(64)) {
-                @Override
-                public void appendHoverText(ItemStack stack, TooltipContext ctx, List<Component> tooltip, TooltipFlag flag) {
-                    tooltip.add(Component.literal("Apply in an Artisan's Workbench").withStyle(ChatFormatting.DARK_GRAY));
-                    tooltip.add(Component.translatable("tooltip.runic.expansion_rune").withStyle(ChatFormatting.GRAY));
-                }
-            });
+            ITEMS.register("expansion_rune", () -> inscription("tooltip.runic.expansion_rune", EnhancementRarity.UNCOMMON, true));
 
     public static final DeferredHolder<Item, Item> NULLIFICATION_INSCRIPTION =
-            ITEMS.register("nullification_rune", () -> new Item(new Item.Properties().stacksTo(64)) {
-                @Override
-                public void appendHoverText(ItemStack stack, TooltipContext ctx, List<Component> tooltip, TooltipFlag flag) {
-                    tooltip.add(Component.literal("Apply in an Artisan's Workbench").withStyle(ChatFormatting.DARK_GRAY));
-                    tooltip.add(Component.translatable("tooltip.runic.nullification_rune").withStyle(ChatFormatting.GRAY));
-                }
-            });
+            ITEMS.register("nullification_rune", () -> inscription("tooltip.runic.nullification_rune", EnhancementRarity.RARE, true, "negative"));
 
     public static final DeferredHolder<Item, Item> UPGRADE_INSCRIPTION =
-            ITEMS.register("upgrade_rune", () -> new Item(new Item.Properties().stacksTo(64)) {
-                @Override
-                public void appendHoverText(ItemStack stack, TooltipContext ctx, List<Component> tooltip, TooltipFlag flag) {
-                    tooltip.add(Component.literal("Apply in an Artisan's Workbench").withStyle(ChatFormatting.DARK_GRAY));
-                    tooltip.add(Component.translatable("tooltip.runic.upgrade_rune").withStyle(ChatFormatting.GRAY));
-                }
-            });
+            ITEMS.register("upgrade_rune", () -> inscription("tooltip.runic.upgrade_rune", EnhancementRarity.RARE, true, "overforged"));
 
     public static final DeferredHolder<Item, Item> REROLL_INSCRIPTION =
-            ITEMS.register("reroll_inscription", () -> new Item(new Item.Properties().stacksTo(64)) {
-                @Override
-                public void appendHoverText(ItemStack stack, TooltipContext ctx, List<Component> tooltip, TooltipFlag flag) {
-                    tooltip.add(Component.literal("Apply in an Artisan's Workbench").withStyle(ChatFormatting.DARK_GRAY));
-                    tooltip.add(Component.translatable("tooltip.runic.reroll_inscription").withStyle(ChatFormatting.GRAY));
-                }
-            });
+            ITEMS.register("reroll_inscription", () -> inscription("tooltip.runic.reroll_inscription", EnhancementRarity.RARE, true, "instable"));
 
     public static final DeferredHolder<Item, Item> CURSED_INSCRIPTION =
-            ITEMS.register("cursed_inscription", () -> new Item(new Item.Properties().stacksTo(64)) {
-                @Override
-                public void appendHoverText(ItemStack stack, TooltipContext ctx, List<Component> tooltip, TooltipFlag flag) {
-                    tooltip.add(Component.literal("Apply in an Artisan's Workbench").withStyle(ChatFormatting.DARK_GRAY));
-                    tooltip.add(Component.translatable("tooltip.runic.cursed_inscription").withStyle(ChatFormatting.GRAY));
-                }
-            });
+            ITEMS.register("cursed_inscription", () -> inscription("tooltip.runic.cursed_inscription", EnhancementRarity.CURSED, false, "cursed", "brittle", "overforged"));
 
     public static final DeferredHolder<Item, Item> WILD_INSCRIPTION =
-            ITEMS.register("wild_inscription", () -> new Item(new Item.Properties().stacksTo(64)) {
-                @Override
-                public void appendHoverText(ItemStack stack, TooltipContext ctx, List<Component> tooltip, TooltipFlag flag) {
-                    tooltip.add(Component.literal("Apply in an Artisan's Workbench").withStyle(ChatFormatting.DARK_GRAY));
-                    tooltip.add(Component.translatable("tooltip.runic.wild_inscription").withStyle(ChatFormatting.GRAY));
-                }
-            });
+            ITEMS.register("wild_inscription", () -> inscription("tooltip.runic.wild_inscription", EnhancementRarity.LEGENDARY, false, "chaotic", "cursed"));
 
     public static final DeferredHolder<Item, Item> EXTRACTION_INSCRIPTION =
-            ITEMS.register("extraction_inscription", () -> new Item(new Item.Properties().stacksTo(64)) {
-                @Override
-                public void appendHoverText(ItemStack stack, TooltipContext ctx, List<Component> tooltip, TooltipFlag flag) {
-                    tooltip.add(Component.literal("Apply in an Artisan's Workbench").withStyle(ChatFormatting.DARK_GRAY));
-                    tooltip.add(Component.translatable("tooltip.runic.extraction_inscription").withStyle(ChatFormatting.GRAY));
-                }
-            });
+            ITEMS.register("extraction_inscription", () -> inscription("tooltip.runic.extraction_inscription", EnhancementRarity.EPIC, true, "sealed"));
 
     public static final DeferredHolder<Item, Item> RESONANCE_INSCRIPTION =
-            ITEMS.register("resonance_inscription", () -> new Item(new Item.Properties().stacksTo(64)) {
-                @Override
-                public void appendHoverText(ItemStack stack, TooltipContext ctx, List<Component> tooltip, TooltipFlag flag) {
-                    tooltip.add(Component.literal("Apply in an Artisan's Workbench").withStyle(ChatFormatting.DARK_GRAY));
-                    tooltip.add(Component.translatable("tooltip.runic.resonance_inscription").withStyle(ChatFormatting.GRAY));
-                }
-            });
+            ITEMS.register("resonance_inscription", () -> inscription("tooltip.runic.resonance_inscription", EnhancementRarity.LEGENDARY, false, "fractured"));
 
     public static final DeferredHolder<Item, Item> PURIFICATION_INSCRIPTION =
-            ITEMS.register("purification_inscription", () -> inscription("tooltip.runic.purification_inscription"));
+            ITEMS.register("purification_inscription", () -> inscription("tooltip.runic.purification_inscription", EnhancementRarity.EPIC, false));
 
     public static final DeferredHolder<Item, Item> STABILIZATION_INSCRIPTION =
-            ITEMS.register("stabilization_inscription", () -> inscription("tooltip.runic.stabilization_inscription"));
+            ITEMS.register("stabilization_inscription", () -> inscription("tooltip.runic.stabilization_inscription", EnhancementRarity.UNCOMMON, false, "instable", "brittle"));
 
     public static final DeferredHolder<Item, Item> TEMPERING_INSCRIPTION =
-            ITEMS.register("tempering_inscription", () -> inscription("tooltip.runic.tempering_inscription"));
+            ITEMS.register("tempering_inscription", () -> inscription("tooltip.runic.tempering_inscription", EnhancementRarity.RARE, false, "reinforced", "brittle"));
 
     public static final DeferredHolder<Item, Item> RELIC_SOCKET_INSCRIPTION =
-            ITEMS.register("relic_socket_inscription", () -> inscription("tooltip.runic.relic_socket_inscription"));
+            ITEMS.register("relic_socket_inscription", () -> inscription("tooltip.runic.relic_socket_inscription", EnhancementRarity.EPIC, true));
 
     public static final DeferredHolder<Item, RelicItem> DRAGON_HEART =
             ITEMS.register("dragon_heart", () -> new RelicItem(new Item.Properties().stacksTo(16), RelicRegistry.DRAGON_HEART));
@@ -150,12 +98,30 @@ public final class ModItems {
     public static final DeferredHolder<Item, RelicItem> WARDENS_SOUL =
             ITEMS.register("wardens_soul", () -> new RelicItem(new Item.Properties().stacksTo(16), RelicRegistry.WARDENS_SOUL));
 
-    private static Item inscription(String tooltipKey) {
+    private static Item inscription(String tooltipKey, EnhancementRarity rarity, boolean craftable, String... attributeIds) {
         return new Item(new Item.Properties().stacksTo(64)) {
             @Override
             public void appendHoverText(ItemStack stack, TooltipContext ctx, List<Component> tooltip, TooltipFlag flag) {
-                tooltip.add(Component.literal("Apply in an Artisan's Workbench").withStyle(ChatFormatting.DARK_GRAY));
-                tooltip.add(Component.translatable(tooltipKey).withStyle(ChatFormatting.GRAY));
+                tooltip.add(Component.translatable("tooltip.runic.use_artisans_workbench").withStyle(ChatFormatting.DARK_GRAY));
+                Component desc = Component.translatable(tooltipKey).withStyle(ChatFormatting.GRAY);
+                if (attributeIds.length > 0 && !Screen.hasAltDown()) {
+                    desc = desc.copy().append(Component.literal(" [Alt]").withStyle(ChatFormatting.DARK_GRAY));
+                }
+                tooltip.add(desc);
+                tooltip.add(Component.translatable("tooltip.runic.inscription_rarity",
+                        Component.translatable("tooltip.runic.rarity." + rarity.key()).withStyle(rarity.color())).withStyle(ChatFormatting.GRAY));
+                tooltip.add(Component.translatable(craftable
+                        ? "tooltip.runic.inscription_source.craftable"
+                        : "tooltip.runic.inscription_source.loot_only").withStyle(craftable ? ChatFormatting.GREEN : ChatFormatting.GOLD));
+                if (attributeIds.length > 0 && Screen.hasAltDown()) {
+                    tooltip.add(Component.translatable("tooltip.runic.inscription_attributes").withStyle(ChatFormatting.GRAY));
+                    for (String attr : attributeIds) {
+                        tooltip.add(Component.literal("  ")
+                                .append(Component.translatable("tooltip.runic.attribute." + attr).withStyle(ChatFormatting.WHITE)));
+                        tooltip.add(Component.literal("  ")
+                                .append(Component.translatable("tooltip.runic.attribute_desc." + attr).withStyle(ChatFormatting.DARK_GRAY)));
+                    }
+                }
             }
         };
     }

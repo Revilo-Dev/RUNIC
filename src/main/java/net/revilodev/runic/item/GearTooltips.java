@@ -1,7 +1,6 @@
 package net.revilodev.runic.item;
 
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.component.DataComponents;
@@ -22,6 +21,7 @@ import net.revilodev.runic.loot.rarity.EnhancementRarities;
 import net.revilodev.runic.loot.rarity.EnhancementRarity;
 import net.revilodev.runic.mythic.MythicRuneRegistry;
 import net.revilodev.runic.relic.RelicRegistry;
+import net.revilodev.runic.runes.RunicItemTargets;
 import net.revilodev.runic.runes.RuneSlots;
 import net.revilodev.runic.stat.RuneStatType;
 import net.revilodev.runic.stat.RuneStats;
@@ -33,6 +33,7 @@ public final class GearTooltips {
     private GearTooltips() {}
 
     private static final int ENCHANT_TOOLTIP_PREVIEW_LIMIT = 4;
+    private static final String SYNERGY_ICON = "\u2605";
 
     private static final char SLOT_FILLED = '⬤';
     private static final char SLOT_EMPTY = '◯';
@@ -118,17 +119,7 @@ public final class GearTooltips {
     }
 
     private static boolean isGear(ItemStack stack) {
-        Item item = stack.getItem();
-        return item instanceof ArmorItem
-                || item instanceof SwordItem
-                || item instanceof AxeItem
-                || item instanceof PickaxeItem
-                || item instanceof ShovelItem
-                || item instanceof HoeItem
-                || item instanceof BowItem
-                || item instanceof CrossbowItem
-                || item instanceof TridentItem
-                || item instanceof MaceItem;
+        return RunicItemTargets.isRunicGear(stack);
     }
 
     private static boolean shouldOverride(ItemStack stack) {
@@ -328,14 +319,18 @@ public final class GearTooltips {
         int u = Math.min(used, cap);
         int rem = Math.max(0, cap - used);
 
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < u; i++) sb.append(SLOT_FILLED);
-        for (int i = 0; i < rem; i++) sb.append(SLOT_EMPTY);
+        boolean hasSynergy = !RunicItemData.getSynergies(stack).isEmpty();
+        boolean hasMythic = !RunicItemData.getMythicRunes(stack).isEmpty();
+        MutableComponent line = Component.empty();
+        for (int i = 0; i < cap; i++) {
+            char icon = i < u ? SLOT_FILLED : SLOT_EMPTY;
+            ChatFormatting color = hasMythic && i == 0
+                    ? ChatFormatting.DARK_PURPLE
+                    : hasSynergy ? ChatFormatting.GOLD : ChatFormatting.WHITE;
+            line.append(Component.literal(String.valueOf(icon)).withStyle(color));
+        }
 
-        return List.of(Component.literal(used + " / " + cap)
-                .withStyle(ChatFormatting.GRAY)
-                .append(Component.literal(" "))
-                .append(Component.literal(sb.toString()).withStyle(ChatFormatting.WHITE)));
+        return List.of(line);
     }
 
     private static List<Component> buildSynergyLines(ItemStack stack, boolean showDetails) {
@@ -346,6 +341,7 @@ public final class GearTooltips {
             if (!id.getPath().startsWith("synergy/")) continue;
             String path = id.getPath().substring("synergy/".length());
             out.add(Component.literal("  ")
+                    .append(Component.literal(SYNERGY_ICON + " ").withStyle(ChatFormatting.GOLD))
                     .append(RarityTintedItemName.tintedName(ChatFormatting.GOLD, stack, Component.translatable("tooltip.runic.synergy." + path))));
             if (showDetails) {
                 out.add(Component.literal("  ")
@@ -374,17 +370,7 @@ public final class GearTooltips {
     }
 
     private static List<Component> buildRelicLines(ItemStack stack, boolean showDetails) {
-        List<Component> relicLines = RelicRegistry.buildGearTooltipLines(stack, showDetails || Screen.hasShiftDown());
-        if (!relicLines.isEmpty() && RunicItemData.hasRelic(stack) && Minecraft.getInstance().player != null) {
-            ResourceLocation relicId = RunicItemData.getRelicId(stack);
-            if (relicId != null) {
-                relicLines = new ArrayList<>(relicLines);
-                relicLines.add(Math.min(3, relicLines.size()), Component.translatable("tooltip.runic.relic_set",
-                        RelicRegistry.countEquippedRelics(Minecraft.getInstance().player, relicId),
-                        net.revilodev.runic.RunicConfig.relicFullSetRequiredCount()).withStyle(ChatFormatting.BLUE));
-            }
-        }
-        return relicLines;
+        return RelicRegistry.buildGearTooltipLines(stack, Screen.hasAltDown());
     }
 
     private static List<Component> buildAttributeIndicators(ItemStack stack, boolean showDetails) {

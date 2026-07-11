@@ -208,8 +208,9 @@ public final class RuneAttributeApplier {
     private static EquipmentSlotGroup resolveSlotGroup(ItemStack stack) {
         Item item = stack.getItem();
 
-        if (item instanceof ArmorItem armor) {
-            return switch (armor.getEquipmentSlot()) {
+        EquipmentSlot armorSlot = RunicItemTargets.armorSlot(stack);
+        if (armorSlot != null) {
+            return switch (armorSlot) {
                 case HEAD -> EquipmentSlotGroup.HEAD;
                 case CHEST -> EquipmentSlotGroup.CHEST;
                 case LEGS -> EquipmentSlotGroup.LEGS;
@@ -218,13 +219,11 @@ public final class RuneAttributeApplier {
             };
         }
 
-        if (item instanceof TieredItem
-                || item instanceof BowItem
-                || item instanceof CrossbowItem
-                || item instanceof TridentItem
+        if (RunicItemTargets.isWeapon(stack)
+                || RunicItemTargets.isRangedWeapon(stack)
+                || RunicItemTargets.isMiningTool(stack)
                 || item instanceof ShieldItem
-                || item instanceof FishingRodItem
-                || item instanceof MaceItem) {
+                || item instanceof FishingRodItem) {
             return EquipmentSlotGroup.MAINHAND;
         }
 

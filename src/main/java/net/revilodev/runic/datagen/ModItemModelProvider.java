@@ -41,13 +41,13 @@ public class ModItemModelProvider extends ItemModelProvider {
         withExistingParent("item/relic_socket_inscription", "minecraft:item/generated")
                 .texture("layer0", modLoc("item/blank_inscription"));
         withExistingParent("item/dragon_heart", "minecraft:item/generated")
-                .texture("layer0", mcLoc("item/blaze_powder"));
+                .texture("layer0", modLoc("item/relic/dragon-heart"));
         withExistingParent("item/elder_guardians_eye", "minecraft:item/generated")
-                .texture("layer0", mcLoc("item/heart_of_the_sea"));
+                .texture("layer0", modLoc("item/relic/elder-gardian-eye"));
         withExistingParent("item/wither_charge", "minecraft:item/generated")
-                .texture("layer0", mcLoc("item/nether_star"));
+                .texture("layer0", modLoc("item/relic/wither-charge"));
         withExistingParent("item/wardens_soul", "minecraft:item/generated")
-                .texture("layer0", mcLoc("item/echo_shard"));
+                .texture("layer0", modLoc("item/relic/warden-soul"));
 
         generateLayeredRuneAndEtchingModels();
     }
@@ -58,9 +58,13 @@ public class ModItemModelProvider extends ItemModelProvider {
     }
 
     private void generateLayeredSet(String itemModelName, String baseTexture, String folderName) {
+        java.util.Set<String> generatedModels = new java.util.HashSet<>();
         for (RuneModelMappings.ModelDef def : RuneModelMappings.modelDefs()) {
             String modelPath = "item/" + folderName + "/" + def.subPath();
             String iconTex = "item/icons/" + def.subPath();
+            if (!generatedModels.add(modelPath)) {
+                continue;
+            }
 
             withExistingParent(modelPath, "minecraft:item/generated")
                     .texture("layer0", modLoc(baseTexture))

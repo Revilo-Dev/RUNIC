@@ -16,6 +16,8 @@ import net.revilodev.runic.item.ModItems;
 import net.revilodev.runic.item.RarityTintedItemName;
 import net.revilodev.runic.loot.rarity.EnhancementRarities;
 import net.revilodev.runic.mythic.MythicRuneRegistry;
+import net.revilodev.runic.gear.RunicItemData;
+import net.revilodev.runic.synergy.SynergyRegistry;
 import net.revilodev.runic.stat.RuneStatType;
 import net.revilodev.runic.stat.RuneStats;
 
@@ -108,9 +110,15 @@ public class RuneItem extends Item implements RarityTintedItemName {
 
     @Override
     public Component getName(ItemStack stack) {
+        ResourceLocation synergyId = getItemSynergyId(stack);
+        if (synergyId != null) {
+            return RarityTintedItemName.super.tintedName(stack,
+                    Component.translatable("tooltip.runic.synergy." + synergyId.getPath().substring("synergy/".length())));
+        }
+
         ResourceLocation mythicId = MythicRuneRegistry.getItemRuneId(stack);
         if (mythicId != null) {
-            return RarityTintedItemName.super.tintedName(stack,
+            return RarityTintedItemName.tintedName(ChatFormatting.DARK_PURPLE, stack,
                     Component.translatable("tooltip.runic.mythic_name." + mythicId.getPath().substring("mythic/".length())));
         }
         return super.getName(stack);
@@ -241,12 +249,33 @@ public class RuneItem extends Item implements RarityTintedItemName {
         return stack;
     }
 
+    public static ItemStack createSynergyRune(ResourceLocation id) {
+        if (!SynergyRegistry.isRegisteredResult(id)) {
+            return ItemStack.EMPTY;
+        }
+        ItemStack stack = new ItemStack(ModItems.ENHANCED_RUNE.get());
+        RunicItemData.addSynergy(stack, id);
+        return stack;
+    }
+
+    public static ResourceLocation getItemSynergyId(ItemStack stack) {
+        List<ResourceLocation> synergies = RunicItemData.getSynergies(stack);
+        if (synergies.size() != 1) {
+            return null;
+        }
+        ResourceLocation id = synergies.get(0);
+        return SynergyRegistry.isRegisteredResult(id) ? id : null;
+    }
+
     @Override
     public boolean isFoil(ItemStack stack) {
         if (stack.isEnchanted()) {
             return true;
         }
         if (MythicRuneRegistry.isMythicRune(stack)) {
+            return true;
+        }
+        if (getItemSynergyId(stack) != null) {
             return true;
         }
         RuneStats stats = RuneStats.get(stack);

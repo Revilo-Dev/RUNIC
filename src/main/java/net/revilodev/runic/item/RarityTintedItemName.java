@@ -18,6 +18,7 @@ public interface RarityTintedItemName {
     static Component tintedName(ChatFormatting color, ItemStack stack, Component baseName) {
         return switch (color) {
             case GOLD -> shimmeringLegendary(baseName.getString());
+            case DARK_PURPLE -> shimmeringMythic(baseName.getString());
             case LIGHT_PURPLE -> pulsingEpic(baseName.getString());
             default -> baseName.copy().withStyle(color);
         };
@@ -59,6 +60,37 @@ public interface RarityTintedItemName {
                 color = lerpColor(edgeGold, warmYellow, (float) ((2.8D - distance) / 1.2D));
             } else {
                 color = baseGold;
+            }
+            result = result.append(Component.literal(String.valueOf(text.charAt(i)))
+                    .withStyle(Style.EMPTY.withColor(TextColor.fromRgb(color))));
+        }
+        return result;
+    }
+
+    private static Component shimmeringMythic(String text) {
+        if (text.isEmpty()) {
+            return Component.empty();
+        }
+
+        final int basePurple = 0x7A1FA2;
+        final int edgePurple = 0xA445D6;
+        final int brightPurple = 0xE0B2FF;
+        final int hotWhite = 0xFFFFFF;
+
+        int length = text.length();
+        double sweep = ((System.currentTimeMillis() % 1800L) / 1800.0D) * (length + 8) - 4.0D;
+        MutableComponent result = Component.empty();
+        for (int i = 0; i < length; i++) {
+            double distance = Math.abs(i - sweep);
+            int color;
+            if (distance < 0.6D) {
+                color = hotWhite;
+            } else if (distance < 1.6D) {
+                color = lerpColor(brightPurple, hotWhite, (float) (1.6D - distance));
+            } else if (distance < 2.8D) {
+                color = lerpColor(edgePurple, brightPurple, (float) ((2.8D - distance) / 1.2D));
+            } else {
+                color = basePurple;
             }
             result = result.append(Component.literal(String.valueOf(text.charAt(i)))
                     .withStyle(Style.EMPTY.withColor(TextColor.fromRgb(color))));

@@ -54,6 +54,7 @@ public final class RunicEtchingRecipeProvider extends RecipeProvider {
                     statMaterial,
                     result.copy(),
                     Optional.of(stat),
+                    Optional.empty(),
                     Optional.empty()
             );
             output.accept(id, recipe, null);
@@ -78,7 +79,8 @@ public final class RunicEtchingRecipeProvider extends RecipeProvider {
                     effectMaterial,
                     result.copy(),
                     Optional.empty(),
-                    Optional.of(effectId)
+                    Optional.of(effectId),
+                    Optional.empty()
             );
             output.accept(id, recipe, null);
         }

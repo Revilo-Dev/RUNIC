@@ -1,0 +1,14 @@
+{
+  "type": "runic:etching_table",
+  "base": {
+    "item": "runic:blank_etching"
+  },
+  "material": {
+    "item": "minecraft:netherite_sword"
+  },
+  "result": {
+    "count": 1,
+    "id": "runic:enhanced_rune"
+  },
+  "mythic": "runic:mythic/ruin"
+}

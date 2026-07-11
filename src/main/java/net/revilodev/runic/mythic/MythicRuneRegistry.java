@@ -11,6 +11,8 @@ import net.revilodev.runic.RunicConfig;
 import net.revilodev.runic.RunicMod;
 import net.revilodev.runic.gear.GearAttributes;
 import net.revilodev.runic.gear.RunicItemData;
+import net.revilodev.runic.item.RarityTintedItemName;
+import net.revilodev.runic.runes.RunicItemTargets;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -110,6 +112,14 @@ public final class MythicRuneRegistry {
         return get(id) != null;
     }
 
+    public static boolean canApplyTo(ItemStack stack, ResourceLocation id) {
+        if (stack == null || stack.isEmpty() || id == null) return false;
+        if (DOMINION.equals(id)) {
+            return RunicItemTargets.isWeapon(stack) || RunicItemTargets.isArmor(stack);
+        }
+        return RunicItemTargets.isWeapon(stack) || RunicItemTargets.isRangedWeapon(stack);
+    }
+
     public static boolean isMythicRune(ItemStack stack) {
         return getItemRuneId(stack) != null;
     }
@@ -194,13 +204,14 @@ public final class MythicRuneRegistry {
         }
 
         List<net.minecraft.network.chat.Component> out = new ArrayList<>();
-        out.add(net.minecraft.network.chat.Component.translatable("tooltip.runic.mythic_runes").withStyle(ChatFormatting.RED));
+        out.add(net.minecraft.network.chat.Component.translatable("tooltip.runic.mythic_runes").withStyle(ChatFormatting.DARK_PURPLE));
         for (ResourceLocation id : ids) {
             MythicRuneDefinition definition = get(id);
             net.minecraft.network.chat.Component name = definition == null
                     ? net.minecraft.network.chat.Component.translatable("tooltip.runic.mythic_unknown")
                     : net.minecraft.network.chat.Component.translatable(definition.translationKey());
-            out.add(net.minecraft.network.chat.Component.literal("  ").append(name.copy().withStyle(ChatFormatting.RED)));
+            out.add(net.minecraft.network.chat.Component.literal("  ")
+                    .append(RarityTintedItemName.tintedName(ChatFormatting.DARK_PURPLE, stack, name)));
             out.add(net.minecraft.network.chat.Component.literal("  ").append(net.minecraft.network.chat.Component.translatable("tooltip.runic.mythic_rune").withStyle(ChatFormatting.DARK_RED)));
             if (detailed && definition != null) {
                 out.add(net.minecraft.network.chat.Component.literal("  ")

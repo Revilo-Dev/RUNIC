@@ -21,6 +21,7 @@ import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.revilodev.runic.RunicConfig;
 import net.revilodev.runic.item.RuneModelMappings;
 import net.revilodev.runic.item.custom.RuneItem;
+import net.revilodev.runic.synergy.SynergyRegistry;
 import net.revilodev.runic.stat.RuneStatType;
 
 import java.util.Collection;
@@ -37,52 +38,70 @@ public final class RunicCommands {
             new SimpleCommandExceptionType(Component.literal("Unknown runic effect enchantment."));
     private static final SimpleCommandExceptionType UNKNOWN_INSCRIPTION =
             new SimpleCommandExceptionType(Component.literal("Unknown inscription."));
+    private static final SimpleCommandExceptionType UNKNOWN_SYNERGY =
+            new SimpleCommandExceptionType(Component.literal("Unknown synergy."));
     private static final SimpleCommandExceptionType UNKNOWN_CONFIG_TARGET =
             new SimpleCommandExceptionType(Component.literal("Unknown runic config target."));
 
     private RunicCommands() {}
 
     public static void register(RegisterCommandsEvent event) {
+        var apply = Commands.literal("apply")
+                .then(Commands.literal("stat")
+                        .then(Commands.argument("name", StringArgumentType.word())
+                                .suggests((context, builder) -> {
+                                    for (RuneStatType type : RuneStatType.values()) {
+                                        builder.suggest(type.id());
+                                    }
+                                    return builder.buildFuture();
+                                })
+                                .then(Commands.argument("amount", FloatArgumentType.floatArg())
+                                        .then(Commands.argument("targets", EntityArgument.entities())
+                                                .executes(context -> applyStat(
+                                                        context.getSource(),
+                                                        StringArgumentType.getString(context, "name"),
+                                                        FloatArgumentType.getFloat(context, "amount"),
+                                                        EntityArgument.getEntities(context, "targets")
+                                                ))))))
+                .then(Commands.literal("effect")
+                        .then(Commands.argument("name", StringArgumentType.word())
+                                .suggests((context, builder) -> {
+                                    for (String effectId : RuneModelMappings.modelDefs().stream()
+                                            .map(RuneModelMappings.ModelDef::subPath)
+                                            .filter(path -> path.startsWith("effect/"))
+                                            .map(path -> path.substring("effect/".length()))
+                                            .toList()) {
+                                        builder.suggest(effectId);
+                                    }
+                                    return builder.buildFuture();
+                                })
+                                .then(Commands.argument("level", IntegerArgumentType.integer(1))
+                                        .then(Commands.argument("targets", EntityArgument.entities())
+                                                .executes(context -> applyEffect(
+                                                        context.getSource(),
+                                                        StringArgumentType.getString(context, "name"),
+                                                        IntegerArgumentType.getInteger(context, "level"),
+                                                        EntityArgument.getEntities(context, "targets")
+                                                ))))))
+                .then(Commands.literal("synergy")
+                        .then(Commands.argument("name", StringArgumentType.word())
+                                .suggests((context, builder) -> {
+                                    for (ResourceLocation id : SynergyRegistry.ids()) {
+                                        builder.suggest(id.getPath().substring("synergy/".length()));
+                                    }
+                                    return builder.buildFuture();
+                                })
+                                .then(Commands.argument("targets", EntityArgument.entities())
+                                        .executes(context -> applySynergy(
+                                                context.getSource(),
+                                                StringArgumentType.getString(context, "name"),
+                                                EntityArgument.getEntities(context, "targets")
+                                        )))));
+
         event.getDispatcher().register(
                 Commands.literal("runic")
                         .requires(source -> source.hasPermission(2))
-                        .then(Commands.literal("apply")
-                                .then(Commands.literal("stat")
-                                        .then(Commands.argument("name", StringArgumentType.word())
-                                                .suggests((context, builder) -> {
-                                                    for (RuneStatType type : RuneStatType.values()) {
-                                                        builder.suggest(type.id());
-                                                    }
-                                                    return builder.buildFuture();
-                                                })
-                                                .then(Commands.argument("amount", FloatArgumentType.floatArg())
-                                                        .then(Commands.argument("targets", EntityArgument.entities())
-                                                                .executes(context -> applyStat(
-                                                                        context.getSource(),
-                                                                        StringArgumentType.getString(context, "name"),
-                                                                        FloatArgumentType.getFloat(context, "amount"),
-                                                                        EntityArgument.getEntities(context, "targets")
-                                                                ))))))
-                                .then(Commands.literal("effect")
-                                        .then(Commands.argument("name", StringArgumentType.word())
-                                                .suggests((context, builder) -> {
-                                                    for (String effectId : RuneModelMappings.modelDefs().stream()
-                                                            .map(RuneModelMappings.ModelDef::subPath)
-                                                            .filter(path -> path.startsWith("effect/"))
-                                                            .map(path -> path.substring("effect/".length()))
-                                                            .toList()) {
-                                                        builder.suggest(effectId);
-                                                    }
-                                                    return builder.buildFuture();
-                                                })
-                                                .then(Commands.argument("level", IntegerArgumentType.integer(1))
-                                                        .then(Commands.argument("targets", EntityArgument.entities())
-                                                                .executes(context -> applyEffect(
-                                                                        context.getSource(),
-                                                                        StringArgumentType.getString(context, "name"),
-                                                                        IntegerArgumentType.getInteger(context, "level"),
-                                                                        EntityArgument.getEntities(context, "targets")
-                                                                )))))))
+                        .then(apply)
                         .then(Commands.literal("clear")
                                 .then(Commands.argument("targets", EntityArgument.entities())
                                         .executes(context -> clear(
@@ -154,6 +173,22 @@ public final class RunicCommands {
         return changed;
     }
 
+    private static int applySynergy(CommandSourceStack source, String synergyName, Collection<? extends Entity> targets)
+            throws CommandSyntaxException {
+        ResourceLocation synergyId = resolveSynergy(synergyName);
+
+        int changed = 0;
+        for (Entity entity : targets) {
+            ItemStack stack = requireHeldItem(entity);
+            if (RunicCommandHelper.applySynergy(stack, synergyId)) {
+                changed++;
+            }
+        }
+
+        sendSummary(source, "Applied synergy " + synergyName + " to", changed, targets.size());
+        return changed;
+    }
+
     private static int clear(CommandSourceStack source, Collection<? extends Entity> targets) throws CommandSyntaxException {
         int changed = 0;
         for (Entity entity : targets) {
@@ -216,6 +251,17 @@ public final class RunicCommands {
                 .get(ResourceKey.create(Registries.ENCHANTMENT, id))
                 .filter(RunicCommands::isRunicEffect)
                 .orElseThrow(UNKNOWN_EFFECT::create);
+    }
+
+    private static ResourceLocation resolveSynergy(String name) throws CommandSyntaxException {
+        String normalized = name.toLowerCase(Locale.ROOT);
+        ResourceLocation id = normalized.contains(":")
+                ? ResourceLocation.parse(normalized)
+                : SynergyRegistry.synergyId(normalized);
+        if (!SynergyRegistry.isRegisteredResult(id)) {
+            throw UNKNOWN_SYNERGY.create();
+        }
+        return id;
     }
 
     private static boolean isRunicEffect(Holder<Enchantment> enchantment) {

@@ -14,6 +14,8 @@ import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.revilodev.runic.RunicMod;
 import net.revilodev.runic.item.ModItems;
 import net.revilodev.runic.item.RuneModelMappings;
+import net.revilodev.runic.item.custom.RuneItem;
+import net.revilodev.runic.mythic.MythicRuneRegistry;
 import net.revilodev.runic.stat.RuneStatType;
 import net.revilodev.runic.stat.RuneStats;
 
@@ -41,6 +43,16 @@ public final class RunicClientModels {
 
     private static float runePredicate(ItemStack stack, ClientLevel level, LivingEntity entity, int seed) {
         if (stack.isEmpty()) return 0.0F;
+
+        ResourceLocation synergyId = RuneItem.getItemSynergyId(stack);
+        if (synergyId != null) {
+            return RuneModelMappings.predicateForSynergy(synergyId);
+        }
+
+        ResourceLocation mythicId = MythicRuneRegistry.getItemRuneId(stack);
+        if (mythicId != null) {
+            return RuneModelMappings.predicateForMythic(mythicId);
+        }
 
         RuneStats stats = RuneStats.get(stack);
         if (stats != null && !stats.isEmpty()) {

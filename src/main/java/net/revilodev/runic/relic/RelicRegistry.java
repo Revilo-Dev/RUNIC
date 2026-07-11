@@ -5,21 +5,12 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.item.ArmorItem;
-import net.minecraft.world.item.AxeItem;
-import net.minecraft.world.item.BowItem;
-import net.minecraft.world.item.CrossbowItem;
-import net.minecraft.world.item.HoeItem;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.MaceItem;
-import net.minecraft.world.item.PickaxeItem;
-import net.minecraft.world.item.ShovelItem;
-import net.minecraft.world.item.SwordItem;
-import net.minecraft.world.item.TridentItem;
 import net.revilodev.runic.RunicConfig;
 import net.revilodev.runic.RunicMod;
 import net.revilodev.runic.gear.RunicItemData;
 import net.revilodev.runic.item.custom.RelicItem;
+import net.revilodev.runic.runes.RunicItemTargets;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -100,16 +91,7 @@ public final class RelicRegistry {
             return false;
         }
 
-        return stack.getItem() instanceof ArmorItem
-                || stack.getItem() instanceof SwordItem
-                || stack.getItem() instanceof AxeItem
-                || stack.getItem() instanceof PickaxeItem
-                || stack.getItem() instanceof ShovelItem
-                || stack.getItem() instanceof HoeItem
-                || stack.getItem() instanceof BowItem
-                || stack.getItem() instanceof CrossbowItem
-                || stack.getItem() instanceof TridentItem
-                || stack.getItem() instanceof MaceItem;
+        return RunicItemTargets.isRunicGear(stack);
     }
 
     public static boolean canApplyTo(ItemStack target, ResourceLocation relicId) {
@@ -168,13 +150,11 @@ public final class RelicRegistry {
         }
 
         tooltip.add(Component.translatable("tooltip.runic.requires_empty_relic_socket").withStyle(ChatFormatting.GRAY));
-        tooltip.add(Component.translatable("tooltip.runic.relic_corruption", definition.corruptionValue()).withStyle(ChatFormatting.DARK_PURPLE));
-        tooltip.add(Component.translatable("tooltip.runic.relic_durability_use", formatPercent(definition.durabilityUseIncreasePercentValue())).withStyle(ChatFormatting.GRAY));
 
         if (detailed) {
+            tooltip.add(Component.translatable("tooltip.runic.relic_durability_use", formatPercent(definition.durabilityUseIncreasePercentValue())).withStyle(ChatFormatting.GRAY));
+            tooltip.add(Component.translatable("tooltip.runic.relic_corruption", definition.corruptionValue()).withStyle(ChatFormatting.GRAY));
             tooltip.add(Component.translatable("tooltip.runic.relic_desc." + definition.id().getPath()).withStyle(ChatFormatting.DARK_GRAY));
-            tooltip.add(Component.translatable("tooltip.runic.full_set_bonus").withStyle(ChatFormatting.GRAY));
-            tooltip.add(Component.translatable("tooltip.runic.relic_full_set_desc." + definition.id().getPath()).withStyle(ChatFormatting.DARK_GRAY));
         }
     }
 
@@ -201,13 +181,10 @@ public final class RelicRegistry {
             return lines;
         }
 
-        lines.add(Component.translatable("tooltip.runic.relic_durability_use", formatPercent(definition.durabilityUseIncreasePercentValue())).withStyle(ChatFormatting.GRAY));
-        lines.add(Component.translatable("tooltip.runic.relic_corruption", definition.corruptionValue()).withStyle(ChatFormatting.DARK_PURPLE));
-
         if (showDetails) {
+            lines.add(Component.translatable("tooltip.runic.relic_durability_use", formatPercent(definition.durabilityUseIncreasePercentValue())).withStyle(ChatFormatting.GRAY));
+            lines.add(Component.translatable("tooltip.runic.relic_corruption", definition.corruptionValue()).withStyle(ChatFormatting.GRAY));
             lines.add(Component.translatable("tooltip.runic.relic_desc." + definition.id().getPath()).withStyle(ChatFormatting.DARK_GRAY));
-            lines.add(Component.translatable("tooltip.runic.full_set_bonus").withStyle(ChatFormatting.GRAY));
-            lines.add(Component.translatable("tooltip.runic.relic_full_set_desc." + definition.id().getPath()).withStyle(ChatFormatting.DARK_GRAY));
         }
 
         return lines;
