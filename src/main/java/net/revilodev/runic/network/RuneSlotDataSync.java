@@ -13,7 +13,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 public record RuneSlotDataSync(Map<ResourceLocation,Integer> items,
-                               Map<String,Integer> defaults) implements CustomPacketPayload {
+                               Map<String,Integer> defaults,
+                               Map<ResourceLocation,Integer> tagCapacities,
+                               Map<ResourceLocation,String> itemTypes,
+                               Map<ResourceLocation,String> tagTypes) implements CustomPacketPayload {
 
     public static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath(RunicMod.MOD_ID, "rune_slots");
     public static final Type<RuneSlotDataSync> TYPE = new Type<>(ID);
@@ -32,7 +35,22 @@ public record RuneSlotDataSync(Map<ResourceLocation,Integer> items,
                     for (int i=0;i<dCount;i++) {
                         defs.put(buf.readUtf(), buf.readVarInt());
                     }
-                    return new RuneSlotDataSync(items, defs);
+                    int tagCount = buf.readVarInt();
+                    Map<ResourceLocation,Integer> tagCapacities = new HashMap<>();
+                    for (int i = 0; i < tagCount; i++) {
+                        tagCapacities.put(ResourceLocation.parse(buf.readUtf()), buf.readVarInt());
+                    }
+                    int itemTypeCount = buf.readVarInt();
+                    Map<ResourceLocation,String> itemTypes = new HashMap<>();
+                    for (int i = 0; i < itemTypeCount; i++) {
+                        itemTypes.put(ResourceLocation.parse(buf.readUtf()), buf.readUtf());
+                    }
+                    int tagTypeCount = buf.readVarInt();
+                    Map<ResourceLocation,String> tagTypes = new HashMap<>();
+                    for (int i = 0; i < tagTypeCount; i++) {
+                        tagTypes.put(ResourceLocation.parse(buf.readUtf()), buf.readUtf());
+                    }
+                    return new RuneSlotDataSync(items, defs, tagCapacities, itemTypes, tagTypes);
                 }
 
                 @Override
@@ -47,12 +65,33 @@ public record RuneSlotDataSync(Map<ResourceLocation,Integer> items,
                         buf.writeUtf(k);
                         buf.writeVarInt(v);
                     });
+                    buf.writeVarInt(msg.tagCapacities().size());
+                    msg.tagCapacities().forEach((id,v)->{
+                        buf.writeUtf(id.toString());
+                        buf.writeVarInt(v);
+                    });
+                    buf.writeVarInt(msg.itemTypes().size());
+                    msg.itemTypes().forEach((id,type)->{
+                        buf.writeUtf(id.toString());
+                        buf.writeUtf(type);
+                    });
+                    buf.writeVarInt(msg.tagTypes().size());
+                    msg.tagTypes().forEach((id,type)->{
+                        buf.writeUtf(id.toString());
+                        buf.writeUtf(type);
+                    });
                 }
             };
 
     public static final IPayloadHandler<RuneSlotDataSync> HANDLER = (msg, ctx) -> {
         if (Minecraft.getInstance().level != null) {
-            RuneSlotCapacityData.importFromNetwork(msg.items(), msg.defaults());
+            RuneSlotCapacityData.importFromNetwork(
+                    msg.items(),
+                    msg.defaults(),
+                    msg.tagCapacities(),
+                    msg.itemTypes(),
+                    msg.tagTypes()
+            );
         }
     };
 

@@ -1,10 +1,7 @@
 package net.revilodev.runic.event;
 
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.world.entity.npc.VillagerProfession;
-import net.minecraft.world.entity.npc.VillagerTrades;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.EnchantedBookItem;
 import net.minecraft.world.item.ItemStack;
@@ -15,26 +12,11 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
-import net.neoforged.neoforge.event.village.VillagerTradesEvent;
 import net.revilodev.runic.RunicMod;
-
-import java.util.List;
 
 @EventBusSubscriber(modid = RunicMod.MOD_ID, value = Dist.CLIENT)
 public final class ItemBlacklistEvents {
     private ItemBlacklistEvents() {}
-
-    @SubscribeEvent
-    public static void onVillagerTrades(VillagerTradesEvent event) {
-        if (event.getType() == VillagerProfession.LIBRARIAN) {
-            Int2ObjectMap<List<VillagerTrades.ItemListing>> trades = event.getTrades();
-            trades.int2ObjectEntrySet().forEach(entry ->
-                    entry.getValue().removeIf(listing ->
-                            listing instanceof VillagerTrades.EnchantBookForEmeralds
-                    )
-            );
-        }
-    }
 
     @SubscribeEvent
     public static void onBuildCreativeTabs(BuildCreativeModeTabContentsEvent event) {

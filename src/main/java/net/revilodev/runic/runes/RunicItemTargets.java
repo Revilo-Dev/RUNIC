@@ -11,7 +11,11 @@ public final class RunicItemTargets {
 
     public static boolean isWeapon(ItemStack stack) {
         Item item = stack.getItem();
-        return item instanceof SwordItem
+        return RuneSlotCapacityData.isCategory(stack, "sword")
+                || RuneSlotCapacityData.isCategory(stack, "axe")
+                || RuneSlotCapacityData.isCategory(stack, "trident")
+                || RuneSlotCapacityData.isCategory(stack, "mace")
+                || item instanceof SwordItem
                 || item instanceof AxeItem
                 || item instanceof TridentItem
                 || item instanceof MaceItem
@@ -21,11 +25,19 @@ public final class RunicItemTargets {
 
     public static boolean isRangedWeapon(ItemStack stack) {
         Item item = stack.getItem();
-        return item instanceof BowItem || item instanceof CrossbowItem;
+        return RuneSlotCapacityData.isCategory(stack, "bow")
+                || RuneSlotCapacityData.isCategory(stack, "crossbow")
+                || item instanceof BowItem
+                || item instanceof CrossbowItem;
     }
 
     public static boolean isMiningTool(ItemStack stack) {
-        return stack.getItem() instanceof DiggerItem || hasMainhandModifier(stack, Attributes.BLOCK_BREAK_SPEED);
+        return RuneSlotCapacityData.isCategory(stack, "pickaxe")
+                || RuneSlotCapacityData.isCategory(stack, "axe")
+                || RuneSlotCapacityData.isCategory(stack, "shovel")
+                || RuneSlotCapacityData.isCategory(stack, "hoe")
+                || stack.getItem() instanceof DiggerItem
+                || hasMainhandModifier(stack, Attributes.BLOCK_BREAK_SPEED);
     }
 
     public static boolean isArmor(ItemStack stack) {
@@ -34,6 +46,10 @@ public final class RunicItemTargets {
 
     public static EquipmentSlot armorSlot(ItemStack stack) {
         Item item = stack.getItem();
+        if (RuneSlotCapacityData.isCategory(stack, "helmet")) return EquipmentSlot.HEAD;
+        if (RuneSlotCapacityData.isCategory(stack, "chestplate")) return EquipmentSlot.CHEST;
+        if (RuneSlotCapacityData.isCategory(stack, "leggings")) return EquipmentSlot.LEGS;
+        if (RuneSlotCapacityData.isCategory(stack, "boots")) return EquipmentSlot.FEET;
         if (item instanceof ArmorItem armor) return armor.getEquipmentSlot();
         if (hasSlotModifier(stack, EquipmentSlot.HEAD, Attributes.ARMOR)) return EquipmentSlot.HEAD;
         if (hasSlotModifier(stack, EquipmentSlot.CHEST, Attributes.ARMOR)) return EquipmentSlot.CHEST;

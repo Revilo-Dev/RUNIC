@@ -31,11 +31,9 @@ public final class EtchingTableCategory implements IRecipeCategory<EtchingTableR
     private static final int WIDTH = 118;
     private static final int HEIGHT = 32;
 
-    private final IDrawable background;
     private final IDrawable icon;
 
     public EtchingTableCategory(IGuiHelper guiHelper) {
-        this.background = guiHelper.createBlankDrawable(WIDTH, HEIGHT);
         this.icon = guiHelper.createDrawableItemStack(new ItemStack(ModBlocks.ETCHING_TABLE.get()));
     }
 
@@ -50,8 +48,13 @@ public final class EtchingTableCategory implements IRecipeCategory<EtchingTableR
     }
 
     @Override
-    public IDrawable getBackground() {
-        return background;
+    public int getWidth() {
+        return WIDTH;
+    }
+
+    @Override
+    public int getHeight() {
+        return HEIGHT;
     }
 
     @Override

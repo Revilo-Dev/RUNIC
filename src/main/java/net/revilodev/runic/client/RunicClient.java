@@ -4,6 +4,7 @@ import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.client.renderer.entity.RenderLayerParent;
+import net.minecraft.client.resources.PlayerSkin;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
@@ -35,7 +36,7 @@ public final class RunicClient {
             addFrozenLayer(event.getRenderer(type));
         }
 
-        for (String skin : event.getSkins()) {
+        for (PlayerSkin.Model skin : event.getSkins()) {
             addFrozenLayer(event.getSkin(skin));
         }
     }

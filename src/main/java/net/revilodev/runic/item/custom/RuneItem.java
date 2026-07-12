@@ -3,7 +3,6 @@ package net.revilodev.runic.item.custom;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
 import net.minecraft.network.chat.Component;
@@ -17,6 +16,7 @@ import net.revilodev.runic.item.RarityTintedItemName;
 import net.revilodev.runic.loot.rarity.EnhancementRarities;
 import net.revilodev.runic.mythic.MythicRuneRegistry;
 import net.revilodev.runic.gear.RunicItemData;
+import net.revilodev.runic.runes.RunicEffectEnchantments;
 import net.revilodev.runic.synergy.SynergyRegistry;
 import net.revilodev.runic.stat.RuneStatType;
 import net.revilodev.runic.stat.RuneStats;
@@ -29,75 +29,6 @@ public class RuneItem extends Item implements RarityTintedItemName {
 
     public static final int EFFECT_LEVEL_ETCHING = 1;
     public static final int EFFECT_LEVEL_RUNE = 2;
-
-    private static final Set<ResourceLocation> EFFECT_ENCHANT_IDS = Set.of(
-            ResourceLocation.fromNamespaceAndPath("aether", "renewal"),
-
-            ResourceLocation.fromNamespaceAndPath("combat_roll", "acrobat"),
-            ResourceLocation.fromNamespaceAndPath("combat_roll", "longfooted"),
-            ResourceLocation.fromNamespaceAndPath("combat_roll", "multi_roll"),
-
-            ResourceLocation.fromNamespaceAndPath("create", "capacity"),
-            ResourceLocation.fromNamespaceAndPath("create", "potato_recovery"),
-
-            ResourceLocation.fromNamespaceAndPath("deeperdarker", "catalysis"),
-            ResourceLocation.fromNamespaceAndPath("deeperdarker", "discharge"),
-            ResourceLocation.fromNamespaceAndPath("deeperdarker", "sculk_smite"),
-
-            ResourceLocation.fromNamespaceAndPath("dungeons_arise", "discharge"),
-            ResourceLocation.fromNamespaceAndPath("dungeons_arise", "ensnaring"),
-            ResourceLocation.fromNamespaceAndPath("dungeons_arise", "lolths_curse"),
-            ResourceLocation.fromNamespaceAndPath("dungeons_arise", "purification"),
-            ResourceLocation.fromNamespaceAndPath("dungeons_arise", "voltaic_shot"),
-
-            ResourceLocation.fromNamespaceAndPath("expanded_combat", "blocking"),
-            ResourceLocation.fromNamespaceAndPath("expanded_combat", "ground_slam"),
-
-            ResourceLocation.fromNamespaceAndPath("farmersdelight", "backstabbing"),
-
-            ResourceLocation.fromNamespaceAndPath("mysticalagriculture", "mystical_enlightenment"),
-            ResourceLocation.fromNamespaceAndPath("mysticalagriculture", "soul_siphoner"),
-
-            ResourceLocation.fromNamespaceAndPath("simplyswords", "catalysis"),
-            ResourceLocation.fromNamespaceAndPath("simplyswords", "fire_react"),
-            ResourceLocation.fromNamespaceAndPath("simplyswords", "soul_siphoner"),
-
-            ResourceLocation.fromNamespaceAndPath("supplementaries", "stasis"),
-
-            ResourceLocation.fromNamespaceAndPath("twilightforest", "chill_aura"),
-            ResourceLocation.fromNamespaceAndPath("twilightforest", "destruction"),
-            ResourceLocation.fromNamespaceAndPath("twilightforest", "fire_react"),
-
-            ResourceLocation.withDefaultNamespace("aqua_affinity"),
-            ResourceLocation.withDefaultNamespace("depth_strider"),
-            ResourceLocation.withDefaultNamespace("feather_falling"),
-
-            ResourceLocation.withDefaultNamespace("binding_curse"),
-            ResourceLocation.withDefaultNamespace("breach"),
-            ResourceLocation.withDefaultNamespace("channeling"),
-            ResourceLocation.withDefaultNamespace("density"),
-            ResourceLocation.withDefaultNamespace("flame"),
-            ResourceLocation.withDefaultNamespace("impaling"),
-            ResourceLocation.withDefaultNamespace("infinity"),
-            ResourceLocation.withDefaultNamespace("looting"),
-            ResourceLocation.withDefaultNamespace("luck_of_the_sea"),
-            ResourceLocation.withDefaultNamespace("multishot"),
-            ResourceLocation.withDefaultNamespace("respiration"),
-            ResourceLocation.withDefaultNamespace("riptide"),
-            ResourceLocation.withDefaultNamespace("fortune"),
-            ResourceLocation.withDefaultNamespace("frost_walker"),
-            ResourceLocation.withDefaultNamespace("loyalty"),
-            ResourceLocation.withDefaultNamespace("lure"),
-            ResourceLocation.withDefaultNamespace("mending"),
-            ResourceLocation.withDefaultNamespace("piercing"),
-            ResourceLocation.withDefaultNamespace("punch"),
-            ResourceLocation.withDefaultNamespace("silk_touch"),
-            ResourceLocation.withDefaultNamespace("soul_speed"),
-            ResourceLocation.withDefaultNamespace("swift_sneak"),
-            ResourceLocation.withDefaultNamespace("thorns"),
-            ResourceLocation.withDefaultNamespace("vanishing_curse"),
-            ResourceLocation.withDefaultNamespace("wind_burst")
-    );
 
     public RuneItem(Properties props) {
         super(props);
@@ -130,14 +61,11 @@ public class RuneItem extends Item implements RarityTintedItemName {
     }
 
     public static Set<ResourceLocation> allowedEffectIds() {
-        return EFFECT_ENCHANT_IDS;
+        return RunicEffectEnchantments.allowedEffectIds();
     }
 
     public static boolean isEffectEnchantment(Holder<Enchantment> holder) {
-        return holder.unwrapKey()
-                .map(ResourceKey::location)
-                .map(EFFECT_ENCHANT_IDS::contains)
-                .orElse(false);
+        return RunicEffectEnchantments.isEffectEnchantment(holder);
     }
 
     public static int clampEffectLevel(Holder<Enchantment> holder, int requested) {

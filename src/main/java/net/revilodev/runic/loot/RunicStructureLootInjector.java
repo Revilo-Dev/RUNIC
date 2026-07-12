@@ -460,6 +460,7 @@ public class RunicStructureLootInjector extends LootModifier {
             case EPIC -> Math.max(0, RunicConfig.epicRuneLootWeight());
             case LEGENDARY -> Math.max(0, RunicConfig.legendaryRuneLootWeight());
             case MYTHIC -> Math.max(0, RunicConfig.mythicRuneLootWeight());
+            case SYNERGY -> Math.max(0, rarity.weight());
             case CURSED -> Math.max(0, rarity.weight());
         };
     }
