@@ -17,6 +17,7 @@ import net.minecraft.world.level.Level;
 import net.revilodev.runic.RunicConfig;
 import net.revilodev.runic.block.ModBlocks;
 import net.revilodev.runic.event.EnchantBlacklist;
+import net.revilodev.runic.item.ModItems;
 import net.revilodev.runic.recipe.EtchingTableInput;
 import net.revilodev.runic.recipe.EtchingTableRecipe;
 import net.revilodev.runic.recipe.ModRecipeTypes;
@@ -127,7 +128,7 @@ public final class EtchingTableMenu extends AbstractContainerMenu {
         if (match.isPresent()) {
             EtchingTableRecipe recipe = match.get().value();
 
-            if (EnchantBlacklist.isRecipeBlacklisted(recipe)) {
+            if (!isInscriptionRecipe(recipe) || EnchantBlacklist.isRecipeBlacklisted(recipe)) {
                 clearResult();
                 return;
             }
@@ -144,6 +145,10 @@ public final class EtchingTableMenu extends AbstractContainerMenu {
     private void clearResult() {
         lastRecipe = null;
         result.setItem(0, ItemStack.EMPTY);
+    }
+
+    private static boolean isInscriptionRecipe(EtchingTableRecipe recipe) {
+        return recipe.base().test(new ItemStack(ModItems.BLANK_INSCRIPTION.get()));
     }
 
 
@@ -226,6 +231,7 @@ public final class EtchingTableMenu extends AbstractContainerMenu {
 
     public void placeRecipeFromBook(ServerPlayer player, RecipeHolder<EtchingTableRecipe> recipe) {
         if (player.containerMenu != this) return;
+        if (!isInscriptionRecipe(recipe.value())) return;
 
         Ingredient a = recipe.value().base();
         Ingredient b = recipe.value().material();

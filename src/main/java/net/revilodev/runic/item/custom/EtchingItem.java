@@ -8,6 +8,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
+import net.revilodev.runic.compat.RunicCompat;
 import net.revilodev.runic.event.EnchantBlacklist;
 import net.revilodev.runic.item.ModItems;
 import net.revilodev.runic.stat.RuneStatType;
@@ -25,7 +26,7 @@ public class EtchingItem extends Item {
 
     @Override
     public boolean isEnchantable(ItemStack stack) {
-        return false;
+        return true;
     }
 
     public static Set<ResourceLocation> allowedEffectIds() {
@@ -41,11 +42,20 @@ public class EtchingItem extends Item {
             return ItemStack.EMPTY;
         }
         ItemStack stack = new ItemStack(ModItems.ETCHING.get());
-        stack.enchant(enchantment, RuneItem.forcedEtchingEffectLevel(enchantment));
+        setStoredEnchantment(stack, enchantment, RuneItem.forcedEtchingEffectLevel(enchantment));
         return stack;
     }
 
+    public static void setStoredEnchantment(ItemStack stack, Holder<Enchantment> enchantment, int level) {
+        ItemEnchantments.Mutable mutable = new ItemEnchantments.Mutable(ItemEnchantments.EMPTY);
+        mutable.set(enchantment, level);
+        stack.set(DataComponents.STORED_ENCHANTMENTS, mutable.toImmutable());
+    }
+
     public static ItemStack createStatEtching(RandomSource random, RuneStatType type) {
+        if (!RunicCompat.isStatAvailable(type)) {
+            return ItemStack.EMPTY;
+        }
         RuneStats stats = RuneStats.singleUnrolled(type);
         ItemStack stack = new ItemStack(ModItems.ETCHING.get());
         RuneStats.set(stack, stats);
@@ -56,7 +66,7 @@ public class EtchingItem extends Item {
         RuneStatType[] all = RuneStatType.values();
         List<RuneStatType> allowed = new ArrayList<>();
         for (RuneStatType type : all) {
-            if (!EnchantBlacklist.isStatBlacklisted(type)) {
+            if (!EnchantBlacklist.isStatBlacklisted(type) && RunicCompat.isStatAvailable(type)) {
                 allowed.add(type);
             }
         }
@@ -104,6 +114,9 @@ public class EtchingItem extends Item {
     @Override
     public boolean isFoil(ItemStack stack) {
         if (stack.isEnchanted()) {
+            return true;
+        }
+        if (!stack.getOrDefault(DataComponents.STORED_ENCHANTMENTS, ItemEnchantments.EMPTY).isEmpty()) {
             return true;
         }
         RuneStats stats = RuneStats.get(stack);

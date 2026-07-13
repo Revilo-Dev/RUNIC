@@ -12,6 +12,7 @@ import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.neoforged.fml.ModList;
 import net.revilodev.runic.RunicMod;
+import net.revilodev.runic.item.ModItems;
 import net.revilodev.runic.recipe.EtchingTableInput;
 import net.revilodev.runic.recipe.EtchingTableRecipe;
 import net.revilodev.runic.recipe.ModRecipeTypes;
@@ -135,6 +136,7 @@ public final class EtchingRecipeBookPanel extends AbstractWidget {
         String q = this.search.toLowerCase(Locale.ROOT).trim();
 
         for (RecipeHolder<EtchingTableRecipe> h : this.all) {
+            if (!isInscriptionRecipe(h)) continue;
             if (!q.isEmpty()) {
                 String name = recipeDisplayName(h).getString().toLowerCase(Locale.ROOT);
                 if (!name.contains(q)) continue;
@@ -173,6 +175,11 @@ public final class EtchingRecipeBookPanel extends AbstractWidget {
         String sourceMod = compatSourceModFromRecipeId(h.id());
         if (sourceMod != null && !sourceMod.equals("minecraft") && !sourceMod.equals(RunicMod.MOD_ID)) {
             if (!ModList.get().isLoaded(sourceMod)) return false;
+        }
+
+        var stat = h.value().stat();
+        if (stat.isPresent() && !net.revilodev.runic.compat.RunicCompat.isStatAvailable(stat.get())) {
+            return false;
         }
 
         var effect = h.value().effect();
@@ -300,6 +307,10 @@ public final class EtchingRecipeBookPanel extends AbstractWidget {
         for (int i = 0; i < stacks.size(); i++) counts[i] = stacks.get(i).isEmpty() ? 0 : stacks.get(i).getCount();
 
         return takeOne(stacks, counts, a) && takeOne(stacks, counts, b);
+    }
+
+    private static boolean isInscriptionRecipe(RecipeHolder<EtchingTableRecipe> holder) {
+        return holder.value().base().test(new ItemStack(ModItems.BLANK_INSCRIPTION.get()));
     }
 
     private ItemStack previewStack(Minecraft mc, RecipeHolder<EtchingTableRecipe> holder) {

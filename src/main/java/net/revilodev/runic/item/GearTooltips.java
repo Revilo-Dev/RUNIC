@@ -25,6 +25,7 @@ import net.revilodev.runic.runes.RunicItemTargets;
 import net.revilodev.runic.runes.RuneSlots;
 import net.revilodev.runic.stat.RuneStatType;
 import net.revilodev.runic.stat.RuneStats;
+import net.revilodev.runic.synergy.SynergyRegistry;
 
 import java.util.*;
 
@@ -319,14 +320,13 @@ public final class GearTooltips {
         int u = Math.min(used, cap);
         int rem = Math.max(0, cap - used);
 
-        boolean hasSynergy = !RunicItemData.getSynergies(stack).isEmpty();
         boolean hasMythic = !RunicItemData.getMythicRunes(stack).isEmpty();
         MutableComponent line = Component.empty();
         for (int i = 0; i < cap; i++) {
             char icon = i < u ? SLOT_FILLED : SLOT_EMPTY;
             ChatFormatting color = hasMythic && i == 0
                     ? ChatFormatting.DARK_PURPLE
-                    : hasSynergy ? ChatFormatting.GOLD : ChatFormatting.WHITE;
+                    : ChatFormatting.WHITE;
             line.append(Component.literal(String.valueOf(icon)).withStyle(color));
         }
 
@@ -341,19 +341,28 @@ public final class GearTooltips {
             if (!id.getPath().startsWith("synergy/")) continue;
             String path = id.getPath().substring("synergy/".length());
             out.add(Component.literal("  ")
-                    .append(Component.literal(SYNERGY_ICON + " ").withStyle(ChatFormatting.GOLD))
+                    .append(Component.literal(synergyIcon(id) + " ").withStyle(ChatFormatting.GOLD))
                     .append(RarityTintedItemName.tintedName(ChatFormatting.GOLD, stack, Component.translatable("tooltip.runic.synergy." + path))));
             if (showDetails) {
                 out.add(Component.literal("  ")
-                        .append(Component.translatable("tooltip.runic.synergy_enhancement").withStyle(ChatFormatting.DARK_PURPLE)));
-                out.add(Component.literal("  ")
-                        .append(Component.translatable("tooltip.runic.category_line", Component.translatable("tooltip.runic.category.synergy"))
-                                .withStyle(ChatFormatting.LIGHT_PURPLE)));
+                        .append(Component.translatable("tooltip.runic.category.synergy").withStyle(ChatFormatting.LIGHT_PURPLE)));
                 out.add(Component.literal("  ")
                         .append(Component.translatable("tooltip.runic.synergy_desc." + path).withStyle(ChatFormatting.DARK_GRAY)));
+                SynergyRegistry.definitionForResult(id).ifPresent(def -> {
+                    out.add(Component.literal("    ")
+                            .append(Component.translatable("tooltip.runic.synergy_influenced_by").withStyle(ChatFormatting.YELLOW)));
+                    out.add(Component.literal("      ")
+                            .append(Component.translatable(displayKey(def.inputA())).withStyle(ChatFormatting.YELLOW)));
+                    out.add(Component.literal("      ")
+                            .append(Component.translatable(displayKey(def.inputB())).withStyle(ChatFormatting.YELLOW)));
+                });
             }
         }
         return out;
+    }
+
+    private static String synergyIcon(ResourceLocation id) {
+        return SynergyRegistry.JUGGERNAUT.equals(id) ? "\u26E8" : SYNERGY_ICON;
     }
 
     private static List<Component> buildUpdateFiveLines(ItemStack stack) {
@@ -370,7 +379,14 @@ public final class GearTooltips {
     }
 
     private static List<Component> buildRelicLines(ItemStack stack, boolean showDetails) {
-        return RelicRegistry.buildGearTooltipLines(stack, Screen.hasAltDown());
+        return RelicRegistry.buildGearTooltipLines(stack, showDetails);
+    }
+
+    private static String displayKey(ResourceLocation id) {
+        if (id != null && id.getNamespace().equals("runic") && id.getPath().startsWith("stat/")) {
+            return "tooltip.runic.stat." + id.getPath().substring("stat/".length());
+        }
+        return descriptionKey(id);
     }
 
     private static List<Component> buildAttributeIndicators(ItemStack stack, boolean showDetails) {
@@ -423,6 +439,7 @@ public final class GearTooltips {
             case REINFORCED -> Component.translatable("tooltip.runic.attribute_desc.reinforced");
             case TEMPERED -> Component.translatable("tooltip.runic.attribute_desc.tempered");
             case HARMONIZED -> Component.translatable("tooltip.runic.attribute_desc.harmonized");
+            case DISSONANT -> Component.translatable("tooltip.runic.attribute_desc.dissonant");
         };
     }
 
@@ -474,16 +491,16 @@ public final class GearTooltips {
             case UNDEAD_DAMAGE -> "Increases damage to undead.";
             case NETHER_DAMAGE -> "Increases damage to nether mobs.";
             case HEALTH -> "Increases maximum health.";
-            case STUN_CHANCE -> "Chance to apply stunning.";
-            case FLAME_CHANCE -> "Chance to apply fire aspect.";
-            case BLEEDING_CHANCE -> "Chance to apply bleeding.";
-            case SHOCKING_CHANCE -> "Chance to apply shocking.";
-            case POISON_CHANCE -> "Chance to apply toxic.";
-            case WITHERING_CHANCE -> "Chance to apply withering.";
-            case WEAKENING_CHANCE -> "Chance to apply diminishing.";
+            case STUN_CHANCE -> "Chance to stun for 3s.";
+            case FLAME_CHANCE -> "Chance to ignite for 4s.";
+            case BLEEDING_CHANCE -> "Chance to apply bleeding for 5s.";
+            case SHOCKING_CHANCE -> "Chance to call visual lightning and slow for 4s.";
+            case POISON_CHANCE -> "Chance to apply poison for 2s.";
+            case WITHERING_CHANCE -> "Chance to apply wither for 5s.";
+            case WEAKENING_CHANCE -> "Chance to apply weakness for 6s.";
             case DRAW_SPEED -> "Increases bow draw speed.";
             case TOUGHNESS -> "Increases toughness.";
-            case FREEZING_CHANCE -> "Chance to apply freezing.";
+            case FREEZING_CHANCE -> "Chance to freeze mobs for 3s; etchings freeze for 2s.";
             case LEECHING_CHANCE -> "Chance to leach 10% max health on critical hit.";
             case FANGS -> "Chance to summon evoker fangs on hit.";
             case STONE -> "Gain temporary resistance after a heavy hit.";

@@ -16,7 +16,8 @@ public enum GearAttribute {
     CHAOTIC("chaotic", Component.translatable("tooltip.runic.attribute.chaotic"), ChatFormatting.LIGHT_PURPLE),
     REINFORCED("reinforced", Component.translatable("tooltip.runic.attribute.reinforced"), ChatFormatting.GREEN),
     TEMPERED("tempered", Component.translatable("tooltip.runic.attribute.tempered"), ChatFormatting.AQUA),
-    HARMONIZED("harmonized", Component.translatable("tooltip.runic.attribute.harmonized"), ChatFormatting.BLUE);
+    HARMONIZED("harmonized", Component.translatable("tooltip.runic.attribute.harmonized"), ChatFormatting.BLUE),
+    DISSONANT("dissonant", Component.translatable("tooltip.runic.attribute.dissonant"), ChatFormatting.DARK_AQUA);
 
     private final String id;
     private final Component displayName;

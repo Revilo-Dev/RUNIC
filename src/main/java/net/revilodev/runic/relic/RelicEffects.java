@@ -1,39 +1,103 @@
 package net.revilodev.runic.relic;
 
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.tags.DamageTypeTags;
+import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.AreaEffectCloud;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.monster.Guardian;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.projectile.DragonFireball;
+import net.minecraft.world.entity.projectile.WitherSkull;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.AABB;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.ItemAttributeModifierEvent;
 import net.neoforged.neoforge.event.entity.living.ArmorHurtEvent;
+import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
+import net.neoforged.neoforge.event.entity.ProjectileImpactEvent;
 import net.neoforged.neoforge.event.entity.player.ArrowLooseEvent;
 import net.neoforged.neoforge.event.entity.player.AttackEntityEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.level.BlockEvent;
+import net.neoforged.neoforge.event.tick.EntityTickEvent;
+import net.neoforged.neoforge.network.PacketDistributor;
 import net.revilodev.runic.RunicConfig;
 import net.revilodev.runic.RunicMod;
 import net.revilodev.runic.gear.GearAttribute;
 import net.revilodev.runic.gear.GearAttributes;
 import net.revilodev.runic.gear.RunicItemData;
 import net.revilodev.runic.mythic.MythicRuneRegistry;
+import net.revilodev.runic.network.payload.RelicPowerStatusPayload;
+import net.revilodev.runic.runes.RunicItemTargets;
 import net.revilodev.runic.stat.RuneStats;
 
+import java.lang.reflect.Method;
 import java.util.List;
+import java.util.Optional;
 
 @EventBusSubscriber(modid = RunicMod.MOD_ID)
 public final class RelicEffects {
     private static final String WARDEN_PULSE_COOLDOWN = "runic_warden_pulse_cooldown";
+    private static final String RELIC_POWER_COOLDOWN = "runic_relic_power_cooldown";
+    private static final String RUNIC_WITHER_SKULL = "runic_wither_skull";
+    private static final String GUARDIAN_BEAM_UNTIL = "runic_guardian_beam_until";
+    private static final String GUARDIAN_BEAM_OWNER = "runic_guardian_beam_owner";
+    private static final int RELIC_POWER_COOLDOWN_TICKS = 200;
+    private static final int RELIC_POWER_CAST_TICKS = 40;
+    private static Method guardianSetActiveAttackTarget;
 
     private RelicEffects() {}
+
+    public static void useRelicPower(ServerPlayer player) {
+        if (player == null || player.level().isClientSide) return;
+        ResourceLocation relic = activeFullSet(player);
+        if (relic == null) return;
+
+        long now = player.level().getGameTime();
+        if (player.getPersistentData().getLong(RELIC_POWER_COOLDOWN) > now) return;
+
+        boolean used = false;
+        boolean guardianPower = false;
+        if (RelicRegistry.DRAGON_HEART.equals(relic)) {
+            used = useDragonBreath(player);
+        } else if (RelicRegistry.ELDER_GUARDIANS_EYE.equals(relic)) {
+            used = useGuardianBeam(player);
+            guardianPower = used;
+        } else if (RelicRegistry.WITHER_CHARGE.equals(relic)) {
+            used = useWitherBullet(player);
+        } else if (RelicRegistry.WARDENS_SOUL.equals(relic)) {
+            used = useSonicBoom(player);
+        }
+
+        if (used) {
+            player.getPersistentData().putLong(RELIC_POWER_COOLDOWN, now + RELIC_POWER_COOLDOWN_TICKS);
+            int duration = guardianPower ? RELIC_POWER_CAST_TICKS : 0;
+            PacketDistributor.sendToPlayer(player, new RelicPowerStatusPayload(duration, duration,
+                    RELIC_POWER_COOLDOWN_TICKS, RELIC_POWER_COOLDOWN_TICKS));
+        }
+    }
 
     public static float modifyOutgoingDamage(LivingEntity attacker, LivingEntity target, ItemStack weapon, float amount) {
         if (attacker == null || target == null || weapon.isEmpty() || amount <= 0.0F) {
@@ -75,8 +139,69 @@ public final class RelicEffects {
                 }
             }
         }
+        if (helper.is(RelicRegistry.WITHER_CHARGE)) {
+            target.addEffect(new MobEffectInstance(MobEffects.WITHER, 100, 0, false, false, true));
+        }
 
         maybeApplyExtraDurability(player, weapon);
+    }
+
+    @SubscribeEvent
+    public static void onItemAttributes(ItemAttributeModifierEvent event) {
+        ItemStack stack = event.getItemStack();
+        ResourceLocation relic = RunicItemData.getRelicId(stack);
+        if (relic == null) return;
+
+        EquipmentSlot armorSlot = RunicItemTargets.armorSlot(stack);
+        if (armorSlot != null) {
+            EquipmentSlotGroup group = slotGroup(armorSlot);
+            if (RelicRegistry.ELDER_GUARDIANS_EYE.equals(relic)) {
+                addModifier(event, Attributes.WATER_MOVEMENT_EFFICIENCY, "elder_guardian_water_movement", 0.15D, AttributeModifier.Operation.ADD_VALUE, group);
+            } else if (RelicRegistry.DRAGON_HEART.equals(relic)) {
+                addModifier(event, Attributes.ARMOR, "dragon_resistance", 1.0D, AttributeModifier.Operation.ADD_VALUE, group);
+                addModifier(event, Attributes.KNOCKBACK_RESISTANCE, "dragon_knockback_resistance", 0.05D, AttributeModifier.Operation.ADD_VALUE, group);
+            } else if (RelicRegistry.WARDENS_SOUL.equals(relic)) {
+                addModifier(event, Attributes.KNOCKBACK_RESISTANCE, "warden_knockback_resistance", 0.08D, AttributeModifier.Operation.ADD_VALUE, group);
+            } else if (RelicRegistry.WITHER_CHARGE.equals(relic)) {
+                addModifier(event, Attributes.MOVEMENT_SPEED, "wither_movement_speed", 0.05D, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL, group);
+            }
+            return;
+        }
+
+        if (!RunicItemTargets.isWeapon(stack)) return;
+        if (RelicRegistry.DRAGON_HEART.equals(relic)) {
+            addModifier(event, Attributes.ATTACK_DAMAGE, "dragon_attack_damage", 0.15D, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL, EquipmentSlotGroup.MAINHAND);
+            addModifier(event, Attributes.ATTACK_SPEED, "dragon_attack_speed", 0.10D, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL, EquipmentSlotGroup.MAINHAND);
+        } else if (RelicRegistry.WARDENS_SOUL.equals(relic)) {
+            addModifier(event, Attributes.SWEEPING_DAMAGE_RATIO, "warden_sweeping_range", 0.20D, AttributeModifier.Operation.ADD_VALUE, EquipmentSlotGroup.MAINHAND);
+            addModifier(event, Attributes.ENTITY_INTERACTION_RANGE, "warden_attack_distance", 1.0D, AttributeModifier.Operation.ADD_VALUE, EquipmentSlotGroup.MAINHAND);
+        } else if (RelicRegistry.WITHER_CHARGE.equals(relic)) {
+            addModifier(event, Attributes.ATTACK_DAMAGE, "wither_attack_damage", 0.10D, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL, EquipmentSlotGroup.MAINHAND);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onIncomingDamage(LivingIncomingDamageEvent event) {
+        LivingEntity entity = event.getEntity();
+        if (entity.level().isClientSide) return;
+
+        if (armorCount(entity, RelicRegistry.WITHER_CHARGE) > 0 && event.getSource().is(DamageTypes.WITHER)) {
+            event.setCanceled(true);
+            return;
+        }
+
+        double reduction = 0.0D;
+        if (event.getSource().is(DamageTypes.MAGIC) || event.getSource().is(DamageTypes.INDIRECT_MAGIC)) {
+            reduction += 0.05D * armorCount(entity, RelicRegistry.DRAGON_HEART);
+        }
+        if (event.getSource().is(DamageTypeTags.IS_EXPLOSION)
+                || event.getSource().is(DamageTypeTags.IS_PROJECTILE)
+                || event.getSource().is(DamageTypeTags.IS_FIRE)) {
+            reduction += 0.05D * armorCount(entity, RelicRegistry.WARDENS_SOUL);
+        }
+        if (reduction > 0.0D) {
+            event.setAmount((float) (event.getAmount() * Math.max(0.0D, 1.0D - Math.min(0.8D, reduction))));
+        }
     }
 
     @SubscribeEvent
@@ -134,6 +259,48 @@ public final class RelicEffects {
         maybeApplyExtraDurability(player, player.getMainHandItem());
     }
 
+    @SubscribeEvent
+    public static void onProjectileImpact(ProjectileImpactEvent event) {
+        if (!(event.getProjectile() instanceof WitherSkull skull) || skull.level().isClientSide) return;
+        if (!skull.getPersistentData().getBoolean(RUNIC_WITHER_SKULL)) return;
+
+        AreaEffectCloud cloud = new AreaEffectCloud(skull.level(), skull.getX(), skull.getY(), skull.getZ());
+        if (skull.getOwner() instanceof LivingEntity owner) {
+            cloud.setOwner(owner);
+        }
+        cloud.setParticle(ParticleTypes.SMOKE);
+        cloud.setRadius(3.0F);
+        cloud.setDuration(160);
+        cloud.setRadiusPerTick(-cloud.getRadius() / (float) cloud.getDuration());
+        cloud.addEffect(new MobEffectInstance(MobEffects.WITHER, 100, 1, false, false, true));
+        skull.level().addFreshEntity(cloud);
+    }
+
+    @SubscribeEvent
+    public static void onEntityTick(EntityTickEvent.Post event) {
+        if (event.getEntity() instanceof LivingEntity living && !living.level().isClientSide
+                && armorCount(living, RelicRegistry.WITHER_CHARGE) > 0 && living.hasEffect(MobEffects.WITHER)) {
+            living.removeEffect(MobEffects.WITHER);
+        }
+
+        if (!(event.getEntity() instanceof Guardian guardian) || guardian.level().isClientSide) return;
+        long until = guardian.getPersistentData().getLong(GUARDIAN_BEAM_UNTIL);
+        if (until <= 0L) return;
+        if (guardian.level().getGameTime() >= until) {
+            guardian.discard();
+            return;
+        }
+        if (guardian.getPersistentData().hasUUID(GUARDIAN_BEAM_OWNER) && guardian.level() instanceof ServerLevel serverLevel) {
+            ServerPlayer owner = serverLevel.getServer().getPlayerList().getPlayer(guardian.getPersistentData().getUUID(GUARDIAN_BEAM_OWNER));
+            if (owner == null || !owner.isAlive()) {
+                guardian.discard();
+                return;
+            }
+            Vec3 source = owner.getEyePosition().subtract(0.0D, 0.35D, 0.0D);
+            guardian.setPos(source.x, source.y, source.z);
+        }
+    }
+
     public static float applyDurabilityModifier(ItemStack stack, float baseDamage, RandomSource random) {
         if (stack.isEmpty() || baseDamage <= 0.0F) {
             return Math.max(0.0F, baseDamage);
@@ -175,32 +342,26 @@ public final class RelicEffects {
         double weaponBonus = RelicRegistry.DRAGON_HEART.equals(RunicItemData.getRelicId(weapon))
                 ? RunicConfig.dragonHeartFireDamageBonusPercent() / 100.0D
                 : 0.0D;
-        double armorBonus = armorContribution(attacker, RelicRegistry.DRAGON_HEART) * (RunicConfig.dragonHeartFireDamageBonusPercent() / 100.0D);
         double setBonus = RelicRegistry.hasFullRelicSet(attacker, RelicRegistry.DRAGON_HEART)
                 ? RunicConfig.dragonHeartFullSetFireDamageBonusPercent() / 100.0D
                 : 0.0D;
-        if (weaponBonus <= 0.0D && armorBonus <= 0.0D && setBonus <= 0.0D) {
+        if (weaponBonus <= 0.0D && setBonus <= 0.0D) {
             return amount;
         }
 
-        if (target.getRemainingFireTicks() > 0 || ResourceLocationHelper.hasFireTrigger(weapon)) {
-            return (float) (amount * (1.0D + weaponBonus + armorBonus + setBonus));
-        }
-        return amount;
+        return (float) (amount * (1.0D + weaponBonus + setBonus));
     }
 
     private static float applyElderGuardianDamage(LivingEntity attacker, LivingEntity target, ItemStack weapon, float amount) {
         double weaponBonus = RelicRegistry.ELDER_GUARDIANS_EYE.equals(RunicItemData.getRelicId(weapon))
                 ? RunicConfig.elderGuardiansEyeUnderwaterDamageBonusPercent() / 100.0D
                 : 0.0D;
-        double armorBonus = armorContribution(attacker, RelicRegistry.ELDER_GUARDIANS_EYE)
-                * (RunicConfig.elderGuardiansEyeUnderwaterDamageBonusPercent() / 100.0D);
-        if (weaponBonus <= 0.0D && armorBonus <= 0.0D) {
+        if (weaponBonus <= 0.0D) {
             return amount;
         }
 
-        if (attacker.isUnderWater() || target.isUnderWater()) {
-            return (float) (amount * (1.0D + weaponBonus + armorBonus));
+        if (target.isUnderWater()) {
+            return (float) (amount * (1.0D + weaponBonus));
         }
         return amount;
     }
@@ -301,12 +462,156 @@ public final class RelicEffects {
         wearer.getPersistentData().putLong(WARDEN_PULSE_COOLDOWN, gameTime + RunicConfig.wardensSoulFullSetSonicPulseCooldownTicks());
     }
 
-    private static double armorContribution(LivingEntity entity, ResourceLocation relicId) {
-        int count = RelicRegistry.countEquippedRelics(entity, relicId);
-        if (count <= 0) {
-            return 0.0D;
+    private static ResourceLocation activeFullSet(LivingEntity wearer) {
+        for (ResourceLocation id : List.of(RelicRegistry.DRAGON_HEART, RelicRegistry.ELDER_GUARDIANS_EYE,
+                RelicRegistry.WITHER_CHARGE, RelicRegistry.WARDENS_SOUL)) {
+            if (RelicRegistry.hasFullRelicSet(wearer, id)) return id;
         }
-        return (double) count / (double) Math.max(1, RunicConfig.relicFullSetRequiredCount()) * 0.5D;
+        return null;
+    }
+
+    private static boolean useDragonBreath(ServerPlayer player) {
+        Vec3 direction = aimDirection(player, 32.0D);
+        DragonFireball fireball = new DragonFireball(player.level(), player, direction);
+        fireball.setPos(player.getEyePosition().add(direction.scale(1.5D)));
+        fireball.setDeltaMovement(direction.scale(0.7D));
+        player.level().addFreshEntity(fireball);
+        player.level().playSound(null, player.blockPosition(), SoundEvents.ENDER_DRAGON_SHOOT, SoundSource.PLAYERS, 1.0F, 1.0F);
+        return true;
+    }
+
+    private static boolean useGuardianBeam(ServerPlayer player) {
+        LivingEntity target = targetUnderCrosshair(player, 24.0D);
+        if (target == null) return false;
+
+        spawnGuardianBeam(player, target);
+        target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, RELIC_POWER_CAST_TICKS + 40, 2, false, false, true));
+        target.hurt(player.damageSources().indirectMagic(player, player), 14.0F);
+        player.level().playSound(null, target.blockPosition(), SoundEvents.GUARDIAN_ATTACK, SoundSource.PLAYERS, 1.0F, 1.0F);
+        return true;
+    }
+
+    private static boolean useWitherBullet(ServerPlayer player) {
+        Vec3 direction = aimDirection(player, 32.0D);
+        WitherSkull skull = new WitherSkull(player.level(), player, direction);
+        skull.setPos(player.getEyePosition().add(direction.scale(1.2D)));
+        skull.setDeltaMovement(direction.scale(0.8D));
+        skull.getPersistentData().putBoolean(RUNIC_WITHER_SKULL, true);
+        player.level().addFreshEntity(skull);
+        player.level().playSound(null, player.blockPosition(), SoundEvents.WITHER_SHOOT, SoundSource.PLAYERS, 1.0F, 1.0F);
+        return true;
+    }
+
+    private static boolean useSonicBoom(ServerPlayer player) {
+        LivingEntity target = targetUnderCrosshair(player, 20.0D);
+        Vec3 start = player.getEyePosition();
+        Vec3 direction;
+        double distance;
+        if (target != null) {
+            Vec3 end = target.getEyePosition();
+            direction = end.subtract(start).normalize();
+            distance = start.distanceTo(end);
+        } else {
+            direction = aimDirection(player, 20.0D);
+            distance = 20.0D;
+        }
+
+        if (player.level() instanceof ServerLevel serverLevel) {
+            int count = Mth.floor(distance) + 7;
+            for (int i = 1; i < count; i++) {
+                Vec3 pos = start.add(direction.scale(i));
+                serverLevel.sendParticles(ParticleTypes.SONIC_BOOM, pos.x, pos.y, pos.z, 1, 0.0D, 0.0D, 0.0D, 0.0D);
+            }
+        }
+        player.level().playSound(null, player.blockPosition(), SoundEvents.WARDEN_SONIC_BOOM, SoundSource.PLAYERS, 3.0F, 1.0F);
+        if (target != null && target.hurt(player.damageSources().sonicBoom(player), (float) RunicConfig.wardensSoulFullSetSonicPulseDamage())) {
+            double vertical = 0.5D * (1.0D - target.getAttributeValue(Attributes.KNOCKBACK_RESISTANCE));
+            double horizontal = 2.5D * (1.0D - target.getAttributeValue(Attributes.KNOCKBACK_RESISTANCE));
+            target.push(direction.x() * horizontal, direction.y() * vertical, direction.z() * horizontal);
+        }
+        return true;
+    }
+
+    private static Vec3 aimDirection(ServerPlayer player, double range) {
+        Vec3 eye = player.getEyePosition();
+        Vec3 look = player.getLookAngle().normalize();
+        HitResult hit = player.level().clip(new ClipContext(eye, eye.add(look.scale(range)), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, player));
+        Vec3 target = hit.getType() == HitResult.Type.MISS ? eye.add(look.scale(range)) : hit.getLocation();
+        Vec3 direction = target.subtract(eye);
+        return direction.lengthSqr() < 1.0E-6D ? look : direction.normalize();
+    }
+
+    private static LivingEntity targetUnderCrosshair(ServerPlayer player, double range) {
+        Vec3 eye = player.getEyePosition();
+        Vec3 look = player.getLookAngle().normalize();
+        Vec3 end = eye.add(look.scale(range));
+        AABB box = player.getBoundingBox().expandTowards(look.scale(range)).inflate(1.0D);
+        LivingEntity best = null;
+        double bestDistance = Double.MAX_VALUE;
+        for (LivingEntity entity : player.level().getEntitiesOfClass(LivingEntity.class, box, e -> e != player && e.isAlive() && !e.isAlliedTo(player))) {
+            AABB targetBox = entity.getBoundingBox().inflate(entity.getPickRadius() + 0.35D);
+            Optional<Vec3> clip = targetBox.clip(eye, end);
+            if (clip.isEmpty()) continue;
+            double distance = eye.distanceToSqr(clip.get());
+            if (distance < bestDistance) {
+                best = entity;
+                bestDistance = distance;
+            }
+        }
+        return best;
+    }
+
+    private static void spawnGuardianBeam(ServerPlayer player, LivingEntity target) {
+        Guardian guardian = new Guardian(EntityType.GUARDIAN, player.level());
+        Vec3 source = player.getEyePosition().subtract(0.0D, 0.35D, 0.0D);
+        guardian.setPos(source.x, source.y, source.z);
+        guardian.setNoAi(true);
+        guardian.setNoGravity(true);
+        guardian.setSilent(true);
+        guardian.setInvulnerable(true);
+        guardian.setInvisible(true);
+        guardian.setTarget(target);
+        guardian.getPersistentData().putUUID(GUARDIAN_BEAM_OWNER, player.getUUID());
+        guardian.getPersistentData().putLong(GUARDIAN_BEAM_UNTIL, player.level().getGameTime() + RELIC_POWER_CAST_TICKS);
+        player.level().addFreshEntity(guardian);
+        setGuardianBeamTarget(guardian, target.getId());
+    }
+
+    private static int armorCount(LivingEntity entity, ResourceLocation relicId) {
+        int count = 0;
+        for (EquipmentSlot slot : List.of(EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET)) {
+            if (relicId.equals(RunicItemData.getRelicId(entity.getItemBySlot(slot)))) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    private static EquipmentSlotGroup slotGroup(EquipmentSlot slot) {
+        return switch (slot) {
+            case HEAD -> EquipmentSlotGroup.HEAD;
+            case CHEST -> EquipmentSlotGroup.CHEST;
+            case LEGS -> EquipmentSlotGroup.LEGS;
+            case FEET -> EquipmentSlotGroup.FEET;
+            default -> EquipmentSlotGroup.ANY;
+        };
+    }
+
+    private static void addModifier(ItemAttributeModifierEvent event, net.minecraft.core.Holder<net.minecraft.world.entity.ai.attributes.Attribute> attribute,
+                                    String path, double amount, AttributeModifier.Operation operation, EquipmentSlotGroup slot) {
+        ResourceLocation id = ResourceLocation.fromNamespaceAndPath(RunicMod.MOD_ID, "relic/" + path);
+        event.addModifier(attribute, new AttributeModifier(id, amount, operation), slot);
+    }
+
+    private static void setGuardianBeamTarget(Guardian guardian, int targetId) {
+        try {
+            if (guardianSetActiveAttackTarget == null) {
+                guardianSetActiveAttackTarget = Guardian.class.getDeclaredMethod("setActiveAttackTarget", int.class);
+                guardianSetActiveAttackTarget.setAccessible(true);
+            }
+            guardianSetActiveAttackTarget.invoke(guardian, targetId);
+        } catch (ReflectiveOperationException ignored) {
+        }
     }
 
     private record ResourceLocationHelper(ItemStack stack) {

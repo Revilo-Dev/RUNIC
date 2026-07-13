@@ -21,12 +21,14 @@ import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
 import net.neoforged.neoforge.common.loot.IGlobalLootModifier;
 import net.neoforged.neoforge.common.loot.LootModifier;
 import net.revilodev.runic.RunicConfig;
+import net.revilodev.runic.compat.RunicCompat;
 import net.revilodev.runic.event.EnchantBlacklist;
 import net.revilodev.runic.gear.GearAttribute;
 import net.revilodev.runic.gear.GearAttributes;
 import net.revilodev.runic.item.ModItems;
 import net.revilodev.runic.item.custom.RuneItem;
 import net.revilodev.runic.loot.rarity.EnhancementRarities;
+import net.revilodev.runic.loot.rarity.EnhancementRarity;
 import net.revilodev.runic.mythic.MythicRuneRegistry;
 import net.revilodev.runic.runes.RuneSlots;
 import net.revilodev.runic.runes.RunicItemTargets;
@@ -34,13 +36,17 @@ import net.revilodev.runic.runes.UniqueRuneSources;
 import net.revilodev.runic.stat.RuneStatType;
 
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 public class RunicStructureLootInjector extends LootModifier {
+    public static final float DEFAULT_RUNE_CHANCE = 0.35F;
+
     public static final MapCodec<RunicStructureLootInjector> CODEC = RecordCodecBuilder.mapCodec(inst ->
             LootModifier.codecStart(inst).and(inst.group(
-                    Codec.FLOAT.fieldOf("rune_chance").orElse(0.35f).forGetter(m -> m.runeChance),
+                    Codec.FLOAT.fieldOf("rune_chance").orElse(DEFAULT_RUNE_CHANCE).forGetter(m -> m.runeChance),
                     Codec.FLOAT.fieldOf("armor_chance").orElse(0.0f).forGetter(m -> m.armorChance),
                     Codec.INT.fieldOf("min_level").orElse(1).forGetter(m -> m.minLevel),
                     Codec.INT.fieldOf("max_level").orElse(1).forGetter(m -> m.maxLevel)
@@ -88,7 +94,6 @@ public class RunicStructureLootInjector extends LootModifier {
         RandomSource rand = ctx.getRandom();
 
         maybeAddRunes(generated, rand, level, id);
-        maybeAddRelics(generated, rand, id);
         maybeAddLootAttribute(generated, rand);
 
         return generated;
@@ -106,21 +111,6 @@ public class RunicStructureLootInjector extends LootModifier {
                 id.contains("dungeon") || id.contains("temple") || id.contains("ruin") ||
                 id.contains("bastion") || id.contains("ancient_city") || id.contains("shipwreck") ||
                 id.contains("fortress") || id.contains("stronghold") || id.contains("mineshaft");
-    }
-
-    private void maybeAddRelics(ObjectArrayList<ItemStack> generated, RandomSource rand, String tableId) {
-        if (!RunicConfig.relicLootInjectionEnabled()) {
-            return;
-        }
-        float chance = relicChanceFor(tableId);
-        if (chance <= 0.0F || rand.nextFloat() > chance) {
-            return;
-        }
-
-        ItemStack relic = randomRelic(rand, tableId);
-        if (!relic.isEmpty()) {
-            generated.add(relic);
-        }
     }
 
     private void maybeAddRunes(ObjectArrayList<ItemStack> generated, RandomSource rand, Level level, String tableId) {
@@ -168,7 +158,7 @@ public class RunicStructureLootInjector extends LootModifier {
         }
     }
 
-    private static boolean isUniqueRuneSource(String tableId) {
+    public static boolean isUniqueRuneSource(String tableId) {
         return isMansionOutpostOrRaider(tableId)
                 || isEvoker(tableId)
                 || isTrialChamber(tableId)
@@ -207,7 +197,7 @@ public class RunicStructureLootInjector extends LootModifier {
                 || tableId.contains("piglin_bartering");
     }
 
-    private static boolean isMythicSource(String tableId) {
+    public static boolean isMythicSource(String tableId) {
         return tableId.contains("ancient_city")
                 || tableId.contains("end_city")
                 || tableId.contains("bastion")
@@ -227,6 +217,14 @@ public class RunicStructureLootInjector extends LootModifier {
             if (!stack.isEmpty()) return stack;
         }
         return ItemStack.EMPTY;
+    }
+
+    public static List<String> uniqueRuneNames(String tableId) {
+        List<String> out = new ArrayList<>();
+        for (RuneChoice choice : uniqueRunePool(tableId)) {
+            out.add(choice.name());
+        }
+        return List.copyOf(out);
     }
 
     private static List<RuneChoice> uniqueRunePool(String tableId) {
@@ -303,40 +301,10 @@ public class RunicStructureLootInjector extends LootModifier {
 
     }
 
-    private static float relicChanceFor(String tableId) {
-        float weightScale = Math.max(0, RunicConfig.relicLootWeight()) / 2.0F;
-        if (weightScale <= 0.0F) return 0.0F;
-        if (tableId.contains("ancient_city")) return 0.12F * weightScale;
-        if (tableId.contains("bastion") || tableId.contains("fortress") || tableId.contains("nether_bridge")) return 0.10F * weightScale;
-        if (tableId.contains("ocean_monument") || tableId.contains("buried_treasure") || tableId.contains("underwater_ruin")) return 0.10F * weightScale;
-        if (tableId.contains("end_city") || tableId.contains("stronghold") || tableId.contains("dungeon")) return 0.08F * weightScale;
-        return 0.0F;
-    }
-
-    private static ItemStack randomRelic(RandomSource rand, String tableId) {
-        List<ItemStack> pool = new ArrayList<>();
-
-        if (tableId.contains("bastion") || tableId.contains("fortress") || tableId.contains("nether_bridge") || tableId.contains("end_city") || tableId.contains("dungeon")) {
-            pool.add(new ItemStack(ModItems.DRAGON_HEART.get()));
-            pool.add(new ItemStack(ModItems.WITHER_CHARGE.get()));
-        }
-        if (tableId.contains("ocean_monument") || tableId.contains("buried_treasure") || tableId.contains("underwater_ruin") || tableId.contains("shipwreck")) {
-            pool.add(new ItemStack(ModItems.ELDER_GUARDIANS_EYE.get()));
-        }
-        if (tableId.contains("ancient_city") || tableId.contains("deep_dark") || tableId.contains("dungeon")) {
-            pool.add(new ItemStack(ModItems.WARDENS_SOUL.get()));
-            pool.add(new ItemStack(ModItems.WITHER_CHARGE.get()));
-        }
-
-        if (pool.isEmpty()) {
-            return ItemStack.EMPTY;
-        }
-        return pool.get(rand.nextInt(pool.size()));
-    }
-
     private static ItemStack randomGenericStatRune(RandomSource rand) {
         List<WeightedStatChoice> pool = new ArrayList<>();
         for (RuneStatType type : RuneStatType.values()) {
+            if (!RunicCompat.isStatAvailable(type)) continue;
             if (UniqueRuneSources.isSourceLockedRuneStat(type)) continue;
             if (EnchantBlacklist.isStatBlacklisted(type)) continue;
             int weight = weightForRarity(EnhancementRarities.getStat(type.id()));
@@ -394,7 +362,7 @@ public class RunicStructureLootInjector extends LootModifier {
         return pool.get(pool.size() - 1).type;
     }
 
-    private static int lootDifficulty(String tableId) {
+    public static int lootDifficulty(String tableId) {
         if (tableId.contains("ancient_city") || tableId.contains("end_city")) return 5;
         if (tableId.contains("bastion") || tableId.contains("fortress") || tableId.contains("deep_dark")) return 4;
         if (tableId.contains("trial_chamber") || tableId.contains("trial_chambers") || tableId.contains("vault")) return 4;
@@ -429,6 +397,10 @@ public class RunicStructureLootInjector extends LootModifier {
             }
             return effectRune(level, effect);
         }
+
+        String name() {
+            return stat != null ? "stat/" + stat.id() : effect.toString();
+        }
     }
 
     private static Holder<Enchantment> pickWeightedEffect(List<Holder<Enchantment>> pool, RandomSource rand) {
@@ -452,7 +424,7 @@ public class RunicStructureLootInjector extends LootModifier {
         return pool.get(pool.size() - 1);
     }
 
-    private static int weightForRarity(net.revilodev.runic.loot.rarity.EnhancementRarity rarity) {
+    public static int weightForRarity(EnhancementRarity rarity) {
         return switch (rarity) {
             case COMMON -> Math.max(0, RunicConfig.commonRuneLootWeight());
             case UNCOMMON -> Math.max(0, RunicConfig.uncommonRuneLootWeight());
@@ -466,6 +438,41 @@ public class RunicStructureLootInjector extends LootModifier {
     }
 
     private record WeightedStatChoice(RuneStatType type, int weight) {}
+
+    public static Map<EnhancementRarity, Double> genericStatRarityDistribution() {
+        EnumMap<EnhancementRarity, Double> out = new EnumMap<>(EnhancementRarity.class);
+        EnumMap<EnhancementRarity, Integer> weights = new EnumMap<>(EnhancementRarity.class);
+        int total = 0;
+        for (RuneStatType type : RuneStatType.values()) {
+            if (!RunicCompat.isStatAvailable(type)) continue;
+            if (UniqueRuneSources.isSourceLockedRuneStat(type)) continue;
+            if (EnchantBlacklist.isStatBlacklisted(type)) continue;
+            EnhancementRarity rarity = EnhancementRarities.getStat(type.id());
+            int weight = weightForRarity(rarity);
+            if (weight <= 0) continue;
+            weights.merge(rarity, weight, Integer::sum);
+            total += weight;
+        }
+        for (EnhancementRarity rarity : EnhancementRarity.values()) {
+            out.put(rarity, total <= 0 ? 0.0D : (double) weights.getOrDefault(rarity, 0) / (double) total);
+        }
+        return out;
+    }
+
+    public static List<String> excludedRuneNames() {
+        List<String> out = new ArrayList<>();
+        for (RuneStatType type : UniqueRuneSources.SOURCE_LOCKED_RUNE_STATS) {
+            out.add("stat/" + type.id());
+        }
+        for (ResourceLocation id : UniqueRuneSources.SOURCE_LOCKED_RUNE_EFFECTS) {
+            out.add(id.toString());
+        }
+        if (!RunicCompat.isStatAvailable(RuneStatType.ABILITY_POWER)) {
+            out.add("stat/" + RuneStatType.ABILITY_POWER.id() + " (requires Aura/Codex)");
+        }
+        out.sort(String::compareTo);
+        return List.copyOf(out);
+    }
 
     private void maybeAddLootAttribute(ObjectArrayList<ItemStack> generated, RandomSource rand) {
         if (generated.isEmpty() || rand.nextFloat() >= this.armorChance) {

@@ -19,6 +19,7 @@ import net.revilodev.runic.loot.rarity.EnhancementRarity;
 import net.revilodev.runic.mythic.MythicRuneDefinition;
 import net.revilodev.runic.mythic.MythicRuneRegistry;
 import net.revilodev.runic.runes.UniqueRuneSources;
+import net.revilodev.runic.synergy.SynergyRegistry;
 import net.revilodev.runic.stat.RuneStatType;
 import net.revilodev.runic.stat.RuneStats;
 
@@ -185,13 +186,13 @@ public final class EnhancementToolTips {
 
     private static void appendSynergyRune(List<Component> tooltip, ResourceLocation id) {
         String path = id.getPath().substring("synergy/".length());
-        tooltip.add(Component.literal(STAR + " ").withStyle(ChatFormatting.GOLD)
+        String icon = SynergyRegistry.JUGGERNAUT.equals(id) ? "\u26E8" : STAR;
+        tooltip.add(Component.literal(icon + " ").withStyle(ChatFormatting.GOLD)
                 .append(RarityTintedItemName.tintedName(ChatFormatting.GOLD, ItemStack.EMPTY, Component.translatable("tooltip.runic.synergy." + path))));
         if (Screen.hasAltDown()) {
             tooltip.add(Component.translatable("tooltip.runic.synergy_desc." + path).withStyle(ChatFormatting.DARK_GRAY));
         }
         tooltip.add(rarityLine(EnhancementRarity.SYNERGY));
-        tooltip.add(EnhancementCategory.SYNERGY.line());
     }
 
     private static Component rarityLine(EnhancementRarity rarity) {
@@ -264,16 +265,16 @@ public final class EnhancementToolTips {
             case UNDEAD_DAMAGE -> "Increases damage to undead.";
             case NETHER_DAMAGE -> "Increases damage to nether mobs.";
             case HEALTH -> "Increases maximum health.";
-            case STUN_CHANCE -> "Chance to apply stunning.";
-            case FLAME_CHANCE -> "Chance to apply fire aspect.";
-            case BLEEDING_CHANCE -> "Chance to apply bleeding.";
-            case SHOCKING_CHANCE -> "Chance to apply shocking.";
-            case POISON_CHANCE -> "Chance to apply toxic.";
-            case WITHERING_CHANCE -> "Chance to apply withering.";
-            case WEAKENING_CHANCE -> "Chance to apply diminishing.";
+            case STUN_CHANCE -> "Chance to stun for 3s.";
+            case FLAME_CHANCE -> "Chance to ignite for 4s.";
+            case BLEEDING_CHANCE -> "Chance to apply bleeding for 5s.";
+            case SHOCKING_CHANCE -> "Chance to call visual lightning and slow for 4s.";
+            case POISON_CHANCE -> "Chance to apply poison for 2s.";
+            case WITHERING_CHANCE -> "Chance to apply wither for 5s.";
+            case WEAKENING_CHANCE -> "Chance to apply weakness for 6s.";
             case DRAW_SPEED -> "Increases bow draw speed.";
             case TOUGHNESS -> "Increases toughness.";
-            case FREEZING_CHANCE -> "Chance to apply freezing.";
+            case FREEZING_CHANCE -> "Chance to freeze mobs for 3s; etchings freeze for 2s.";
             case LEECHING_CHANCE -> "Chance to leach 10% max health on critical hit.";
             case FANGS -> "Chance to summon evoker fangs on hit.";
             case STONE -> "Gain temporary resistance after a heavy hit.";

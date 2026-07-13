@@ -10,6 +10,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
+import net.revilodev.runic.compat.RunicCompat;
 import net.revilodev.runic.event.EnchantBlacklist;
 import net.revilodev.runic.item.ModItems;
 import net.revilodev.runic.item.RarityTintedItemName;
@@ -43,14 +44,12 @@ public class RuneItem extends Item implements RarityTintedItemName {
     public Component getName(ItemStack stack) {
         ResourceLocation synergyId = getItemSynergyId(stack);
         if (synergyId != null) {
-            return RarityTintedItemName.super.tintedName(stack,
-                    Component.translatable("tooltip.runic.synergy." + synergyId.getPath().substring("synergy/".length())));
+            return RarityTintedItemName.super.tintedName(stack, Component.translatable("tooltip.runic.synergy_rune"));
         }
 
         ResourceLocation mythicId = MythicRuneRegistry.getItemRuneId(stack);
         if (mythicId != null) {
-            return RarityTintedItemName.tintedName(ChatFormatting.DARK_PURPLE, stack,
-                    Component.translatable("tooltip.runic.mythic_name." + mythicId.getPath().substring("mythic/".length())));
+            return RarityTintedItemName.tintedName(ChatFormatting.DARK_PURPLE, stack, Component.translatable("tooltip.runic.mythic_rune"));
         }
         return super.getName(stack);
     }
@@ -91,6 +90,9 @@ public class RuneItem extends Item implements RarityTintedItemName {
     }
 
     public static ItemStack createStatRune(RandomSource random, RuneStatType type) {
+        if (!RunicCompat.isStatAvailable(type)) {
+            return ItemStack.EMPTY;
+        }
         RuneStats stats = RuneStats.singleUnrolled(type);
         ItemStack stack = new ItemStack(ModItems.ENHANCED_RUNE.get());
         RuneStats.set(stack, stats);
@@ -101,7 +103,7 @@ public class RuneItem extends Item implements RarityTintedItemName {
         RuneStatType[] all = RuneStatType.values();
         List<RuneStatType> allowed = new ArrayList<>();
         for (RuneStatType type : all) {
-            if (!EnchantBlacklist.isStatBlacklisted(type)) {
+            if (!EnchantBlacklist.isStatBlacklisted(type) && RunicCompat.isStatAvailable(type)) {
                 allowed.add(type);
             }
         }

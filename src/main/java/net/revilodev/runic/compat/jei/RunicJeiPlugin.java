@@ -20,6 +20,7 @@ import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.revilodev.runic.RunicMod;
 import net.revilodev.runic.block.ModBlocks;
+import net.revilodev.runic.compat.RunicCompat;
 import net.revilodev.runic.item.ModItems;
 import net.revilodev.runic.item.custom.EtchingItem;
 import net.revilodev.runic.item.custom.RuneItem;
@@ -88,6 +89,7 @@ public final class RunicJeiPlugin implements IModPlugin {
 
         var registry = mc.level.registryAccess().registryOrThrow(Registries.ENCHANTMENT);
         for (RuneStatType type : RuneStatType.values()) {
+            if (!RunicCompat.isStatAvailable(type)) continue;
             ItemStack stack = RuneItem.createStatRune(RandomSource.create(), type);
             if (stack.isEmpty()) continue;
 
@@ -153,6 +155,7 @@ public final class RunicJeiPlugin implements IModPlugin {
         List<ItemStack> out = new ArrayList<>();
 
         for (RuneStatType type : RuneStatType.values()) {
+            if (!RunicCompat.isStatAvailable(type)) continue;
             ItemStack stack = RuneItem.createStatRune(RandomSource.create(), type);
             if (!stack.isEmpty()) out.add(stack);
         }
@@ -178,6 +181,7 @@ public final class RunicJeiPlugin implements IModPlugin {
         List<ItemStack> out = new ArrayList<>();
 
         for (RuneStatType type : RuneStatType.values()) {
+            if (!RunicCompat.isStatAvailable(type)) continue;
             if (UniqueRuneSources.isUniqueEtchingStat(type)) continue;
             ItemStack stack = EtchingItem.createStatEtching(RandomSource.create(), type);
             if (!stack.isEmpty()) out.add(stack);

@@ -68,12 +68,16 @@ public final class RunicItemData {
     }
 
     public static int getSynergyPotential(ItemStack stack) {
+        if (GearAttributes.has(stack, GearAttribute.DISSONANT)) return 0;
         CompoundTag runic = getRunic(stack);
         if (runic == null) return 0;
         return clampSynergyPotential(runic.getInt(SYNERGY_POTENTIAL));
     }
 
     public static void setSynergyPotential(ItemStack stack, int value) {
+        if (value > 0 && GearAttributes.has(stack, GearAttribute.DISSONANT)) {
+            value = 0;
+        }
         int next = clampSynergyPotential(value);
         CompoundTag root = getRootCopy(stack);
         CompoundTag runic = root.contains(ROOT, Tag.TAG_COMPOUND) ? root.getCompound(ROOT) : new CompoundTag();
@@ -121,6 +125,10 @@ public final class RunicItemData {
         if (id == null) return;
         List<ResourceLocation> current = new ArrayList<>(getSynergies(stack));
         if (current.remove(id)) setSynergies(stack, current);
+    }
+
+    public static void clearMythicRunes(ItemStack stack) {
+        setMythicRunes(stack, List.of());
     }
 
     public static void clearSynergies(ItemStack stack) {

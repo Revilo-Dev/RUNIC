@@ -26,6 +26,7 @@
     "runic:stat/undead_damage": "uncommon",
     "runic:stat/water_breathing": "uncommon",
 
+    "runic:stat/ability_power": "rare",
     "runic:stat/bleeding_chance": "rare",
     "runic:stat/flame_chance": "rare",
     "runic:stat/freezing_chance": "rare",

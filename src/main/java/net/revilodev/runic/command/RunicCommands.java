@@ -19,14 +19,21 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.revilodev.runic.RunicConfig;
+import net.revilodev.runic.event.EnchantBlacklist;
 import net.revilodev.runic.item.RuneModelMappings;
 import net.revilodev.runic.item.custom.RuneItem;
+import net.revilodev.runic.loot.RunicStructureLootInjector;
+import net.revilodev.runic.loot.rarity.EnhancementRarities;
+import net.revilodev.runic.loot.rarity.EnhancementRarity;
 import net.revilodev.runic.synergy.SynergyRegistry;
 import net.revilodev.runic.stat.RuneStatType;
 
+import java.util.EnumMap;
 import java.util.Collection;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 public final class RunicCommands {
@@ -135,6 +142,21 @@ public final class RunicCommands {
                                                         context.getSource(),
                                                         StringArgumentType.getString(context, "name")
                                                 )))))
+                        .then(Commands.literal("test")
+                                .executes(context -> runicTestHelp(context.getSource()))
+                                .then(Commands.literal("droprate")
+                                        .executes(context -> dropRate(context.getSource(), null))
+                                        .then(Commands.argument("structure", StringArgumentType.greedyString())
+                                                .suggests((context, builder) -> {
+                                                    for (String id : structureSuggestions()) {
+                                                        builder.suggest(id);
+                                                    }
+                                                    return builder.buildFuture();
+                                                })
+                                                .executes(context -> dropRate(
+                                                        context.getSource(),
+                                                        StringArgumentType.getString(context, "structure")
+                                                )))))
         );
     }
 
@@ -226,6 +248,95 @@ public final class RunicCommands {
         }
         source.sendSuccess(() -> Component.literal("Disabled runic config target: " + name.toLowerCase(Locale.ROOT)), true);
         return 1;
+    }
+
+    private static int runicTestHelp(CommandSourceStack source) {
+        source.sendSuccess(() -> Component.literal("Runic test commands:"), false);
+        source.sendSuccess(() -> Component.literal("/runic test droprate"), false);
+        source.sendSuccess(() -> Component.literal("/runic test droprate <structure>"), false);
+        return 1;
+    }
+
+    private static int dropRate(CommandSourceStack source, String structure) {
+        String table = structure == null || structure.isBlank()
+                ? "base"
+                : structure.trim().toLowerCase(Locale.ROOT);
+        boolean specific = !"base".equals(table);
+        int rolls = specific && (table.contains("bastion") || table.contains("ancient_city")) ? 2 : 1;
+        double runeChance = RunicStructureLootInjector.DEFAULT_RUNE_CHANCE;
+        double mythicPerRoll = mythicChancePerRoll(table);
+        double genericFactor = runeChance * rolls * Math.max(0.0D, 1.0D - mythicPerRoll) * 0.75D;
+        Map<EnhancementRarity, Double> distribution = combinedGenericDistribution(source);
+
+        source.sendSuccess(() -> Component.literal("Runic droprate report: " + table), false);
+        source.sendSuccess(() -> Component.literal("Rune roll chance: " + percent(runeChance) + " per chest; rolls: " + rolls), false);
+        for (EnhancementRarity rarity : List.of(EnhancementRarity.COMMON, EnhancementRarity.UNCOMMON, EnhancementRarity.RARE,
+                EnhancementRarity.EPIC, EnhancementRarity.LEGENDARY, EnhancementRarity.CURSED)) {
+            double chance = genericFactor * distribution.getOrDefault(rarity, 0.0D);
+            source.sendSuccess(() -> Component.literal(" - " + rarity.key() + ": " + percent(chance)), false);
+        }
+        if (mythicPerRoll > 0.0D) {
+            double expected = runeChance * rolls * mythicPerRoll;
+            source.sendSuccess(() -> Component.literal(" - mythic: " + percent(expected)), false);
+        }
+        if (specific) {
+            List<String> unique = RunicStructureLootInjector.uniqueRuneNames(table);
+            source.sendSuccess(() -> Component.literal("Unique pool: " + (unique.isEmpty() ? "none" : String.join(", ", unique))), false);
+            source.sendSuccess(() -> Component.literal("Excluded from generic pool: " + String.join(", ", RunicStructureLootInjector.excludedRuneNames())), false);
+        }
+        source.sendSuccess(() -> Component.literal("Relics: 0% in all chests; boss drops only."), false);
+        return 1;
+    }
+
+    private static Map<EnhancementRarity, Double> combinedGenericDistribution(CommandSourceStack source) {
+        EnumMap<EnhancementRarity, Double> out = new EnumMap<>(EnhancementRarity.class);
+        Map<EnhancementRarity, Double> stat = RunicStructureLootInjector.genericStatRarityDistribution();
+        Map<EnhancementRarity, Double> effect = genericEffectRarityDistribution(source);
+        for (EnhancementRarity rarity : EnhancementRarity.values()) {
+            out.put(rarity, (stat.getOrDefault(rarity, 0.0D) * 0.8D) + (effect.getOrDefault(rarity, 0.0D) * 0.2D));
+        }
+        return out;
+    }
+
+    private static Map<EnhancementRarity, Double> genericEffectRarityDistribution(CommandSourceStack source) {
+        EnumMap<EnhancementRarity, Double> out = new EnumMap<>(EnhancementRarity.class);
+        EnumMap<EnhancementRarity, Integer> weights = new EnumMap<>(EnhancementRarity.class);
+        int total = 0;
+        var registry = source.getServer().registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
+        for (ResourceLocation id : RuneItem.allowedEffectIds()) {
+            if (net.revilodev.runic.runes.UniqueRuneSources.isSourceLockedRuneEffect(id)) continue;
+            ResourceKey<Enchantment> key = ResourceKey.create(Registries.ENCHANTMENT, id);
+            Holder<Enchantment> holder = registry.get(key).orElse(null);
+            if (holder == null || EnchantBlacklist.isBlacklisted(holder)) continue;
+            EnhancementRarity rarity = EnhancementRarities.get(holder);
+            int weight = RunicStructureLootInjector.weightForRarity(rarity);
+            if (weight <= 0) continue;
+            weights.merge(rarity, weight, Integer::sum);
+            total += weight;
+        }
+        for (EnhancementRarity rarity : EnhancementRarity.values()) {
+            out.put(rarity, total <= 0 ? 0.0D : (double) weights.getOrDefault(rarity, 0) / (double) total);
+        }
+        return out;
+    }
+
+    private static double mythicChancePerRoll(String table) {
+        if (table == null || table.equals("base")) return 0.0D;
+        if (!RunicConfig.mythicRunesEnabled() || !RunicConfig.mythicRuneLootEnabled()) return 0.0D;
+        if (!RunicStructureLootInjector.isMythicSource(table)
+                || RunicStructureLootInjector.lootDifficulty(table) < RunicConfig.mythicRuneMinLootDifficulty()) {
+            return 0.0D;
+        }
+        return Math.max(0, RunicConfig.mythicRuneLootWeight()) / 24.0D;
+    }
+
+    private static String percent(double chance) {
+        return String.format(Locale.ROOT, "%.2f%%", Math.max(0.0D, chance) * 100.0D);
+    }
+
+    private static List<String> structureSuggestions() {
+        return List.of("ancient_city", "bastion", "fortress", "ocean_monument", "end_city",
+                "stronghold", "dungeon", "trial_chamber", "woodland_mansion", "pillager_outpost");
     }
 
     private static ItemStack requireHeldItem(Entity entity) throws CommandSyntaxException {

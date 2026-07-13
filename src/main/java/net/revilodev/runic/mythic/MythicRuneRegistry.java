@@ -10,6 +10,7 @@ import net.minecraft.world.item.ItemStack;
 import net.revilodev.runic.RunicConfig;
 import net.revilodev.runic.RunicMod;
 import net.revilodev.runic.gear.GearAttributes;
+import net.revilodev.runic.gear.GearAttribute;
 import net.revilodev.runic.gear.RunicItemData;
 import net.revilodev.runic.item.RarityTintedItemName;
 import net.revilodev.runic.runes.RunicItemTargets;
@@ -114,6 +115,7 @@ public final class MythicRuneRegistry {
 
     public static boolean canApplyTo(ItemStack stack, ResourceLocation id) {
         if (stack == null || stack.isEmpty() || id == null) return false;
+        if (GearAttributes.has(stack, GearAttribute.DISSONANT)) return false;
         if (DOMINION.equals(id)) {
             return RunicItemTargets.isWeapon(stack) || RunicItemTargets.isArmor(stack);
         }

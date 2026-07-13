@@ -48,6 +48,7 @@ public class ModCreativeModeTabs {
                         output.accept(ModItems.STABILIZATION_INSCRIPTION.get());
                         output.accept(ModItems.TEMPERING_INSCRIPTION.get());
                         output.accept(ModItems.RELIC_SOCKET_INSCRIPTION.get());
+                        output.accept(ModItems.DISSONANT_INSCRIPTION.get());
                         output.accept(ModItems.DRAGON_HEART.get());
                         output.accept(ModItems.ELDER_GUARDIANS_EYE.get());
                         output.accept(ModItems.WITHER_CHARGE.get());

@@ -5,6 +5,7 @@ import net.minecraft.world.item.ItemStack;
 import net.revilodev.runic.RunicMod;
 import net.revilodev.runic.gear.RunicItemData;
 import net.revilodev.runic.item.EnhancementCategory;
+import net.revilodev.runic.runes.RunicItemTargets;
 import net.revilodev.runic.stat.RuneStatType;
 import net.revilodev.runic.stat.RuneStats;
 
@@ -18,7 +19,8 @@ public final class SynergyRegistry {
     public static final ResourceLocation SHATTER = synergyId("shatter");
     public static final ResourceLocation BLOODFIRE = synergyId("bloodfire");
     public static final ResourceLocation CORROSION = synergyId("corrosion");
-    public static final ResourceLocation EXECUTIONERS_FURY = synergyId("executioners_fury");
+    public static final ResourceLocation FURY = synergyId("fury");
+    public static final ResourceLocation EXECUTIONERS_FURY = FURY;
     public static final ResourceLocation JUGGERNAUT = synergyId("juggernaut");
     public static final ResourceLocation TEMPEST = synergyId("tempest");
     public static final ResourceLocation REAPER = synergyId("reaper");
@@ -26,23 +28,24 @@ public final class SynergyRegistry {
     public static final ResourceLocation FROSTBITE = synergyId("frostbite");
     public static final ResourceLocation VENOM_BURST = synergyId("venom_burst");
     public static final ResourceLocation BERSERK = synergyId("berserk");
-    public static final ResourceLocation ICE_PRISON = synergyId("ice_prison");
+    public static final ResourceLocation ICE_BURST = synergyId("ice_burst");
+    public static final ResourceLocation ICE_PRISON = ICE_BURST;
 
     private static final Map<PairKey, Definition> DEFINITIONS = new ConcurrentHashMap<>();
 
     static {
-        register(statId(RuneStatType.FREEZING_CHANCE), statId(RuneStatType.SHOCKING_CHANCE), SHATTER);
+        register(statId(RuneStatType.FREEZING_CHANCE), statId(RuneStatType.FLAME_CHANCE), SHATTER);
         register(statId(RuneStatType.FLAME_CHANCE), statId(RuneStatType.BLEEDING_CHANCE), BLOODFIRE);
-        register(statId(RuneStatType.POISON_CHANCE), effectId("minecraft", "piercing"), CORROSION);
-        register(effectId("runic", "execution"), effectId("runic", "momentum"), EXECUTIONERS_FURY);
+        register(statId(RuneStatType.POISON_CHANCE), statId(RuneStatType.WEAKENING_CHANCE), CORROSION);
+        register(statId(RuneStatType.ATTACK_DAMAGE), statId(RuneStatType.ATTACK_SPEED), EXECUTIONERS_FURY);
         register(statId(RuneStatType.STONE), statId(RuneStatType.RESISTANCE), JUGGERNAUT);
         register(statId(RuneStatType.SHOCKING_CHANCE), statId(RuneStatType.ATTACK_SPEED), TEMPEST);
-        register(statId(RuneStatType.LEECHING_CHANCE), effectId("runic", "execution"), REAPER);
+        register(statId(RuneStatType.LEECHING_CHANCE), statId(RuneStatType.WEAKENING_CHANCE), REAPER);
         register(statId(RuneStatType.FLAME_CHANCE), statId(RuneStatType.WITHERING_CHANCE), SOULBURN);
         register(statId(RuneStatType.FREEZING_CHANCE), statId(RuneStatType.BLEEDING_CHANCE), FROSTBITE);
         register(statId(RuneStatType.POISON_CHANCE), statId(RuneStatType.SHOCKING_CHANCE), VENOM_BURST);
-        register(statId(RuneStatType.ATTACK_SPEED), effectId("runic", "momentum"), BERSERK);
-        register(statId(RuneStatType.FREEZING_CHANCE), statId(RuneStatType.STONE), ICE_PRISON);
+        register(statId(RuneStatType.ATTACK_SPEED), statId(RuneStatType.ATTACK_DAMAGE), BERSERK);
+        register(statId(RuneStatType.FREEZING_CHANCE), statId(RuneStatType.SHOCKING_CHANCE), ICE_PRISON);
     }
 
     private SynergyRegistry() {}
@@ -76,7 +79,7 @@ public final class SynergyRegistry {
 
         List<Definition> out = new ArrayList<>();
         for (Definition def : DEFINITIONS.values()) {
-            if (!def.enabled() || RunicItemData.hasSynergy(stack, def.result())) continue;
+            if (!def.enabled() || RunicItemData.hasSynergy(stack, def.result()) || !canApplyTo(stack, def.result())) continue;
             if (applied.contains(def.inputA()) && applied.contains(def.inputB())) {
                 out.add(def);
             }
@@ -90,9 +93,17 @@ public final class SynergyRegistry {
         for (ResourceLocation existing : EnhancementRefs.collectApplied(stack)) {
             if (existing.equals(newlyApplied)) continue;
             Definition def = DEFINITIONS.get(PairKey.of(newlyApplied, existing));
-            if (def != null && def.enabled() && !RunicItemData.hasSynergy(stack, def.result())) out.add(def);
+            if (def != null && def.enabled() && !RunicItemData.hasSynergy(stack, def.result()) && canApplyTo(stack, def.result())) out.add(def);
         }
         return List.copyOf(out);
+    }
+
+    public static boolean canApplyTo(ItemStack stack, ResourceLocation result) {
+        if (stack == null || stack.isEmpty() || result == null) return false;
+        if (JUGGERNAUT.equals(result)) {
+            return RunicItemTargets.isArmor(stack);
+        }
+        return true;
     }
 
     public static boolean isSynergy(ResourceLocation id) {
@@ -102,6 +113,11 @@ public final class SynergyRegistry {
     public static boolean isRegisteredResult(ResourceLocation id) {
         if (!isSynergy(id)) return false;
         return DEFINITIONS.values().stream().anyMatch(def -> def.result().equals(id));
+    }
+
+    public static Optional<Definition> definitionForResult(ResourceLocation id) {
+        if (!isSynergy(id)) return Optional.empty();
+        return DEFINITIONS.values().stream().filter(def -> def.result().equals(id)).findFirst();
     }
 
     public static ResourceLocation synergyId(String path) {
@@ -177,8 +193,6 @@ public final class SynergyRegistry {
                 entry.getKey().unwrapKey().ifPresent(key -> out.add(key.location()));
             });
 
-            // Mythic runes are stored as applied enhancements, but they are not synergy inputs.
-            out.addAll(RunicItemData.getSynergies(stack));
             return out;
         }
     }

@@ -18,6 +18,7 @@ import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.revilodev.runic.RunicConfig;
+import net.revilodev.runic.compat.RunicCompat;
 import net.revilodev.runic.event.EnchantBlacklist;
 import net.revilodev.runic.item.custom.EtchingItem;
 import net.revilodev.runic.item.custom.RuneItem;
@@ -94,6 +95,7 @@ public final class EtchingTableRecipe implements Recipe<EtchingTableInput> {
     public boolean matches(EtchingTableInput input, net.minecraft.world.level.Level level) {
         if (RunicConfig.disableEtchingCrafting()) return false;
         if (stat.map(EnchantBlacklist::isStatBlacklisted).orElse(false)) return false;
+        if (stat.map(s -> !RunicCompat.isStatAvailable(s)).orElse(false)) return false;
         if (effect.map(EnchantBlacklist::isBlacklisted).orElse(false)) return false;
         if (!base.test(input.base())) return false;
 
@@ -114,6 +116,9 @@ public final class EtchingTableRecipe implements Recipe<EtchingTableInput> {
         if (stat.map(EnchantBlacklist::isStatBlacklisted).orElse(false)) {
             return ItemStack.EMPTY;
         }
+        if (stat.map(s -> !RunicCompat.isStatAvailable(s)).orElse(false)) {
+            return ItemStack.EMPTY;
+        }
         if (effect.map(EnchantBlacklist::isBlacklisted).orElse(false)) {
             return ItemStack.EMPTY;
         }
@@ -129,7 +134,7 @@ public final class EtchingTableRecipe implements Recipe<EtchingTableInput> {
         if (effect.isPresent()) {
             Holder<Enchantment> ench = enchantmentHolderOrNull(registries, effect.get());
             if (ench != null && EtchingItem.isEffectEnchantment(ench)) {
-                out.enchant(ench, RuneItem.forcedEtchingEffectLevel(ench));
+                EtchingItem.setStoredEnchantment(out, ench, RuneItem.forcedEtchingEffectLevel(ench));
             }
         }
 

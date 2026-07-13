@@ -106,7 +106,7 @@ public final class RuneModelMappings {
         addSynergy("shatter", 89f, "effect/binding_curse");
         addSynergy("bloodfire", 90f, "effect/binding_curse");
         addSynergy("corrosion", 91f, "effect/binding_curse");
-        addSynergy("executioners_fury", 92f, "effect/binding_curse");
+        addSynergy("fury", 92f, "effect/binding_curse");
         addSynergy("juggernaut", 93f, "effect/binding_curse");
         addSynergy("tempest", 94f, "effect/binding_curse");
         addSynergy("reaper", 95f, "effect/binding_curse");
@@ -114,7 +114,7 @@ public final class RuneModelMappings {
         addSynergy("frostbite", 97f, "effect/binding_curse");
         addSynergy("venom_burst", 98f, "effect/binding_curse");
         addSynergy("berserk", 99f, "effect/binding_curse");
-        addSynergy("ice_prison", 100f, "effect/binding_curse");
+        addSynergy("ice_burst", 100f, "effect/binding_curse");
 
         MODEL_DEFS = List.copyOf(buildModelDefs());
     }

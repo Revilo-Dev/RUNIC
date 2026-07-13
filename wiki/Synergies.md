@@ -1,38 +1,51 @@
 # Synergies
 
-Synergies are bonus powers created by combining certain enhancements on the same item.
+Synergies are bonus powers that unlock when the right rune effects are on the same item.
 
-## How Synergies Work
+Synergies do not replace the runes that created them. The original runes stay on the item, keep using their rune slots, and continue to work normally. The synergy is an extra bonus layered on top.
 
-If an item has the right pair of enhancements, it can unlock a synergy. Synergy chance and synergy potential affect whether the bonus is gained.
+Etchings cannot create synergies. Synergies come from runes, resonance effects, or creative-only Synergy Runes.
+
+## Reading Synergies
+
+On gear tooltips, synergy runes that influence a synergy are shown indented below it in yellow. Their rolled values affect how strong the synergy is, so a stronger Freezing rune will make Freezing-based synergies better.
+
+Synergies do not consume rune slots.
 
 ## Known Synergies
 
-Shatter: frozen and shocking builds release a burst when frozen enemies are struck.
+**Berserk**: after 3 critical hits on the same enemy, you gain Strength II and Speed III for 2 seconds. The effects refresh while you keep critically hitting that same enemy.
 
-Bloodfire: bleeding and fire builds chain burn and bleed pressure.
+**Bloodfire**: Bleeding and Fire Aspect create soul fire damage. Burning enemies spread that fire for 1 second to enemies their hitbox touches, and marked enemies burst into blood particles when they die.
 
-Corrosion: poison and piercing builds deal bonus damage that partially ignores armor.
+**Corrosion**: Toxic and Diminishing make poisoned or weakened enemies take extra damage that partially ignores armor.
 
-Executioner's Fury: execution-focused builds gain a temporary damage surge after finishing enemies.
+**Fury**: Attack Damage and Attack Speed increase damage against enemies below 10% health.
 
-Juggernaut: defensive builds gain resistance and knockback control after heavy hits.
+**Frostbite**: Bleeding enemies freeze more easily and take extra pressure while chilled. Freezing and Bleeding values influence the result.
 
-Tempest: rapid shocking attacks build into chain lightning.
+**Ice Burst**: Freezing and Shocking make frozen enemies burst with lightning, striking nearby enemies.
 
-Reaper: weakened enemy executions restore health and speed up attacks.
+**Shatter**: Freezing and Fire Aspect shatter frozen enemies, dealing 50% of their max health or their remaining health, whichever is greater.
 
-Soulburn: burning enemies release withering pressure on death.
+**Reaper**: Leeching and Diminishing let you drain weakened enemies without needing a critical hit. The enemy is drained for twice the amount, but you heal for the normal leech value.
 
-Frostbite: bleeding enemies freeze more easily and take extra pressure while chilled.
+**Soulburn**: Fire Aspect and Withering feed each other. Burning enemies gain wither, withered enemies burn, and the effect spreads burn and wither around them.
 
-Venom Burst: poisoned enemies can erupt, spreading poison and damage.
+**Tempest**: Shocking attacks build charge on enemies. When the charged enemy dies, the charge transfers evenly to nearby enemies as zaps.
 
-Berserk: sustained aggression grants movement and mining speed.
+**Venom Burst**: poisoned enemies can erupt, spreading poison and damage to nearby enemies.
 
-Ice Prison: frozen enemies can trap nearby enemies in ice.
+**Juggernaut**: armor-only defensive rune builds can gain resistance and knockback control after heavy hits.
+
+## Creative Synergy Runes
+
+Synergy Runes are creative-only testing items. Applying one also adds the two relevant base rune effects so the synergy can be tested immediately.
 
 ## Synergy Potential
 
-Some items can gain more synergy potential. More potential gives more chances to gain synergy bonuses, but usually adds corruption risk.
+Some items can gain Synergy Potential. More potential gives more chances to unlock synergy bonuses, but failed attempts can add corruption.
 
+## Dissonant Items
+
+The Dissonant Inscription is a creative-only testing inscription. It sets an item's Synergy Potential to 0 and prevents that item from holding Mythic Runes.

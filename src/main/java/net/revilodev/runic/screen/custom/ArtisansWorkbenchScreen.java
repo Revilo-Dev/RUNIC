@@ -184,7 +184,7 @@ public final class ArtisansWorkbenchScreen extends AbstractContainerScreen<Artis
         int prevCorruption = RunicItemData.getCorruption(preview);
         if (baseCorruption != prevCorruption) {
             int deltaCorruption = prevCorruption - baseCorruption;
-            out.add(Component.literal("Corruption " + prevCorruption + "%: " + signedPercent(deltaCorruption))
+            out.add(Component.literal("Corruption: " + signedPercent(deltaCorruption))
                     .withStyle(deltaCorruption > 0 ? ChatFormatting.DARK_PURPLE : ChatFormatting.GREEN));
         }
 
@@ -195,9 +195,6 @@ public final class ArtisansWorkbenchScreen extends AbstractContainerScreen<Artis
         if (delta != null && delta.contains("relic_id", Tag.TAG_STRING)) {
             ResourceLocation relicId = ResourceLocation.tryParse(delta.getString("relic_id"));
             out.add(Component.translatable("tooltip.runic.relic", RelicRegistry.displayName(relicId)).withStyle(ChatFormatting.GOLD));
-            if (delta.contains("relic_corruption", Tag.TAG_INT)) {
-                out.add(Component.translatable("tooltip.runic.relic_corruption", delta.getInt("relic_corruption")).withStyle(ChatFormatting.DARK_PURPLE));
-            }
             if (delta.contains("relic_durability_use", Tag.TAG_DOUBLE)) {
                 out.add(Component.translatable("tooltip.runic.relic_durability_use", formatNumber(delta.getDouble("relic_durability_use"))).withStyle(ChatFormatting.GRAY));
             }

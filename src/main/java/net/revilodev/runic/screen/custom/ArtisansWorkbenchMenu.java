@@ -86,12 +86,22 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
 
         this.addSlot(new Slot(input, 0, 26, 53) {
             @Override
+            public boolean mayPlace(ItemStack stack) {
+                return isEnhancementItem(stack) || isInscription(stack);
+            }
+
+            @Override
             public int getMaxStackSize() {
                 return 64;
             }
         });
 
         this.addSlot(new Slot(input, 1, 80, 53) {
+            @Override
+            public boolean mayPlace(ItemStack stack) {
+                return !isEnhancementItem(stack) && !isInscription(stack);
+            }
+
             @Override
             public int getMaxStackSize() {
                 return 1;
@@ -252,7 +262,8 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
                 || stack.is(ModItems.PURIFICATION_INSCRIPTION.get())
                 || stack.is(ModItems.STABILIZATION_INSCRIPTION.get())
                 || stack.is(ModItems.TEMPERING_INSCRIPTION.get())
-                || stack.is(ModItems.RELIC_SOCKET_INSCRIPTION.get());
+                || stack.is(ModItems.RELIC_SOCKET_INSCRIPTION.get())
+                || stack.is(ModItems.DISSONANT_INSCRIPTION.get());
     }
 
     private boolean anyAttrAtMax(ItemStack stack) {
@@ -488,6 +499,9 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
         if (MythicRuneRegistry.isMythicRune(enhancement) && !RunicConfig.mythicRunesEnabled()) {
             return createInvalidPreview(gear, "message.runic.mythic_disabled");
         }
+        if (MythicRuneRegistry.isMythicRune(enhancement) && GearAttributes.has(gear, GearAttribute.DISSONANT)) {
+            return createInvalidPreview(gear, "message.runic.mythic_blocked_dissonant");
+        }
         if (MythicRuneRegistry.isMythicRune(enhancement)) {
             ResourceLocation mythicId = MythicRuneRegistry.getItemRuneId(enhancement);
             if (mythicId != null && RunicItemData.hasMythicRune(gear, mythicId)) {
@@ -545,18 +559,22 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
         } else if (enhancement.is(ModItems.RELIC_SOCKET_INSCRIPTION.get())) {
             if (!canApplyRelicSocket(out)) return ItemStack.EMPTY;
             applyRuneOnTake(out, enhancement, false);
+        } else if (enhancement.is(ModItems.DISSONANT_INSCRIPTION.get())) {
+            if (!canApplyDissonant(out)) return ItemStack.EMPTY;
+            applyRuneOnTake(out, enhancement, false);
         } else {
             if (!isEnhancementItem(enhancement)) return ItemStack.EMPTY;
-            if (effectiveRemaining(out) <= 0) return ItemStack.EMPTY;
             ResourceLocation synergyId = RuneItem.getItemSynergyId(enhancement);
             if (synergyId != null) {
                 if (RunicItemData.hasSynergy(out, synergyId)) return ItemStack.EMPTY;
+                if (!SynergyRegistry.canApplyTo(out, synergyId)) return ItemStack.EMPTY;
                 applyRuneOnTake(out, enhancement, false);
                 boolean unchanged = ItemStack.isSameItemSameComponents(base, out) && base.getDamageValue() == out.getDamageValue();
                 if (unchanged) return ItemStack.EMPTY;
                 writePreviewDelta(base, out);
                 return out;
             }
+            if (effectiveRemaining(out) <= 0) return ItemStack.EMPTY;
 
             RuneStats stats = RuneStats.get(enhancement);
             RuneStatType stat = (stats != null && !stats.isEmpty()) ? getEnhancementStatType(enhancement) : null;
@@ -1367,6 +1385,20 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
         return true;
     }
 
+    private boolean canApplyDissonant(ItemStack target) {
+        return target != null && !target.isEmpty() && !GearAttributes.has(target, GearAttribute.DISSONANT);
+    }
+
+    private boolean applyDissonant(ItemStack taken) {
+        if (!canApplyDissonant(taken)) return false;
+        RunicItemData.setSynergyPotential(taken, 0);
+        RunicItemData.clearMythicRunes(taken);
+        GearAttributes.addLevel(taken, GearAttribute.DISSONANT, 1);
+        RuneSlots.syncUsedToContents(taken);
+        updateGlintAfter(taken);
+        return true;
+    }
+
     private boolean mutateOneEnhancement(ItemStack taken) {
         List<ResourceLocation> refs = new ArrayList<>(SynergyRegistry.EnhancementRefs.collectApplied(taken));
         if (!RunicConfig.wildInscriptionCanMutateSynergies()) {
@@ -1667,11 +1699,16 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
             return;
         }
 
+        if (enhancement.is(ModItems.DISSONANT_INSCRIPTION.get())) {
+            applyDissonant(taken);
+            return;
+        }
+
         if (!isEnhancementItem(enhancement)) return;
         RuneSlots.syncUsedToContents(taken);
-        if (effectiveRemaining(taken) <= 0) return;
 
         if (MythicRuneRegistry.isMythicRune(enhancement)) {
+            if (effectiveRemaining(taken) <= 0) return;
             ResourceLocation mythicId = MythicRuneRegistry.getItemRuneId(enhancement);
             if (mythicId == null || RunicItemData.hasMythicRune(taken, mythicId) || !MythicRuneRegistry.canApplyTo(taken, mythicId)) {
                 return;
@@ -1693,13 +1730,18 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
             if (RunicItemData.hasSynergy(taken, synergyId)) {
                 return;
             }
+            if (!SynergyRegistry.canApplyTo(taken, synergyId)) {
+                return;
+            }
+            addSynergyInputsForCreativeRune(taken, synergyId);
             RunicItemData.addSynergy(taken, synergyId);
-            RuneSlots.tryConsumeSlot(taken);
             RunicItemData.addCorruption(taken, RunicConfig.mythicCorruption());
             taken.set(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, true);
             updateGlintAfter(taken);
             return;
         }
+
+        if (effectiveRemaining(taken) <= 0) return;
 
         RuneStats templateStats = RuneStats.get(enhancement);
         RuneStatType stat = (templateStats != null && !templateStats.isEmpty()) ? getEnhancementStatType(enhancement) : null;
@@ -1757,7 +1799,7 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
         if (applied) {
             RuneSlots.tryConsumeSlot(taken);
             RunicItemData.addCorruption(taken, corruptionFor(enhancement));
-            if (rollSynergies) {
+            if (rollSynergies && !isEtching(enhancement)) {
                 tryApplyForgedSynergy(taken, enhancementRef(enhancement));
             }
             updateGlintAfter(taken);
@@ -1786,6 +1828,7 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
             case EPIC -> RunicConfig.epicCorruption();
             case LEGENDARY -> RunicConfig.legendaryCorruption();
             case MYTHIC -> RunicConfig.mythicCorruption();
+            case SYNERGY -> RunicConfig.mythicCorruption();
             case CURSED -> RunicConfig.rareCorruption();
         };
     }
@@ -1816,13 +1859,34 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
     }
 
     private void applySynergyResult(ItemStack stack, SynergyRegistry.Definition chosen) {
-        removeEnhancement(stack, chosen.inputA());
-        removeEnhancement(stack, chosen.inputB());
         RunicItemData.addSynergy(stack, chosen.result());
-        stack.set(ModDataComponents.RUNE_SLOTS_USED.get(),
-                Math.min(RuneSlots.capacity(stack), RuneSlots.countAppliedEnhancements(stack)));
+        RuneSlots.syncUsedToContents(stack);
         RunicItemData.addCorruption(stack, RunicConfig.successfulSynergyCorruption());
         stack.set(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, true);
+    }
+
+    private void addSynergyInputsForCreativeRune(ItemStack stack, ResourceLocation synergyId) {
+        SynergyRegistry.definitionForResult(synergyId).ifPresent(def -> {
+            addStatInput(stack, def.inputA());
+            addStatInput(stack, def.inputB());
+            RuneSlots.syncUsedToContents(stack);
+        });
+    }
+
+    private void addStatInput(ItemStack stack, ResourceLocation input) {
+        if (input == null || !input.getNamespace().equals(RunicMod.MOD_ID) || !input.getPath().startsWith("stat/")) {
+            return;
+        }
+        RuneStatType type = RuneStatType.byId(input.getPath().substring("stat/".length()));
+        if (type == null) return;
+        RuneStats current = RuneStats.get(stack);
+        if (current != null && current.has(type)) return;
+        EnumMap<RuneStatType, Float> map = new EnumMap<>(RuneStatType.class);
+        if (current != null && !current.isEmpty()) {
+            map.putAll(current.view());
+        }
+        map.put(type, powerAdjusted(stack, type.maxPercent()));
+        RuneStats.set(stack, new RuneStats(map));
     }
 
     private ResourceLocation enhancementRef(ItemStack enhancement) {
@@ -1944,21 +2008,7 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
         if (index == previewIdx) return ItemStack.EMPTY;
 
         if (index >= invStart) {
-            if (stack.getItem() instanceof RuneItem
-                    || stack.getItem() instanceof EtchingItem
-                    || stack.is(ModItems.REPAIR_INSCRIPTION.get())
-                    || stack.is(ModItems.EXPANSION_INSCRIPTION.get())
-                    || stack.is(ModItems.NULLIFICATION_INSCRIPTION.get())
-                    || stack.is(ModItems.UPGRADE_INSCRIPTION.get())
-                    || stack.is(ModItems.REROLL_INSCRIPTION.get())
-                    || stack.is(ModItems.CURSED_INSCRIPTION.get())
-                    || stack.is(ModItems.WILD_INSCRIPTION.get())
-                    || stack.is(ModItems.EXTRACTION_INSCRIPTION.get())
-                    || stack.is(ModItems.RESONANCE_INSCRIPTION.get())
-                    || stack.is(ModItems.PURIFICATION_INSCRIPTION.get())
-                    || stack.is(ModItems.STABILIZATION_INSCRIPTION.get())
-                    || stack.is(ModItems.TEMPERING_INSCRIPTION.get())
-                    || stack.is(ModItems.RELIC_SOCKET_INSCRIPTION.get())) {
+            if (isEnhancementItem(stack) || isInscription(stack)) {
                 if (!this.moveItemStackTo(stack, enhIdx, enhIdx + 1, false)) return ItemStack.EMPTY;
             } else {
                 if (!this.moveItemStackTo(stack, gearIdx, gearIdx + 1, false)) return ItemStack.EMPTY;

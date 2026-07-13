@@ -79,8 +79,9 @@ public final class RuneOnHitHandler {
 
             tryRollEffect(stats, RuneStatType.FREEZING_CHANCE, rand,
                     () -> {
-                        target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, 2));
-                        SynergyEffects.markFrozen(target, 100);
+                        int duration = stats.get(RuneStatType.FREEZING_CHANCE) <= RuneStatType.FREEZING_CHANCE.etchingMaxPercent() ? 40 : 60;
+                        target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, duration, 2));
+                        SynergyEffects.markFrozen(target, duration);
                     });
         }
 

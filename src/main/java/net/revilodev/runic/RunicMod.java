@@ -62,8 +62,11 @@ public class RunicMod {
         if (FMLEnvironment.dist == Dist.CLIENT) {
             modEventBus.addListener(RunicClient::onRegisterScreens);
             modEventBus.addListener(RunicClient::onRegisterParticleProviders);
-            modEventBus.addListener(RunicClient::onAddEntityLayers);
+            modEventBus.addListener(RunicClient::onRegisterKeyMappings);
             modEventBus.addListener(RunicClientModels::onClientSetup);
+            NeoForge.EVENT_BUS.addListener(RunicClient::onClientKeyInput);
+            NeoForge.EVENT_BUS.addListener(RunicClient::onScreenInit);
+            NeoForge.EVENT_BUS.addListener(RunicClient::onRenderGui);
         }
 
         NeoForge.EVENT_BUS.register(this);

@@ -56,6 +56,7 @@ public final class RunicLangProviders {
             add("item.runic.stabilization_inscription", "Stabilization Inscription");
             add("item.runic.tempering_inscription", "Tempering Inscription");
             add("item.runic.relic_socket_inscription", "Relic Socket Inscription");
+            add("item.runic.dissonant_inscription", "Dissonant Inscription");
             add("item.runic.blank_inscription", "Blank Inscription");
             add("item.runic.enhanced_rune", "Rune");
             add("item.runic.etching", "Etching");
@@ -63,7 +64,7 @@ public final class RunicLangProviders {
 
             // Blocks
             add("block.runic.artisans_workbench", "Artisans Workbench");
-            add("block.runic.etching_table", "Etching Table");
+            add("block.runic.etching_table", "Inscription Table");
 
             // Vanilla
             add("minecraft:experience_bottle", "Bottle o' Experience");
@@ -167,10 +168,8 @@ public final class RunicLangProviders {
             add("tooltip.runic.stabilization_inscription", "Stabilizes an item at the cost of brittleness and corruption.");
             add("tooltip.runic.tempering_inscription", "Reinforces an item, reducing durability loss but increasing corruption.");
             add("tooltip.runic.relic_socket_inscription", "Adds a relic socket, allowing one future relic to be bound to the item.");
+            add("tooltip.runic.dissonant_inscription", "Sets Synergy Potential to 0 and prevents this item from holding mythic runes.");
             add("tooltip.runic.use_artisans_workbench", "Apply in an Artisan's Workbench");
-            add("tooltip.runic.inscription_rarity", "Rarity: %s");
-            add("tooltip.runic.inscription_source.craftable", "Craftable");
-            add("tooltip.runic.inscription_source.loot_only", "Loot Only");
             add("tooltip.runic.inscription_attributes", "Attributes:");
             add("tooltip.runic.rarity.common", "Common");
             add("tooltip.runic.rarity.uncommon", "Uncommon");
@@ -194,6 +193,8 @@ public final class RunicLangProviders {
             add("tooltip.runic.attribute.reinforced", "Reinforced");
             add("tooltip.runic.attribute.tempered", "Tempered");
             add("tooltip.runic.attribute.harmonized", "Harmonized");
+            add("tooltip.runic.attribute.dissonant", "Dissonant");
+            add("tooltip.runic.inscription_corruption", "Corruption: %s");
             add("tooltip.runic.attribute_desc.sealed", "Prevents further modification at the Artisan's Workbench.");
             add("tooltip.runic.attribute_desc.cursed", "Reduces runic stat values and makes future changes more dangerous.");
             add("tooltip.runic.attribute_desc.instable", "Raises forging risk and weakens future rerolls.");
@@ -207,6 +208,7 @@ public final class RunicLangProviders {
             add("tooltip.runic.attribute_desc.reinforced", "Durability loss reduced.");
             add("tooltip.runic.attribute_desc.tempered", "Inscription corruption gain reduced.");
             add("tooltip.runic.attribute_desc.harmonized", "Synergy effects are stronger.");
+            add("tooltip.runic.attribute_desc.dissonant", "Synergy Potential is fixed at 0 and mythic runes cannot be held.");
             add("tooltip.runic.relic_socket.empty", "Relic Socket: Empty");
             add("tooltip.runic.relic_socket.bound", "Relic Socket: Bound");
             add("tooltip.runic.relic", "Relic: %s");
@@ -244,7 +246,9 @@ public final class RunicLangProviders {
             add("tooltip.runic.synergy_potential", "Synergy Potential: %s");
             add("tooltip.runic.synergy_chance", "Synergy Chance: %s%%");
             add("tooltip.runic.synergies", "Synergies:");
-            add("tooltip.runic.synergy_enhancement", "Synergy Enhancement");
+            add("tooltip.runic.synergy_rune", "Synergy Rune");
+            add("tooltip.runic.synergy_influenced_by", "Influenced by:");
+            add("tooltip.runic.synergy_enhancement", "Synergy");
             add("tooltip.runic.category_line", "Category: %s");
             add("tooltip.runic.category.offensive", "Offensive");
             add("tooltip.runic.category.defensive", "Defensive");
@@ -255,7 +259,7 @@ public final class RunicLangProviders {
             add("tooltip.runic.synergy.shatter", "Shatter");
             add("tooltip.runic.synergy.bloodfire", "Bloodfire");
             add("tooltip.runic.synergy.corrosion", "Corrosion");
-            add("tooltip.runic.synergy.executioners_fury", "Executioner's Fury");
+            add("tooltip.runic.synergy.fury", "Fury");
             add("tooltip.runic.synergy.juggernaut", "Juggernaut");
             add("tooltip.runic.synergy.tempest", "Tempest");
             add("tooltip.runic.synergy.reaper", "Reaper");
@@ -263,19 +267,19 @@ public final class RunicLangProviders {
             add("tooltip.runic.synergy.frostbite", "Frostbite");
             add("tooltip.runic.synergy.venom_burst", "Venom Burst");
             add("tooltip.runic.synergy.berserk", "Berserk");
-            add("tooltip.runic.synergy.ice_prison", "Ice Prison");
-            add("tooltip.runic.synergy_desc.shatter", "Frozen enemies release an electric burst when struck, damaging nearby enemies after a short cooldown.");
-            add("tooltip.runic.synergy_desc.bloodfire", "Bleeding enemies ignite, and burning enemies can begin bleeding for chained fire and bleed pressure.");
-            add("tooltip.runic.synergy_desc.corrosion", "Poisoned enemies take bonus damage that partially ignores armor.");
-            add("tooltip.runic.synergy_desc.executioners_fury", "Finishing low-health enemies grants a temporary damage surge.");
+            add("tooltip.runic.synergy.ice_burst", "Ice Burst");
+            add("tooltip.runic.synergy_desc.shatter", "Freezing and fire aspect shatter frozen enemies, dealing 50% max health or their remaining health, whichever is greater.");
+            add("tooltip.runic.synergy_desc.bloodfire", "Bleeding and fire aspect create soul fire damage that spreads for 1 second to touching enemies and bursts into blood particles on death.");
+            add("tooltip.runic.synergy_desc.corrosion", "Toxic and diminishing make poisoned or weakened enemies take bonus damage that partially ignores armor.");
+            add("tooltip.runic.synergy_desc.fury", "Attack damage and attack speed increase damage against enemies below 10% health.");
             add("tooltip.runic.synergy_desc.juggernaut", "Taking a heavy hit briefly grants strong resistance and knockback control.");
-            add("tooltip.runic.synergy_desc.tempest", "Rapid strikes build static charge, then release chain lightning into nearby enemies.");
-            add("tooltip.runic.synergy_desc.reaper", "Executing weakened enemies restores health and briefly hastens your next attacks.");
-            add("tooltip.runic.synergy_desc.soulburn", "Burning enemies mark themselves, then release a withering pulse on death.");
+            add("tooltip.runic.synergy_desc.tempest", "Shocking attacks build charge on enemies; when they die, the charge splits into zaps across nearby enemies.");
+            add("tooltip.runic.synergy_desc.reaper", "Leeching and diminishing drain weakened enemies harder while healing you for the normal leech amount.");
+            add("tooltip.runic.synergy_desc.soulburn", "Fire aspect and withering feed each other, spreading burn and wither to nearby enemies.");
             add("tooltip.runic.synergy_desc.frostbite", "Bleeding enemies freeze more easily and take bonus pressure while chilled.");
             add("tooltip.runic.synergy_desc.venom_burst", "Poisoned enemies can erupt, spreading poison and lightning-like damage to nearby targets.");
-            add("tooltip.runic.synergy_desc.berserk", "Sustained aggression grants a temporary burst of movement and mining speed.");
-            add("tooltip.runic.synergy_desc.ice_prison", "Frozen enemies trap nearby foes in ice, slowing and marking them as frozen.");
+            add("tooltip.runic.synergy_desc.berserk", "After 3 critical hits on one enemy, gain Strength II and Speed III for 2 seconds while continuing to crit that enemy.");
+            add("tooltip.runic.synergy_desc.ice_burst", "Freezing and shocking make frozen enemies burst into lightning that strikes nearby enemies.");
             add("item.runic.dragon_heart", "Dragon Heart");
             add("item.runic.elder_guardians_eye", "Elder Guardian's Eye");
             add("item.runic.wither_charge", "Wither Charge");
@@ -284,6 +288,17 @@ public final class RunicLangProviders {
             add("tooltip.runic.relic_desc.elder_guardians_eye", "Improves underwater combat and mining, with stronger benefits while fighting in water.");
             add("tooltip.runic.relic_desc.wither_charge", "Extends wither effects and increases damage against withered enemies.");
             add("tooltip.runic.relic_desc.wardens_soul", "Improves damage against powerful enemies and rewards fighting high-health targets.");
+            add("tooltip.runic.relic_base.dragon_heart", "Base Effect: improves fire damage and burn pressure.");
+            add("tooltip.runic.relic_base.elder_guardians_eye", "Base Effect: improves underwater combat and mining.");
+            add("tooltip.runic.relic_base.wither_charge", "Base Effect: improves damage and duration against withered enemies.");
+            add("tooltip.runic.relic_base.wardens_soul", "Base Effect: improves damage against high-health enemies.");
+            add("tooltip.runic.relic_set.dragon_heart", "Full Set: press the relic keybind to breathe dragon fire.");
+            add("tooltip.runic.relic_set.elder_guardians_eye", "Full Set: press the relic keybind to fire a guardian beam.");
+            add("tooltip.runic.relic_set.wither_charge", "Full Set: press the relic keybind to launch a wither bullet.");
+            add("tooltip.runic.relic_set.wardens_soul", "Full Set: press the relic keybind to release a sonic boom.");
+            add("tooltip.runic.hold_ctrl_more", "Hold Ctrl to read more.");
+            add("key.categories.runic", "Runic");
+            add("key.runic.relic_power", "Use Relic Power");
             add("tooltip.runic.mythic_rune", "Mythic Rune");
             add("tooltip.runic.mythic_runes", "Mythic Runes");
             add("tooltip.runic.mythic_unknown", "Unknown Mythic Rune");
@@ -305,9 +320,13 @@ public final class RunicLangProviders {
             add("message.runic.mythic_disabled", "Mythic runes are disabled.");
             add("message.runic.mythic_already_present", "This item already has that Mythic rune.");
             add("message.runic.mythic_wrong_item", "That Mythic rune cannot be applied to this item.");
+            add("message.runic.mythic_blocked_dissonant", "Dissonant items cannot hold mythic runes.");
 
             // tooltips
-            add("tooltip.runic.use_etching_table", "Used in an Etching Table");
+            add("tooltip.runic.use_inscription_table", "Used in an Inscription Table");
+            add("tooltip.runic.use_enchanting_table", "Used in an Enchanting Table");
+            add("button.runic.reroll_etching", "Reroll");
+            add("tooltip.runic.reroll_etching", "Use 1 level and 1 lapis to roll a random etching.");
             add("tooltip.runic.aqua_affinity", "Increases underwater mining speed");
             add("tooltip.runic.bane_of_arthropods", "Deal more damage to arthropod type enemies");
             add("tooltip.runic.binding_curse", "Item cannot be unequipped");

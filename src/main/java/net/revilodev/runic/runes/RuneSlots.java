@@ -53,7 +53,6 @@ public final class RuneSlots {
             }
         }
 
-        total += RunicItemData.getSynergies(stack).size();
         total += RunicItemData.getMythicRunes(stack).size();
 
         return total;
@@ -67,7 +66,7 @@ public final class RuneSlots {
             return;
         }
         int derived = Math.min(capacity(stack), countAppliedEnhancements(stack));
-        if (used(stack) < derived) {
+        if (used(stack) != derived) {
             stack.set(ModDataComponents.RUNE_SLOTS_USED.get(), derived);
         }
     }

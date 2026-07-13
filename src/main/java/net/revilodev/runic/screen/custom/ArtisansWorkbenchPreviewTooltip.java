@@ -176,7 +176,7 @@ public final class ArtisansWorkbenchPreviewTooltip {
         if (delta.contains("synergies", Tag.TAG_INT)) {
             int v = delta.getInt("synergies");
             if (v != 0) {
-                out.add(Component.literal("  Synergy Enhancements ")
+                out.add(Component.literal("  Synergy ")
                         .append(Component.literal(formatSignedInt(v)).withStyle(colorForSign(v)))
                         .withStyle(ChatFormatting.WHITE));
             }
