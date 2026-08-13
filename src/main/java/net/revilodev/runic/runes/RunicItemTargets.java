@@ -1,10 +1,12 @@
 package net.revilodev.runic.runes;
 
 import net.minecraft.core.Holder;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.*;
+import net.minecraft.world.item.component.ItemAttributeModifiers;
 
 public final class RunicItemTargets {
     private RunicItemTargets() {}
@@ -78,12 +80,15 @@ public final class RunicItemTargets {
     }
 
     private static boolean hasSlotModifier(ItemStack stack, EquipmentSlot slot, Holder<Attribute> attribute) {
-        final boolean[] found = {false};
-        stack.forEachModifier(slot, (holder, modifier) -> {
-            if (holder.unwrapKey().equals(attribute.unwrapKey()) && modifier.amount() != 0.0D) {
-                found[0] = true;
+        ItemAttributeModifiers modifiers =
+                stack.getOrDefault(DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.EMPTY);
+        for (ItemAttributeModifiers.Entry entry : modifiers.modifiers()) {
+            if (entry.slot().test(slot)
+                    && entry.attribute().unwrapKey().equals(attribute.unwrapKey())
+                    && entry.modifier().amount() != 0.0D) {
+                return true;
             }
-        });
-        return found[0];
+        }
+        return false;
     }
 }

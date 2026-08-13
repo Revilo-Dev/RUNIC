@@ -16,10 +16,12 @@ import java.util.Map;
 
 public final class RuneStats {
 
+    // custom data keys
     public static final String NBT_KEY = "runic_stats";
     private static final String BASE_ITEM_KEY = "runic_base_item";
     private static final RuneStats EMPTY = new RuneStats(new EnumMap<>(RuneStatType.class));
 
+    // active stat values by type
     final EnumMap<RuneStatType, Float> values;
 
     public RuneStats(EnumMap<RuneStatType, Float> values) {
@@ -30,6 +32,7 @@ public final class RuneStats {
         return values.getOrDefault(type, 0.0F);
     }
 
+    // exact key presence
     public boolean has(RuneStatType type) {
         return values.containsKey(type);
     }
@@ -42,10 +45,12 @@ public final class RuneStats {
         return Map.copyOf(values);
     }
 
+    // preview rolls without storing them
     public RuneStats rolledForTooltip() {
         return rollForApplication(this, RandomSource.create());
     }
 
+    // save only live stat values
     public CompoundTag save() {
         CompoundTag tag = new CompoundTag();
         for (Map.Entry<RuneStatType, Float> e : values.entrySet()) {
@@ -57,6 +62,7 @@ public final class RuneStats {
         return tag;
     }
 
+    // rebuild enum keyed stats from saved ids
     public static RuneStats load(CompoundTag tag) {
         EnumMap<RuneStatType, Float> map = new EnumMap<>(RuneStatType.class);
         for (String key : tag.getAllKeys()) {
@@ -78,10 +84,12 @@ public final class RuneStats {
         return new RuneStats(map);
     }
 
+    // negative value marks a pending roll
     public static RuneStats singleUnrolled(RuneStatType type) {
         return single(type, -1.0F);
     }
 
+    // normal rune application path
     public static RuneStats rollForApplication(RuneStats template, RandomSource random) {
         return rollForApplication(template, random, false);
     }
@@ -90,11 +98,14 @@ public final class RuneStats {
         if (template == null || template.isEmpty()) {
             return EMPTY;
         }
+
+        // roll unresolved values when the rune is applied
         EnumMap<RuneStatType, Float> map = new EnumMap<>(RuneStatType.class);
         for (Map.Entry<RuneStatType, Float> e : template.values.entrySet()) {
             RuneStatType type = e.getKey();
             float v = e.getValue();
 
+            // unresolved entries roll here
             if (v < 0.0F) {
                 v = etching ? type.rollEtching(random) : type.roll(random);
             }
@@ -109,17 +120,20 @@ public final class RuneStats {
         return combine(base, add, !RunicConfig.disableStatCaps());
     }
 
+    // optional cap aware merge
     public static RuneStats combine(RuneStats base, RuneStats add, boolean respectCaps) {
         if ((base == null || base.isEmpty()) && (add == null || add.isEmpty())) {
             return EMPTY;
         }
 
+        // start from existing stats then merge new ones
         EnumMap<RuneStatType, Float> map = new EnumMap<>(RuneStatType.class);
 
         if (base != null && !base.isEmpty()) {
             map.putAll(base.values);
         }
 
+        // add onto existing values one type at a time
         if (add != null && !add.isEmpty()) {
             for (Map.Entry<RuneStatType, Float> e : add.values.entrySet()) {
                 RuneStatType type = e.getKey();
@@ -127,6 +141,7 @@ public final class RuneStats {
                 float added = e.getValue();
                 float sum = existing + added;
 
+                // optional per stat cap
                 float cap = type.cap();
                 if (respectCaps && cap > 0.0F && sum > cap) {
                     sum = cap;
@@ -145,6 +160,7 @@ public final class RuneStats {
         if (root == null || !root.contains(NBT_KEY)) {
             return EMPTY;
         }
+        // stats live under one custom data key
         return load(root.getCompound(NBT_KEY));
     }
 
@@ -155,6 +171,7 @@ public final class RuneStats {
             root = new CompoundTag();
         }
 
+        // keep raw stats and the source item id together
         if (stats == null || stats.isEmpty()) {
             root.remove(NBT_KEY);
             root.remove(BASE_ITEM_KEY);
@@ -166,6 +183,7 @@ public final class RuneStats {
             }
         }
 
+        // rebuild derived item state from the stored stats
         RuneAttributeApplier.clearRunicAttributes(stack);
         RuneAttributeApplier.clearDurability(stack, root);
 
@@ -174,6 +192,7 @@ public final class RuneStats {
             RuneAttributeApplier.applyDurability(stack, stats, root);
         }
 
+        // write the final custom data back once
         stack.set(DataComponents.CUSTOM_DATA, CustomData.of(root));
     }
 
@@ -181,6 +200,7 @@ public final class RuneStats {
         RuneStats stats = get(stack);
         if (stats == null || stats.isEmpty()) return false;
 
+        // item swaps can leave old derived data behind
         CustomData data = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
         CompoundTag root = data.copyTag();
         if (root == null || !root.contains(BASE_ITEM_KEY)) return true;
@@ -194,6 +214,7 @@ public final class RuneStats {
     public static float getTotalFromEquipment(LivingEntity entity, RuneStatType type) {
         if (entity == null || type == null) return 0.0F;
         float total = 0.0F;
+        // sum every equipped item with runic stats
         for (ItemStack stack : entity.getAllSlots()) {
             if (!stack.isEmpty()) {
                 total += get(stack).get(type);

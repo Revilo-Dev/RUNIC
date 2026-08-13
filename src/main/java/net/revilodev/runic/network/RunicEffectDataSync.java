@@ -13,6 +13,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 public record RunicEffectDataSync(Set<ResourceLocation> effects) implements CustomPacketPayload {
+    // sync packet for allowed effect ids
     public static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath(RunicMod.MOD_ID, "runic_effects");
     public static final Type<RunicEffectDataSync> TYPE = new Type<>(ID);
 
@@ -20,6 +21,7 @@ public record RunicEffectDataSync(Set<ResourceLocation> effects) implements Cust
             new StreamCodec<>() {
                 @Override
                 public RunicEffectDataSync decode(RegistryFriendlyByteBuf buf) {
+                    // flat list of enchant ids
                     int count = buf.readVarInt();
                     Set<ResourceLocation> ids = new HashSet<>();
                     for (int i = 0; i < count; i++) {
@@ -37,6 +39,7 @@ public record RunicEffectDataSync(Set<ResourceLocation> effects) implements Cust
 
     public static final IPayloadHandler<RunicEffectDataSync> HANDLER = (msg, ctx) -> {
         if (Minecraft.getInstance().level != null) {
+            // client keeps the same whitelist as the server
             RunicEffectEnchantments.importFromNetwork(msg.effects());
         }
     };

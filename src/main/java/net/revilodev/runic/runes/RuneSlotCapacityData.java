@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.minecraft.core.Holder;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
@@ -17,6 +18,7 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.*;
+import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.revilodev.runic.RunicMod;
 
 import java.util.HashMap;
@@ -25,9 +27,11 @@ import java.util.Objects;
 import java.util.Set;
 
 public final class RuneSlotCapacityData extends SimpleJsonResourceReloadListener {
+    // permissive parser for datapack json
     private static final Gson GSON = new GsonBuilder().setLenient().create();
     private static final String FOLDER = "rune_slots";
 
+    // live caches rebuilt on reload
     private static Map<Item, Integer> CAPACITIES = new HashMap<>();
     private static Map<TagKey<Item>, Integer> TAG_CAPACITIES = new HashMap<>();
     private static Map<String, Integer> DEFAULTS = new HashMap<>();
@@ -42,6 +46,7 @@ public final class RuneSlotCapacityData extends SimpleJsonResourceReloadListener
     protected void apply(Map<ResourceLocation, JsonElement> objects,
                          ResourceManager manager,
                          ProfilerFiller profiler) {
+        // rebuild everything from datapacks
         Map<Item, Integer> fresh = new HashMap<>();
         Map<TagKey<Item>, Integer> tagCapacities = new HashMap<>();
         Map<String, Integer> defaults = new HashMap<>();
@@ -53,8 +58,11 @@ public final class RuneSlotCapacityData extends SimpleJsonResourceReloadListener
                 RunicMod.LOGGER.warn("RuneSlots: {} is not a JSON object", rl);
                 return;
             }
+
+            // each file can contribute partial data
             JsonObject json = element.getAsJsonObject();
 
+            // new format with grouped sections
             if (json.has("defaults") && json.get("defaults").isJsonObject()) {
                 JsonObject defs = json.getAsJsonObject("defaults");
                 for (String keyStr : defs.keySet()) {
@@ -72,6 +80,7 @@ public final class RuneSlotCapacityData extends SimpleJsonResourceReloadListener
                         continue;
                     }
                     int slots = GsonHelper.getAsInt(items, keyStr, 0);
+                    // direct item override
                     putSafe(fresh, key, slots, rl);
                 }
             }
@@ -85,6 +94,7 @@ public final class RuneSlotCapacityData extends SimpleJsonResourceReloadListener
                         continue;
                     }
                     int slots = GsonHelper.getAsInt(tags, keyStr, 0);
+                    // tag wide override
                     tagCapacities.put(itemTag(key), Math.max(0, slots));
                 }
             }
@@ -102,6 +112,7 @@ public final class RuneSlotCapacityData extends SimpleJsonResourceReloadListener
                         RunicMod.LOGGER.warn("RuneSlots: invalid item type '{}' for {} in {}", GsonHelper.getAsString(types, keyStr, ""), keyStr, rl);
                         continue;
                     }
+                    // explicit item category
                     putTypeSafe(itemTypes, key, type, rl);
                 }
             }
@@ -119,14 +130,17 @@ public final class RuneSlotCapacityData extends SimpleJsonResourceReloadListener
                         RunicMod.LOGGER.warn("RuneSlots: invalid tag type '{}' for {} in {}", GsonHelper.getAsString(types, keyStr, ""), keyStr, rl);
                         continue;
                     }
+                    // explicit tag category
                     tagTypes.put(itemTag(key), type);
                 }
             }
 
+            // grouped format stops here
             if (json.has("defaults") || json.has("items") || json.has("tags") || json.has("item_types") || json.has("tag_types")) {
                 return;
             }
 
+            // legacy list format
             if (json.has("list") && json.get("list").isJsonArray()) {
                 json.getAsJsonArray("list").forEach(el -> {
                     if (!el.isJsonObject()) return;
@@ -143,6 +157,7 @@ public final class RuneSlotCapacityData extends SimpleJsonResourceReloadListener
                 return;
             }
 
+            // legacy single entry format
             String itemId = GsonHelper.getAsString(json, "item", "");
             int slots = GsonHelper.getAsInt(json, "slots", 0);
             ResourceLocation key = ResourceLocation.tryParse(itemId);
@@ -158,10 +173,12 @@ public final class RuneSlotCapacityData extends SimpleJsonResourceReloadListener
         DEFAULTS = defaults;
         ITEM_TYPES = itemTypes;
         TAG_TYPES = tagTypes;
+        // log only the direct tables
         RunicMod.LOGGER.info("Loaded {} rune slot capacity entries and {} defaults.",
                 CAPACITIES.size(), DEFAULTS.size());
     }
 
+    // validate ids before storing
     private static void putSafe(Map<Item, Integer> map, ResourceLocation itemId, int slots, ResourceLocation source) {
         if (!BuiltInRegistries.ITEM.containsKey(itemId)) {
             RunicMod.LOGGER.warn("RuneSlots: unknown item '{}' in {}", itemId, source);
@@ -171,6 +188,7 @@ public final class RuneSlotCapacityData extends SimpleJsonResourceReloadListener
         map.put(item, Math.max(0, slots));
     }
 
+    // validate item types against the registry
     private static void putTypeSafe(Map<Item, String> map, ResourceLocation itemId, String type, ResourceLocation source) {
         if (!BuiltInRegistries.ITEM.containsKey(itemId)) {
             RunicMod.LOGGER.warn("RuneSlots: unknown item '{}' in {}", itemId, source);
@@ -183,12 +201,14 @@ public final class RuneSlotCapacityData extends SimpleJsonResourceReloadListener
         return TagKey.create(Registries.ITEM, id);
     }
 
+    // keep type keys normalized
     private static String normalizeType(String raw) {
         if (raw == null) return null;
         String type = raw.trim().toLowerCase();
         return DEFAULT_TYPE_KEYS.contains(type) ? type : null;
     }
 
+    // supported fallback categories
     private static final Set<String> DEFAULT_TYPE_KEYS = Set.of(
             "helmet",
             "chestplate",
@@ -211,6 +231,8 @@ public final class RuneSlotCapacityData extends SimpleJsonResourceReloadListener
     public static int capacity(Item item) {
         Integer direct = CAPACITIES.get(item);
         if (direct != null) return direct;
+
+        // item type overrides fallback classification
         String type = ITEM_TYPES.get(item);
         if (type == null) {
             type = classify(item);
@@ -224,6 +246,8 @@ public final class RuneSlotCapacityData extends SimpleJsonResourceReloadListener
     public static int capacity(ItemStack stack) {
         Integer direct = CAPACITIES.get(stack.getItem());
         if (direct != null) return direct;
+
+        // tag capacities beat defaults
         for (Map.Entry<TagKey<Item>, Integer> entry : TAG_CAPACITIES.entrySet()) {
             if (stack.is(entry.getKey())) {
                 return entry.getValue();
@@ -237,6 +261,7 @@ public final class RuneSlotCapacityData extends SimpleJsonResourceReloadListener
     }
 
     private static String classify(Item item) {
+        // vanilla item classes first
         if (item instanceof ArmorItem armor) {
             return switch (armor.getType()) {
                 case HELMET -> "helmet";
@@ -264,6 +289,8 @@ public final class RuneSlotCapacityData extends SimpleJsonResourceReloadListener
         Item item = stack.getItem();
         String directType = ITEM_TYPES.get(item);
         if (directType != null) return directType;
+
+        // tag types beat vanilla guesses
         for (Map.Entry<TagKey<Item>, String> entry : TAG_TYPES.entrySet()) {
             if (stack.is(entry.getKey())) {
                 return entry.getValue();
@@ -275,6 +302,7 @@ public final class RuneSlotCapacityData extends SimpleJsonResourceReloadListener
 
         EquipmentSlot armorSlot = armorSlotByAttributes(stack);
         if (armorSlot != null) {
+            // fallback for custom armor like items
             return switch (armorSlot) {
                 case HEAD -> "helmet";
                 case CHEST -> "chestplate";
@@ -293,6 +321,7 @@ public final class RuneSlotCapacityData extends SimpleJsonResourceReloadListener
     }
 
     private static EquipmentSlot armorSlotByAttributes(ItemStack stack) {
+        // detect custom armor slots from attributes
         if (hasSlotModifier(stack, EquipmentSlot.HEAD, Attributes.ARMOR)) return EquipmentSlot.HEAD;
         if (hasSlotModifier(stack, EquipmentSlot.CHEST, Attributes.ARMOR)) return EquipmentSlot.CHEST;
         if (hasSlotModifier(stack, EquipmentSlot.LEGS, Attributes.ARMOR)) return EquipmentSlot.LEGS;
@@ -308,14 +337,18 @@ public final class RuneSlotCapacityData extends SimpleJsonResourceReloadListener
         return hasSlotModifier(stack, EquipmentSlot.MAINHAND, attribute);
     }
 
+    // inspect raw attribute modifiers on the stack
     private static boolean hasSlotModifier(ItemStack stack, EquipmentSlot slot, Holder<Attribute> attribute) {
-        final boolean[] found = {false};
-        stack.forEachModifier(slot, (holder, modifier) -> {
-            if (holder.unwrapKey().equals(attribute.unwrapKey()) && modifier.amount() != 0.0D) {
-                found[0] = true;
+        ItemAttributeModifiers modifiers =
+                stack.getOrDefault(DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.EMPTY);
+        for (ItemAttributeModifiers.Entry entry : modifiers.modifiers()) {
+            if (entry.slot().test(slot)
+                    && entry.attribute().unwrapKey().equals(attribute.unwrapKey())
+                    && entry.modifier().amount() != 0.0D) {
+                return true;
             }
-        });
-        return found[0];
+        }
+        return false;
     }
 
     public static boolean isCategory(ItemStack stack, String category) {
@@ -323,6 +356,7 @@ public final class RuneSlotCapacityData extends SimpleJsonResourceReloadListener
         return normalized != null && normalized.equals(classify(stack));
     }
 
+    // network export for direct item capacities
     public static Map<ResourceLocation, Integer> exportItemIdMap() {
         Map<ResourceLocation, Integer> out = new HashMap<>();
         CAPACITIES.forEach((item, v) -> {
@@ -338,10 +372,12 @@ public final class RuneSlotCapacityData extends SimpleJsonResourceReloadListener
         return out;
     }
 
+    // network export for default type capacities
     public static Map<String, Integer> exportDefaults() {
         return new HashMap<>(DEFAULTS);
     }
 
+    // network export for direct item types
     public static Map<ResourceLocation, String> exportItemTypeMap() {
         Map<ResourceLocation, String> out = new HashMap<>();
         ITEM_TYPES.forEach((item, type) -> {
@@ -362,18 +398,22 @@ public final class RuneSlotCapacityData extends SimpleJsonResourceReloadListener
                                          Map<ResourceLocation, Integer> tagCapacities,
                                          Map<ResourceLocation, String> itemTypes,
                                          Map<ResourceLocation, String> tagTypes) {
+        // rebuild client caches from the sync payload
         Map<Item, Integer> rebuilt = new HashMap<>();
         itemMap.forEach((id, v) -> {
             if (!BuiltInRegistries.ITEM.containsKey(id)) {
                 return;
             }
+            // skip unknown ids on the client
             Item item = BuiltInRegistries.ITEM.get(id);
             rebuilt.put(item, Math.max(0, v));
         });
 
+        // tag capacities rebuild by location
         Map<TagKey<Item>, Integer> rebuiltTagCapacities = new HashMap<>();
         tagCapacities.forEach((id, v) -> rebuiltTagCapacities.put(itemTag(id), Math.max(0, v)));
 
+        // explicit item types rebuild after validation
         Map<Item, String> rebuiltItemTypes = new HashMap<>();
         itemTypes.forEach((id, type) -> {
             String normalized = normalizeType(type);
@@ -382,6 +422,7 @@ public final class RuneSlotCapacityData extends SimpleJsonResourceReloadListener
             }
         });
 
+        // tag types rebuild after validation
         Map<TagKey<Item>, String> rebuiltTagTypes = new HashMap<>();
         tagTypes.forEach((id, type) -> {
             String normalized = normalizeType(type);

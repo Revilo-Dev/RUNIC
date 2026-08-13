@@ -6,9 +6,9 @@
   "material": {
     "item": "minecraft:echo_shard"
   },
+  "mythic": "runic:mythic/void",
   "result": {
     "count": 1,
     "id": "runic:enhanced_rune"
-  },
-  "mythic": "runic:mythic/void"
+  }
 }

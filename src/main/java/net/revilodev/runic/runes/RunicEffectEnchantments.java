@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 public final class RunicEffectEnchantments {
+    // built in effect whitelist
     private static final Set<ResourceLocation> BUILTIN_EFFECTS = Set.of(
             ResourceLocation.fromNamespaceAndPath("aether", "renewal"),
 
@@ -95,6 +96,7 @@ public final class RunicEffectEnchantments {
     }
 
     public static void replaceDatapackEffects(Set<ResourceLocation> additions, Set<ResourceLocation> removals) {
+        // datapacks extend then prune the builtin list
         Set<ResourceLocation> next = new HashSet<>(BUILTIN_EFFECTS);
         next.addAll(additions);
         next.removeAll(removals);
@@ -102,6 +104,7 @@ public final class RunicEffectEnchantments {
     }
 
     public static void importFromNetwork(Set<ResourceLocation> ids) {
+        // client copy from server sync
         loadedEffects = new HashSet<>(ids);
     }
 }

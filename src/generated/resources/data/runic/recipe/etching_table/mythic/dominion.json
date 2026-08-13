@@ -6,9 +6,9 @@
   "material": {
     "item": "minecraft:nether_star"
   },
+  "mythic": "runic:mythic/dominion",
   "result": {
     "count": 1,
     "id": "runic:enhanced_rune"
-  },
-  "mythic": "runic:mythic/dominion"
+  }
 }

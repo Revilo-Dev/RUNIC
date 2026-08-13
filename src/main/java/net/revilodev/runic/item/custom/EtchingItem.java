@@ -7,6 +7,7 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.EnchantmentInstance;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.revilodev.runic.compat.RunicCompat;
 import net.revilodev.runic.event.EnchantBlacklist;
@@ -26,7 +27,33 @@ public class EtchingItem extends Item {
 
     @Override
     public boolean isEnchantable(ItemStack stack) {
-        return true;
+        return stack.is(ModItems.BLANK_ETCHING.get());
+    }
+
+    @Override
+    public int getEnchantmentValue() {
+        return 10;
+    }
+
+    @Override
+    public boolean isPrimaryItemFor(ItemStack stack, Holder<Enchantment> enchantment) {
+        return stack.is(ModItems.BLANK_ETCHING.get())
+                && isEffectEnchantment(enchantment)
+                && !EnchantBlacklist.isBlacklisted(enchantment);
+    }
+
+    @Override
+    public ItemStack applyEnchantments(ItemStack stack, List<EnchantmentInstance> enchantments) {
+        if (!stack.is(ModItems.BLANK_ETCHING.get())) {
+            return super.applyEnchantments(stack, enchantments);
+        }
+        for (EnchantmentInstance enchantment : enchantments) {
+            ItemStack etching = createEffectEtching(enchantment.enchantment);
+            if (!etching.isEmpty()) {
+                return etching;
+            }
+        }
+        return stack;
     }
 
     public static Set<ResourceLocation> allowedEffectIds() {

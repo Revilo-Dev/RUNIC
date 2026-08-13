@@ -9,6 +9,7 @@ import net.revilodev.runic.RunicMod;
 public final class RuneSlotReloadListenerRegistrar {
     @SubscribeEvent
     public static void onAddReloadListeners(AddReloadListenerEvent e) {
+        // load rune slot datapacks with the normal reload pipeline
         e.addListener(new RuneSlotCapacityData());
     }
 }

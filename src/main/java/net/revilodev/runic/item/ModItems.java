@@ -78,13 +78,13 @@ public final class ModItems {
             ITEMS.register("resonance_inscription", () -> inscription("tooltip.runic.resonance_inscription", EnhancementRarity.LEGENDARY, false, "fractured"));
 
     public static final DeferredHolder<Item, Item> PURIFICATION_INSCRIPTION =
-            ITEMS.register("purification_inscription", () -> inscription("tooltip.runic.purification_inscription", EnhancementRarity.EPIC, false));
+            ITEMS.register("purification_inscription", () -> inscription("tooltip.runic.purification_inscription", EnhancementRarity.EPIC, false, "brittle"));
 
     public static final DeferredHolder<Item, Item> STABILIZATION_INSCRIPTION =
             ITEMS.register("stabilization_inscription", () -> inscription("tooltip.runic.stabilization_inscription", EnhancementRarity.UNCOMMON, false, "instable", "brittle"));
 
     public static final DeferredHolder<Item, Item> TEMPERING_INSCRIPTION =
-            ITEMS.register("tempering_inscription", () -> inscription("tooltip.runic.tempering_inscription", EnhancementRarity.RARE, false, "reinforced", "brittle"));
+            ITEMS.register("tempering_inscription", () -> inscription("tooltip.runic.tempering_inscription", EnhancementRarity.RARE, false, "reinforced"));
 
     public static final DeferredHolder<Item, Item> RELIC_SOCKET_INSCRIPTION =
             ITEMS.register("relic_socket_inscription", () -> inscription("tooltip.runic.relic_socket_inscription", EnhancementRarity.EPIC, true));

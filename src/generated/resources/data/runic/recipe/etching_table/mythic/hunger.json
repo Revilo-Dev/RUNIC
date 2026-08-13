@@ -6,9 +6,9 @@
   "material": {
     "item": "minecraft:rotten_flesh"
   },
+  "mythic": "runic:mythic/hunger",
   "result": {
     "count": 1,
     "id": "runic:enhanced_rune"
-  },
-  "mythic": "runic:mythic/hunger"
+  }
 }

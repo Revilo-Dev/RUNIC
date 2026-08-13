@@ -13,6 +13,7 @@ import net.revilodev.runic.RunicMod;
 public class RuneSlotDatapackSyncHandler {
     @SubscribeEvent
     public static void onDatapackSync(OnDatapackSyncEvent e) {
+        // send slot data after datapacks reload
         RuneSlotDataSync payload = new RuneSlotDataSync(
                 RuneSlotCapacityData.exportItemIdMap(),
                 RuneSlotCapacityData.exportDefaults(),
@@ -24,6 +25,7 @@ public class RuneSlotDatapackSyncHandler {
         ServerPlayer player = e.getPlayer();
         RunicEffectDataSync effects = new RunicEffectDataSync(RunicEffectEnchantments.allowedEffectIds());
 
+        // single player sync for joins full sync for reloads
         if (player != null) {
             PacketDistributor.sendToPlayer(player, payload);
             PacketDistributor.sendToPlayer(player, effects);

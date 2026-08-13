@@ -6,7 +6,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.player.ItemEntityPickupEvent;
@@ -23,11 +22,6 @@ public final class BlacklistStrippingEvents {
         ItemEntity entity = event.getItemEntity();
         ItemStack stack = entity.getItem();
 
-        if (stack.is(Items.ENCHANTING_TABLE)) {
-            entity.discard();
-            return;
-        }
-
         if (EnchantBlacklist.strip(stack)) {
             entity.setItem(stack);
         }
@@ -40,11 +34,6 @@ public final class BlacklistStrippingEvents {
 
         for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
             ItemStack stack = player.getInventory().getItem(i);
-
-            if (stack.is(Items.ENCHANTING_TABLE)) {
-                player.getInventory().setItem(i, ItemStack.EMPTY);
-                continue;
-            }
 
             if (!stack.isEmpty()) {
                 EnchantBlacklist.strip(stack);

@@ -65,7 +65,6 @@ public class RunicMod {
             modEventBus.addListener(RunicClient::onRegisterKeyMappings);
             modEventBus.addListener(RunicClientModels::onClientSetup);
             NeoForge.EVENT_BUS.addListener(RunicClient::onClientKeyInput);
-            NeoForge.EVENT_BUS.addListener(RunicClient::onScreenInit);
             NeoForge.EVENT_BUS.addListener(RunicClient::onRenderGui);
         }
 

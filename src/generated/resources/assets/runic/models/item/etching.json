@@ -498,6 +498,108 @@
       "predicate": {
         "runic:rune_model": 83.0
       }
+    },
+    {
+      "model": "runic:item/etching/stat/attack_damage",
+      "predicate": {
+        "runic:rune_model": 84.0
+      }
+    },
+    {
+      "model": "runic:item/etching/stat/durability",
+      "predicate": {
+        "runic:rune_model": 85.0
+      }
+    },
+    {
+      "model": "runic:item/etching/stat/leeching_chance",
+      "predicate": {
+        "runic:rune_model": 86.0
+      }
+    },
+    {
+      "model": "runic:item/etching/stat/withering_chance",
+      "predicate": {
+        "runic:rune_model": 87.0
+      }
+    },
+    {
+      "model": "runic:item/etching/stat/health",
+      "predicate": {
+        "runic:rune_model": 88.0
+      }
+    },
+    {
+      "model": "runic:item/etching/effect/binding_curse",
+      "predicate": {
+        "runic:rune_model": 89.0
+      }
+    },
+    {
+      "model": "runic:item/etching/effect/binding_curse",
+      "predicate": {
+        "runic:rune_model": 90.0
+      }
+    },
+    {
+      "model": "runic:item/etching/effect/binding_curse",
+      "predicate": {
+        "runic:rune_model": 91.0
+      }
+    },
+    {
+      "model": "runic:item/etching/effect/binding_curse",
+      "predicate": {
+        "runic:rune_model": 92.0
+      }
+    },
+    {
+      "model": "runic:item/etching/effect/binding_curse",
+      "predicate": {
+        "runic:rune_model": 93.0
+      }
+    },
+    {
+      "model": "runic:item/etching/effect/binding_curse",
+      "predicate": {
+        "runic:rune_model": 94.0
+      }
+    },
+    {
+      "model": "runic:item/etching/effect/binding_curse",
+      "predicate": {
+        "runic:rune_model": 95.0
+      }
+    },
+    {
+      "model": "runic:item/etching/effect/binding_curse",
+      "predicate": {
+        "runic:rune_model": 96.0
+      }
+    },
+    {
+      "model": "runic:item/etching/effect/binding_curse",
+      "predicate": {
+        "runic:rune_model": 97.0
+      }
+    },
+    {
+      "model": "runic:item/etching/effect/binding_curse",
+      "predicate": {
+        "runic:rune_model": 98.0
+      }
+    },
+    {
+      "model": "runic:item/etching/effect/binding_curse",
+      "predicate": {
+        "runic:rune_model": 99.0
+      }
+    },
+    {
+      "model": "runic:item/etching/effect/binding_curse",
+      "predicate": {
+        "runic:rune_model": 100.0
+      }
     }
   ],
   "textures": {

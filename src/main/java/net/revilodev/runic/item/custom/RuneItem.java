@@ -8,6 +8,7 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.revilodev.runic.compat.RunicCompat;
@@ -28,6 +29,7 @@ import java.util.Set;
 
 public class RuneItem extends Item implements RarityTintedItemName {
 
+    // fixed levels for generated effects
     public static final int EFFECT_LEVEL_ETCHING = 1;
     public static final int EFFECT_LEVEL_RUNE = 2;
 
@@ -42,6 +44,7 @@ public class RuneItem extends Item implements RarityTintedItemName {
 
     @Override
     public Component getName(ItemStack stack) {
+        // synergy and mythic runes override the base name
         ResourceLocation synergyId = getItemSynergyId(stack);
         if (synergyId != null) {
             return RarityTintedItemName.super.tintedName(stack, Component.translatable("tooltip.runic.synergy_rune"));
@@ -57,6 +60,16 @@ public class RuneItem extends Item implements RarityTintedItemName {
     @Override
     public ChatFormatting nameColor() {
         return ChatFormatting.GOLD;
+    }
+
+    @Override
+    public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
+        super.appendHoverText(stack, context, tooltip, flag);
+        ResourceLocation mythicId = MythicRuneRegistry.getItemRuneId(stack);
+        if (mythicId != null && MythicRuneRegistry.get(mythicId) != null) {
+            String path = mythicId.getPath().substring("mythic/".length());
+            tooltip.add(Component.translatable("tooltip.runic.mythic_desc." + path).withStyle(ChatFormatting.DARK_GRAY));
+        }
     }
 
     public static Set<ResourceLocation> allowedEffectIds() {
@@ -84,6 +97,8 @@ public class RuneItem extends Item implements RarityTintedItemName {
         if (!isEffectEnchantment(enchantment) || EnchantBlacklist.isBlacklisted(enchantment)) {
             return ItemStack.EMPTY;
         }
+
+        // effect runes store the enchant directly on the item
         ItemStack stack = new ItemStack(ModItems.ENHANCED_RUNE.get());
         stack.enchant(enchantment, forcedEffectLevel(enchantment)); // Level 2 (clamped)
         return stack;
@@ -102,6 +117,8 @@ public class RuneItem extends Item implements RarityTintedItemName {
     public static ItemStack createRandomStatRune(RandomSource random) {
         RuneStatType[] all = RuneStatType.values();
         List<RuneStatType> allowed = new ArrayList<>();
+
+        // skip disabled and blacklisted stats
         for (RuneStatType type : all) {
             if (!EnchantBlacklist.isStatBlacklisted(type) && RunicCompat.isStatAvailable(type)) {
                 allowed.add(type);
@@ -117,6 +134,8 @@ public class RuneItem extends Item implements RarityTintedItemName {
     private static RuneStatType pickWeightedStat(RuneStatType[] all, RandomSource random) {
         int total = 0;
         int[] weights = new int[all.length];
+
+        // rarity weights drive the roll
         for (int i = 0; i < all.length; i++) {
             int w = EnhancementRarities.getStat(all[i].id()).weight();
             weights[i] = Math.max(0, w);
@@ -150,6 +169,8 @@ public class RuneItem extends Item implements RarityTintedItemName {
     public static Holder<Enchantment> getPrimaryEffectEnchantment(ItemStack stack) {
         ItemEnchantments stored = stack.getOrDefault(DataComponents.STORED_ENCHANTMENTS, ItemEnchantments.EMPTY);
         ItemEnchantments direct = stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
+
+        // books use stored enchants and finished runes use direct enchants
         ItemEnchantments enchants = !stored.isEmpty() ? stored : direct;
 
         if (enchants.isEmpty()) {
@@ -193,6 +214,8 @@ public class RuneItem extends Item implements RarityTintedItemName {
         if (synergies.size() != 1) {
             return null;
         }
+
+        // only a single registered result counts as a real synergy rune
         ResourceLocation id = synergies.get(0);
         return SynergyRegistry.isRegisteredResult(id) ? id : null;
     }

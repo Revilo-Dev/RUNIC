@@ -5,7 +5,6 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.EnchantedBookItem;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentInstance;
 import net.neoforged.api.distmarker.Dist;
@@ -37,10 +36,5 @@ public final class ItemBlacklistEvents {
                 event.remove(book, CreativeModeTab.TabVisibility.PARENT_AND_SEARCH_TABS);
             }
         });
-
-        event.remove(
-                new ItemStack(Items.ENCHANTING_TABLE),
-                CreativeModeTab.TabVisibility.PARENT_AND_SEARCH_TABS
-        );
     }
 }

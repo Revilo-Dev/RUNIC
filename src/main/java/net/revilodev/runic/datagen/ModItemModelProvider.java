@@ -21,7 +21,8 @@ public class ModItemModelProvider extends ItemModelProvider {
     @Override
     protected void registerModels() {
         basicItem(ModItems.BLANK_INSCRIPTION.get());
-        basicItem(ModItems.BLANK_ETCHING.get());
+        withExistingParent("item/blank_etching", "minecraft:item/generated")
+                .texture("layer0", modLoc("item/blank_etching"));
         basicItem(ModItems.EXPANSION_INSCRIPTION.get());
         basicItem(ModItems.REPAIR_INSCRIPTION.get());
         basicItem(ModItems.UPGRADE_INSCRIPTION.get());
@@ -31,15 +32,17 @@ public class ModItemModelProvider extends ItemModelProvider {
         basicItem(ModItems.CURSED_INSCRIPTION.get());
         basicItem(ModItems.EXTRACTION_INSCRIPTION.get());
         withExistingParent("item/resonance_inscription", "minecraft:item/generated")
-                .texture("layer0", modLoc("item/blank_inscription"));
+                .texture("layer0", modLoc("item/inscriptions/resonance-inscription"));
         withExistingParent("item/purification_inscription", "minecraft:item/generated")
-                .texture("layer0", modLoc("item/blank_inscription"));
+                .texture("layer0", modLoc("item/inscriptions/purification-inscription"));
         withExistingParent("item/stabilization_inscription", "minecraft:item/generated")
-                .texture("layer0", modLoc("item/blank_inscription"));
+                .texture("layer0", modLoc("item/inscriptions/stabilisation-inscription"));
         withExistingParent("item/tempering_inscription", "minecraft:item/generated")
-                .texture("layer0", modLoc("item/blank_inscription"));
+                .texture("layer0", modLoc("item/inscriptions/tempering-inscription"));
         withExistingParent("item/relic_socket_inscription", "minecraft:item/generated")
-                .texture("layer0", modLoc("item/blank_inscription"));
+                .texture("layer0", modLoc("item/inscriptions/relic-inscription"));
+        withExistingParent("item/dissonant_inscription", "minecraft:item/generated")
+                .texture("layer0", modLoc("item/inscriptions/dissonant-inscription"));
         withExistingParent("item/dragon_heart", "minecraft:item/generated")
                 .texture("layer0", modLoc("item/relic/dragon-heart"));
         withExistingParent("item/elder_guardians_eye", "minecraft:item/generated")

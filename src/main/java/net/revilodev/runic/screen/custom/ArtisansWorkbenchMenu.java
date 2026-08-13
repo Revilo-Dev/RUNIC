@@ -59,6 +59,7 @@ import java.util.*;
 public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
     public static final int BUTTON_FORGE = 0;
 
+    // preview flags live on the output stack
     private static final String ROOT = "runic";
     private static final String PREVIEW_DELTA = "preview_delta";
     private static final String PREVIEW_INVALID = "preview_invalid";
@@ -68,6 +69,7 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
     private final ContainerLevelAccess access;
     private final Level level;
 
+    // slot 0 enhancement slot 1 target gear
     private final SimpleContainer input = new SimpleContainer(2) {
         @Override
         public void setChanged() {
@@ -214,6 +216,7 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
         ItemStack enh = input.getItem(0);
         ItemStack gear = input.getItem(1);
 
+        // server owns preview generation
         ItemStack out = computePreview(gear, enh);
         preview.setItem(0, out);
         broadcastChanges();
@@ -279,6 +282,8 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
         }
         int cap = RuneSlots.capacity(stack);
         int neg = GearAttributes.getLevel(stack, GearAttribute.NEGATIVE);
+
+        // negative gear lowers usable capacity
         return Math.max(0, cap - neg);
     }
 
@@ -291,6 +296,8 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
     private RuneStatType getEnhancementStatType(ItemStack enhancement) {
         RuneStats stats = RuneStats.get(enhancement);
         if (stats == null || stats.isEmpty()) return null;
+
+        // stat runes only carry one stat
         for (RuneStatType t : stats.view().keySet()) return t;
         return null;
     }
@@ -304,6 +311,7 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
 
         EquipmentSlot armorSlot = RunicItemTargets.armorSlot(target);
 
+        // stat gating follows the target item role
         return switch (stat) {
             case ATTACK_DAMAGE, ATTACK_SPEED, ATTACK_RANGE, SWEEPING_RANGE,
                  UNDEAD_DAMAGE, NETHER_DAMAGE,
@@ -1351,6 +1359,7 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
         GearAttribute attr = removableNegativeAttribute(taken);
         if (attr == null) return false;
         GearAttributes.addLevel(taken, attr, -1);
+        GearAttributes.addLevel(taken, GearAttribute.BRITTLE, 1);
         if (taken.isDamageableItem() && this.level.random.nextDouble() < RunicConfig.purificationInscriptionDurabilityLossChance()) {
             reduceMaxDurabilityPercent(taken, RunicConfig.purificationInscriptionMaxDurabilityLossPercent());
         }

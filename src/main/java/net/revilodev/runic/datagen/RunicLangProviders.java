@@ -164,7 +164,7 @@ public final class RunicLangProviders {
             add("tooltip.runic.wild_inscription", "Mutates one enhancement into another of the same category, adding corruption and chaos.");
             add("tooltip.runic.cursed_inscription", "Attempts to force a stat beyond its limit. Failure curses and damages the item.");
             add("tooltip.runic.extraction_inscription", "Extracts one enhancement, sealing the item and increasing corruption.");
-            add("tooltip.runic.purification_inscription", "Removes one negative attribute, but increases corruption and may reduce durability.");
+            add("tooltip.runic.purification_inscription", "Removes one negative attribute, but adds brittleness, increases corruption, and may reduce durability.");
             add("tooltip.runic.stabilization_inscription", "Stabilizes an item at the cost of brittleness and corruption.");
             add("tooltip.runic.tempering_inscription", "Reinforces an item, reducing durability loss but increasing corruption.");
             add("tooltip.runic.relic_socket_inscription", "Adds a relic socket, allowing one future relic to be bound to the item.");

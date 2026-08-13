@@ -22,5 +22,11 @@ eclipse
 run
 runs
 run-data
+logs
+crash-reports
+hs_err_pid*
+replay_pid*
+*.log
+.run
 
 repo

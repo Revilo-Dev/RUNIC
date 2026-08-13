@@ -286,6 +286,7 @@ public final class RelicEffects {
         if (!(event.getEntity() instanceof Guardian guardian) || guardian.level().isClientSide) return;
         long until = guardian.getPersistentData().getLong(GUARDIAN_BEAM_UNTIL);
         if (until <= 0L) return;
+        guardian.setInvisible(true);
         if (guardian.level().getGameTime() >= until) {
             guardian.discard();
             return;

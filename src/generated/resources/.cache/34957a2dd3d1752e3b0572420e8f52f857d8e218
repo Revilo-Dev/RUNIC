@@ -1,9 +1,12 @@
-// 1.21.1	2026-06-09T18:44:12.2874812	Item Models: runic
+// 1.21.1	2026-08-13T19:45:23.4015329	Item Models: runic
 8c6bce6213fe74f2e97edda311b11ea3c68e72a3 assets/runic/models/item/blank_etching.json
 a102d64c957d27075fa5fb554dcae22cef2068be assets/runic/models/item/blank_inscription.json
 099f7228c97cbd5bf5e3236d83df0d964909fe1a assets/runic/models/item/cursed_inscription.json
-dbf530856be0adcaaeb952049dee119409e3bd06 assets/runic/models/item/enhanced_rune.json
-8e27b8059e62259995745b5f693a4c84a0f31315 assets/runic/models/item/etching.json
+c2e910b67db375c58167814295917351f08e6381 assets/runic/models/item/dissonant_inscription.json
+fe63a64c060bef6fb895b37f629942f909e34cda assets/runic/models/item/dragon_heart.json
+27c88a23d8cb07c0cd52eff13ee17351321564f4 assets/runic/models/item/elder_guardians_eye.json
+399adef90c15fd3a9e0c2da4af7195e9eee4abc1 assets/runic/models/item/enhanced_rune.json
+047389891a5c6576faa01b71edc001951ded704b assets/runic/models/item/etching.json
 1b6f8a48ac4cbf7841035d8fe30baa8f24a4d6b9 assets/runic/models/item/etching/effect/acrobat.json
 01967f529303b40f24dfbf832565e8426574afed assets/runic/models/item/etching/effect/aqua_affinity.json
 6ae9726d496aed27e768947e5fa25a23af5dc5fb assets/runic/models/item/etching/effect/backstabbing.json
@@ -90,8 +93,11 @@ b63c52f62f9e0bb972a6728d7a8d9f7eed417c3d assets/runic/models/item/etching/stat/t
 0e7022959976946814cef1f7fd614a09d2a0de49 assets/runic/models/item/expansion_rune.json
 4a5fca738352779b3e873f7b40fa54f1eb08715f assets/runic/models/item/extraction_inscription.json
 8463befd7a37655f38854451d1d75b8e2443d085 assets/runic/models/item/nullification_rune.json
+f4b36cb98a0840e8cc2b5bc5a1e24d7a7a4af615 assets/runic/models/item/purification_inscription.json
+de0acb4a662bd113029313e39ad52c134a0d9872 assets/runic/models/item/relic_socket_inscription.json
 e13ee6645f71adb4b7f82ae27b6b163ba46b1820 assets/runic/models/item/repair_rune.json
 766b38ef976ffa5846e34e3c8ee432ece872b829 assets/runic/models/item/reroll_inscription.json
+67267e4d91611c5c21529f2e807d64ad9e003818 assets/runic/models/item/resonance_inscription.json
 0a6c08d15894e2dcc4a51490b06d656a2146c13c assets/runic/models/item/rune/effect/acrobat.json
 4f61340ada11a2f2d53ec4457de8bf480b48ce0c assets/runic/models/item/rune/effect/aqua_affinity.json
 f26f57cef50893b11eb511477f61dac5dbc94bd8 assets/runic/models/item/rune/effect/backstabbing.json
@@ -175,5 +181,9 @@ d6273c24b3f44563c2aed6d0820a87017d4181cb assets/runic/models/item/rune/stat/stun
 0c3ea92a572fecab3d4b7487ee040574e7631206 assets/runic/models/item/rune/stat/undead_damage.json
 21b05ee1410d4ebbb2107017fda21ec54e0d8f40 assets/runic/models/item/rune/stat/weakening_chance.json
 0e256990b01bf17f7883505e1ca5a3a75ce7e2f0 assets/runic/models/item/rune/stat/withering_chance.json
+88e26811c556fad6abe76e700e016a03feff4eb9 assets/runic/models/item/stabilization_inscription.json
+cbe7ce19d1ab18cc1a1d1c31d92d34dd5ce555f8 assets/runic/models/item/tempering_inscription.json
 787fbaa5d7f31a20f45ea6c20b63d8956bdcf581 assets/runic/models/item/upgrade_rune.json
+827555b69c5ffdee5ee811f0b480a8823385810a assets/runic/models/item/wardens_soul.json
 a6d7561d2e2f84a423a20d86d6ddb22acd083497 assets/runic/models/item/wild_inscription.json
+1c87a813c5eae650d23c3ee52912c9993f477dc4 assets/runic/models/item/wither_charge.json

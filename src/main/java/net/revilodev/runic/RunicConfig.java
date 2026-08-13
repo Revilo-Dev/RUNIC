@@ -358,7 +358,7 @@ public final class RunicConfig {
     private static volatile double VENOM_BURST_RADIUS_CACHE = 3.5D;
     private static volatile double VENOM_BURST_DAMAGE_MULTIPLIER_CACHE = 0.20D;
     private static volatile int VENOM_BURST_POISON_DURATION_TICKS_CACHE = 80;
-    private static volatile int BERSERK_HITS_REQUIRED_CACHE = 5;
+    private static volatile int BERSERK_HITS_REQUIRED_CACHE = 3;
     private static volatile int BERSERK_DURATION_TICKS_CACHE = 100;
     private static volatile double BERSERK_ATTACK_SPEED_BONUS_PERCENT_CACHE = 0.20D;
     private static volatile double BERSERK_MOVEMENT_SPEED_BONUS_PERCENT_CACHE = 0.10D;
@@ -582,7 +582,7 @@ public final class RunicConfig {
         VENOM_BURST_RADIUS = builder.defineInRange("update_5.synergy.venom_burst_radius", 3.5D, 0.0D, 128.0D);
         VENOM_BURST_DAMAGE_MULTIPLIER = builder.defineInRange("update_5.synergy.venom_burst_damage_multiplier", 0.20D, 0.0D, 1000.0D);
         VENOM_BURST_POISON_DURATION_TICKS = builder.defineInRange("update_5.synergy.venom_burst_poison_duration_ticks", 80, 0, Integer.MAX_VALUE);
-        BERSERK_HITS_REQUIRED = builder.defineInRange("update_5.synergy.berserk_hits_required", 5, 0, Integer.MAX_VALUE);
+        BERSERK_HITS_REQUIRED = builder.defineInRange("update_5.synergy.berserk_hits_required", 3, 1, Integer.MAX_VALUE);
         BERSERK_DURATION_TICKS = builder.defineInRange("update_5.synergy.berserk_duration_ticks", 100, 0, Integer.MAX_VALUE);
         BERSERK_ATTACK_SPEED_BONUS_PERCENT = builder.defineInRange("update_5.synergy.berserk_attack_speed_bonus_percent", 0.20D, 0.0D, 1000.0D);
         BERSERK_MOVEMENT_SPEED_BONUS_PERCENT = builder.defineInRange("update_5.synergy.berserk_movement_speed_bonus_percent", 0.10D, 0.0D, 1000.0D);

@@ -4,18 +4,13 @@ import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.Tooltip;
-import net.minecraft.client.gui.screens.inventory.EnchantmentScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import net.neoforged.neoforge.client.event.InputEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.neoforge.client.event.RegisterParticleProvidersEvent;
 import net.neoforged.neoforge.client.event.RenderGuiEvent;
-import net.neoforged.neoforge.client.event.ScreenEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
-import net.revilodev.runic.network.payload.RerollEtchingPayload;
 import net.revilodev.runic.network.payload.UseRelicPowerPayload;
 import net.revilodev.runic.particle.BloodDropParticle;
 import net.revilodev.runic.particle.ModParticles;
@@ -59,19 +54,6 @@ public final class RunicClient {
         while (RELIC_POWER_KEY.consumeClick()) {
             PacketDistributor.sendToServer(new UseRelicPowerPayload());
         }
-    }
-
-    public static void onScreenInit(ScreenEvent.Init.Post event) {
-        if (!(event.getScreen() instanceof EnchantmentScreen screen)) return;
-
-        int left = (screen.width - 176) / 2;
-        int top = (screen.height - 166) / 2;
-        Button reroll = Button.builder(Component.translatable("button.runic.reroll_etching"), button ->
-                        PacketDistributor.sendToServer(new RerollEtchingPayload()))
-                .bounds(left + 60, top + 73, 108, 18)
-                .tooltip(Tooltip.create(Component.translatable("tooltip.runic.reroll_etching")))
-                .build();
-        event.addListener(reroll);
     }
 
     public static void updateRelicPowerHud(int durationTicks, int maxDurationTicks, int cooldownTicks, int maxCooldownTicks) {

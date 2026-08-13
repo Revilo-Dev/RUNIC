@@ -6,9 +6,9 @@
   "material": {
     "item": "minecraft:totem_of_undying"
   },
+  "mythic": "runic:mythic/ascendance",
   "result": {
     "count": 1,
     "id": "runic:enhanced_rune"
-  },
-  "mythic": "runic:mythic/ascendance"
+  }
 }

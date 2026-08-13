@@ -1,19 +1,21 @@
 package net.revilodev.runic.synergy;
 
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.BlockParticleOption;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.AreaEffectCloud;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.AABB;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -28,50 +30,67 @@ import net.revilodev.runic.runes.RunicItemTargets;
 import net.revilodev.runic.stat.RuneStatType;
 import net.revilodev.runic.stat.RuneStats;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.function.Predicate;
 
 @EventBusSubscriber(modid = RunicMod.MOD_ID)
 public final class SynergyEffects {
     private static final String INTERNAL_DAMAGE = "runic_synergy_internal_damage";
-    private static final String FROZEN_UNTIL = "runic_frozen_until";
-    private static final String FROZEN_SLOW_APPLIED = "runic_frozen_slow_applied";
+    private static final String FROZEN_PHASE = "runic_frozen_phase";
+    private static final String FROZEN_LEVEL = "runic_frozen_level";
+    private static final String FROZEN_PHASE_END = "runic_frozen_phase_end";
+    private static final String FROZEN_SOURCE = "runic_frozen_source";
     private static final String SHATTER_COOLDOWN = "runic_shatter_cd";
     private static final String ICE_PRISON_COOLDOWN = "runic_ice_prison_cd";
     private static final String SOULBURN_COOLDOWN = "runic_soulburn_cd";
     private static final String TEMPEST_HITS = "runic_tempest_hits";
     private static final String TEMPEST_CHARGE = "runic_tempest_charge";
     private static final String BERSERK_HITS = "runic_berserk_hits";
-    private static final String BERSERK_TARGET = "runic_berserk_target";
     private static final String EXECUTION_MARK = "runic_execution_mark";
     private static final String REAPER_MARK = "runic_reaper_mark";
     private static final String BLOODFIRE_MARK = "runic_bloodfire_mark";
+    private static final String VENOM_BURST_MARK = "runic_venom_burst_mark";
     private static final String SOULBURN_MARK = "runic_soulburn_mark";
     private static final String JUGGERNAUT_COOLDOWN = "runic_juggernaut_cd";
     private static final String FURY_UNTIL = "runic_executioners_fury_until";
-    private static final Map<UUID, List<FrozenBlock>> FROZEN_BLOCKS = new HashMap<>();
 
     private SynergyEffects() {}
 
-    public static void markFrozen(LivingEntity target, int durationTicks) {
+    public static void markFrozen(LivingEntity target, LivingEntity attacker, int level) {
         if (target == null || target.level().isClientSide) return;
-        int duration = Math.max(0, target instanceof Player ? durationTicks / 2 : durationTicks);
-        target.getPersistentData().putLong(FROZEN_UNTIL, target.level().getGameTime() + duration);
-        target.getPersistentData().remove(FROZEN_SLOW_APPLIED);
-        target.addEffect(new MobEffectInstance(ModMobEffects.FROZEN, duration, 0, false, false, false));
-        placeFrozenBlocks(target);
+        int clampedLevel = Mth.clamp(level, 1, 2);
+        int duration = phaseOneDurationTicks(target, clampedLevel);
+        CompoundTag data = target.getPersistentData();
+        data.putInt(FROZEN_PHASE, 1);
+        data.putInt(FROZEN_LEVEL, clampedLevel);
+        data.putLong(FROZEN_PHASE_END, target.level().getGameTime() + duration);
+        if (attacker != null) {
+            data.putUUID(FROZEN_SOURCE, attacker.getUUID());
+        } else {
+            data.remove(FROZEN_SOURCE);
+        }
+        target.addEffect(new MobEffectInstance(ModMobEffects.FROZEN, duration, frozenAmplifier(clampedLevel, 1), false, false, false));
     }
 
     public static boolean isFrozenOrChilled(LivingEntity target) {
         if (target == null) return false;
-        if (target.hasEffect(ModMobEffects.FROZEN)) return true;
-        long now = target.level().getGameTime();
-        if (target.getPersistentData().getLong(FROZEN_UNTIL) > now) return true;
-        return target.hasEffect(MobEffects.MOVEMENT_SLOWDOWN);
+        return frozenState(target) != null || target.hasEffect(MobEffects.MOVEMENT_SLOWDOWN);
+    }
+
+    public static boolean isIcebound(LivingEntity target) {
+        FrozenState state = frozenState(target);
+        return state != null && state.phase() == 1;
+    }
+
+    public static int frozenPhase(LivingEntity target) {
+        FrozenState state = frozenState(target);
+        return state == null ? 0 : state.phase();
+    }
+
+    public static int frozenLevel(LivingEntity target) {
+        FrozenState state = frozenState(target);
+        return state == null ? 0 : state.level();
     }
 
     public static boolean isInternalDamage(LivingEntity entity) {
@@ -98,6 +117,10 @@ public final class SynergyEffects {
         }
 
         float out = amount;
+        if (isIcebound(target) && canBreakFrozen(attacker, target)) {
+            shatterFrozen(target, attacker);
+        }
+
         if (has(weapon, SynergyRegistry.CORROSION) && (target.hasEffect(MobEffects.POISON) || target.hasEffect(MobEffects.WEAKNESS))) {
             double bonus = RunicConfig.corrosionBonusDamageMultiplier() + RunicConfig.corrosionArmorIgnorePercent();
             out *= (float) (1.0D + Math.max(0.0D, bonus) * synergyMultiplier(weapon)
@@ -148,8 +171,15 @@ public final class SynergyEffects {
         CompoundTag data = target.getPersistentData();
         if (data.hasUUID(BLOODFIRE_MARK)) {
             spawnBloodfireDeathParticles(target);
+            LivingEntity bloodfireAttacker = resolveMarkedSource(target, BLOODFIRE_MARK);
+            if (bloodfireAttacker instanceof Player player) {
+                spreadBloodfireOnDeath(player, target);
+            }
         }
-        clearFrozenBlocks(target);
+        if (data.hasUUID(VENOM_BURST_MARK) && target.hasEffect(MobEffects.POISON)) {
+            spawnVenomBurstDeathEffect(target, resolveMarkedSource(target, VENOM_BURST_MARK));
+        }
+        clearFrozenState(target);
 
         if (!(source.getEntity() instanceof LivingEntity attacker)) return;
 
@@ -181,20 +211,24 @@ public final class SynergyEffects {
     @SubscribeEvent
     public static void onEntityTick(EntityTickEvent.Post event) {
         if (!(event.getEntity() instanceof LivingEntity entity) || entity.level().isClientSide) return;
-        CompoundTag data = entity.getPersistentData();
-        long until = data.getLong(FROZEN_UNTIL);
-        if (entity.hasEffect(ModMobEffects.FROZEN)) {
-            placeFrozenBlocks(entity);
-            entity.setDeltaMovement(0.0D, 0.0D, 0.0D);
-            entity.hurtMarked = true;
+        FrozenState state = frozenState(entity);
+        if (state == null) {
+            clearFrozenState(entity);
             return;
         }
-        clearFrozenBlocks(entity);
-        if (until > 0L && entity.level().getGameTime() >= until && !data.getBoolean(FROZEN_SLOW_APPLIED)) {
-            int slow = entity instanceof Player ? 20 : 40;
-            entity.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, slow, 1, false, false, true));
-            data.putBoolean(FROZEN_SLOW_APPLIED, true);
-            data.remove(FROZEN_UNTIL);
+
+        if (state.phase() == 1) {
+            entity.setDeltaMovement(0.0D, 0.0D, 0.0D);
+            entity.hurtMarked = true;
+        }
+
+        if (entity.level().getGameTime() >= state.endsAt()) {
+            if (state.phase() == 1) {
+                shatterFrozen(entity, resolveFrozenSource(entity));
+            } else {
+                clearFrozenState(entity);
+                entity.removeEffect(ModMobEffects.FROZEN);
+            }
         }
     }
 
@@ -214,10 +248,10 @@ public final class SynergyEffects {
 
     private static void applyFrostbite(Player attacker, LivingEntity target, ItemStack weapon, float baseDamage) {
         if (!target.hasEffect(ModMobEffects.BLEEDING)) return;
-        int duration = (int) Math.round(60.0D * Math.max(0.0D, RunicConfig.frostbiteFreezeBonusMultiplier()) * synergyMultiplier(weapon)
+        int scaled = (int) Math.round(60.0D * Math.max(0.0D, RunicConfig.frostbiteFreezeBonusMultiplier()) * synergyMultiplier(weapon)
                 * pairScale(weapon, RuneStatType.FREEZING_CHANCE, RuneStatType.BLEEDING_CHANCE));
-        target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, duration, 1, false, false, true));
-        markFrozen(target, duration);
+        int level = scaled >= 60 ? 2 : 1;
+        markFrozen(target, attacker, level);
         if (isFrozenOrChilled(target)) {
             dealInternal(attacker, target, baseDamage * (float) (RunicConfig.frostbiteChilledDamageMultiplier() * synergyMultiplier(weapon)));
         }
@@ -250,6 +284,7 @@ public final class SynergyEffects {
     private static void applyVenomBurst(Player attacker, LivingEntity target, ItemStack weapon, float baseDamage) {
         if (!target.hasEffect(MobEffects.POISON)) return;
         if (attacker.getRandom().nextDouble() > RunicConfig.venomBurstChance()) return;
+        markUuid(target.getPersistentData(), VENOM_BURST_MARK, attacker.getUUID());
         float damage = baseDamage * (float) (RunicConfig.venomBurstDamageMultiplier() * synergyMultiplier(weapon));
         for (LivingEntity nearby : nearbyHostiles(attacker, target, RunicConfig.venomBurstRadius() * synergyMultiplier(weapon))) {
             nearby.addEffect(new MobEffectInstance(MobEffects.POISON,
@@ -281,21 +316,17 @@ public final class SynergyEffects {
         boolean critical = attacker.fallDistance > 0.0F && !attacker.onGround() && !attacker.isInWater() && !attacker.hasEffect(MobEffects.BLINDNESS) && !attacker.isPassenger();
         if (!critical) return;
         CompoundTag data = attacker.getPersistentData();
-        UUID last = data.hasUUID(BERSERK_TARGET) ? data.getUUID(BERSERK_TARGET) : null;
-        if (!target.getUUID().equals(last)) {
-            data.putUUID(BERSERK_TARGET, target.getUUID());
-            data.putInt(BERSERK_HITS, 0);
-        }
         int hits = data.getInt(BERSERK_HITS) + 1;
-        if (hits < 3) {
+        if (hits < Math.max(3, RunicConfig.berserkHitsRequired())) {
             data.putInt(BERSERK_HITS, hits);
             return;
         }
         data.putInt(BERSERK_HITS, hits);
         attacker.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED,
-                40, 2, false, false, true));
+                RunicConfig.berserkDurationTicks(), 2, false, false, true));
         attacker.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST,
-                40, 1, false, false, true));
+                RunicConfig.berserkDurationTicks(), 2, false, false, true));
+        data.remove(BERSERK_HITS);
     }
 
     private static void applyBloodfireBurn(LivingEntity attacker, LivingEntity target, ItemStack weapon, int fireTicks) {
@@ -315,6 +346,12 @@ public final class SynergyEffects {
                         && !entity.isAlliedTo(attacker)
                         && entity.getBoundingBox().intersects(touchBox))) {
             applyBloodfireBurn(attacker, nearby, weapon, 20);
+        }
+    }
+
+    private static void spreadBloodfireOnDeath(Player attacker, LivingEntity source) {
+        for (LivingEntity nearby : nearbyHostiles(attacker, source, 3.5D)) {
+            applyBloodfireBurn(attacker, nearby, ItemStack.EMPTY, 60);
         }
     }
 
@@ -393,46 +430,57 @@ public final class SynergyEffects {
                 Math.max(0.35D, target.getBbWidth() * 0.5D),
                 0.18D
         );
+        level.sendParticles(
+                ParticleTypes.FLAME,
+                target.getX(),
+                target.getY() + target.getBbHeight() * 0.5D,
+                target.getZ(),
+                32,
+                Math.max(0.35D, target.getBbWidth() * 0.5D),
+                Math.max(0.35D, target.getBbHeight() * 0.35D),
+                Math.max(0.35D, target.getBbWidth() * 0.5D),
+                0.12D
+        );
     }
 
-    private static void placeFrozenBlocks(LivingEntity target) {
+    private static void spawnVenomBurstDeathEffect(LivingEntity target, LivingEntity owner) {
         if (!(target.level() instanceof ServerLevel level)) return;
-        UUID id = target.getUUID();
-        if (FROZEN_BLOCKS.containsKey(id)) return;
-
-        BlockPos base = BlockPos.containing(target.getX(), target.getY(), target.getZ());
-        List<FrozenBlock> placed = new ArrayList<>();
-        for (int y = 0; y < 2; y++) {
-            BlockPos pos = base.above(y);
-            BlockState state = level.getBlockState(pos);
-            if (!state.isAir() && !state.getCollisionShape(level, pos).isEmpty()) continue;
-            placed.add(new FrozenBlock(pos.immutable(), state));
-            level.setBlock(pos, Blocks.ICE.defaultBlockState(), 3);
+        level.sendParticles(
+                ParticleTypes.SNEEZE,
+                target.getX(),
+                target.getY() + target.getBbHeight() * 0.5D,
+                target.getZ(),
+                40,
+                Math.max(0.35D, target.getBbWidth() * 0.5D),
+                Math.max(0.35D, target.getBbHeight() * 0.35D),
+                Math.max(0.35D, target.getBbWidth() * 0.5D),
+                0.14D
+        );
+        AreaEffectCloud cloud = new AreaEffectCloud(level, target.getX(), target.getY(), target.getZ());
+        cloud.setParticle(ParticleTypes.SNEEZE);
+        cloud.setRadius((float) RunicConfig.venomBurstRadius());
+        cloud.setDuration(80);
+        cloud.setRadiusPerTick(-cloud.getRadius() / cloud.getDuration());
+        cloud.addEffect(new MobEffectInstance(MobEffects.POISON,
+                RunicConfig.venomBurstPoisonDurationTicks(), 0, false, false, true));
+        if (owner instanceof Player player) {
+            cloud.setOwner(player);
         }
-        if (!placed.isEmpty()) {
-            FROZEN_BLOCKS.put(id, placed);
-        }
-    }
-
-    private static void clearFrozenBlocks(LivingEntity target) {
-        if (!(target.level() instanceof ServerLevel level)) return;
-        List<FrozenBlock> placed = FROZEN_BLOCKS.remove(target.getUUID());
-        if (placed == null) return;
-        for (FrozenBlock block : placed) {
-            if (level.getBlockState(block.pos()).is(Blocks.ICE)) {
-                level.setBlock(block.pos(), block.previous(), 3);
-            }
-        }
+        level.addFreshEntity(cloud);
     }
 
     private static void dealInternal(LivingEntity attacker, LivingEntity target, float amount) {
-        if (amount <= 0.0F || attacker == null || target == null || !target.isAlive()) return;
-        CompoundTag data = attacker.getPersistentData();
-        data.putBoolean(INTERNAL_DAMAGE, true);
+        if (amount <= 0.0F || target == null || !target.isAlive()) return;
+        CompoundTag data = attacker == null ? null : attacker.getPersistentData();
+        if (data != null) {
+            data.putBoolean(INTERNAL_DAMAGE, true);
+        }
         try {
             target.hurt(target.damageSources().magic(), amount);
         } finally {
-            data.remove(INTERNAL_DAMAGE);
+            if (data != null) {
+                data.remove(INTERNAL_DAMAGE);
+            }
         }
     }
 
@@ -482,5 +530,98 @@ public final class SynergyEffects {
         return (first + second) * 0.5D;
     }
 
-    private record FrozenBlock(BlockPos pos, BlockState previous) {}
+    private static boolean canBreakFrozen(LivingEntity attacker, LivingEntity target) {
+        CompoundTag data = target.getPersistentData();
+        return !data.hasUUID(FROZEN_SOURCE) || data.getUUID(FROZEN_SOURCE).equals(attacker.getUUID());
+    }
+
+    private static void shatterFrozen(LivingEntity target, LivingEntity attacker) {
+        FrozenState state = frozenState(target);
+        if (state == null || state.phase() != 1) return;
+
+        int level = state.level();
+        spawnFrozenShatterParticles(target);
+        float ratio = level >= 2 ? 0.35F : 0.20F;
+        float floor = level >= 2 ? 8.0F : 4.0F;
+        dealInternal(attacker, target, Math.max(floor, target.getMaxHealth() * ratio));
+
+        int recovery = phaseTwoDurationTicks(target, level);
+        CompoundTag data = target.getPersistentData();
+        data.putInt(FROZEN_PHASE, 2);
+        data.putInt(FROZEN_LEVEL, level);
+        data.putLong(FROZEN_PHASE_END, target.level().getGameTime() + recovery);
+        target.addEffect(new MobEffectInstance(ModMobEffects.FROZEN, recovery, frozenAmplifier(level, 2), false, false, false));
+    }
+
+    private static void spawnFrozenShatterParticles(LivingEntity target) {
+        if (!(target.level() instanceof ServerLevel level)) return;
+        level.sendParticles(
+                new BlockParticleOption(ParticleTypes.BLOCK, Blocks.ICE.defaultBlockState()),
+                target.getX(),
+                target.getY() + target.getBbHeight() * 0.5D,
+                target.getZ(),
+                36,
+                Math.max(0.2D, target.getBbWidth() * 0.45D),
+                Math.max(0.25D, target.getBbHeight() * 0.35D),
+                Math.max(0.2D, target.getBbWidth() * 0.45D),
+                0.08D
+        );
+    }
+
+    private static LivingEntity resolveFrozenSource(LivingEntity target) {
+        return resolveMarkedSource(target, FROZEN_SOURCE);
+    }
+
+    private static LivingEntity resolveMarkedSource(LivingEntity target, String key) {
+        CompoundTag data = target.getPersistentData();
+        if (!data.hasUUID(key) || !(target.level() instanceof ServerLevel level)) {
+            return null;
+        }
+        return level.getEntity(data.getUUID(key)) instanceof LivingEntity living ? living : null;
+    }
+
+    private static FrozenState frozenState(LivingEntity target) {
+        if (target == null) return null;
+        MobEffectInstance effect = target.getEffect(ModMobEffects.FROZEN);
+        CompoundTag data = target.getPersistentData();
+        int phase = effect == null ? data.getInt(FROZEN_PHASE) : frozenPhase(effect.getAmplifier());
+        int level = effect == null ? data.getInt(FROZEN_LEVEL) : frozenLevel(effect.getAmplifier());
+        long endsAt = data.getLong(FROZEN_PHASE_END);
+        if (phase <= 0 || level <= 0 || endsAt <= 0L) {
+            return null;
+        }
+        return new FrozenState(phase, level, endsAt);
+    }
+
+    private static int frozenPhase(int amplifier) {
+        return amplifier >= 2 ? 2 : 1;
+    }
+
+    private static int frozenLevel(int amplifier) {
+        return amplifier % 2 == 0 ? 1 : 2;
+    }
+
+    private static int frozenAmplifier(int level, int phase) {
+        return phase <= 1 ? level - 1 : level + 1;
+    }
+
+    private static int phaseOneDurationTicks(LivingEntity target, int level) {
+        int base = level >= 2 ? 80 : 40;
+        return target instanceof Player ? base / 2 : base;
+    }
+
+    private static int phaseTwoDurationTicks(LivingEntity target, int level) {
+        int base = level >= 2 ? 80 : 40;
+        return target instanceof Player ? base / 2 : base;
+    }
+
+    private static void clearFrozenState(LivingEntity target) {
+        CompoundTag data = target.getPersistentData();
+        data.remove(FROZEN_PHASE);
+        data.remove(FROZEN_LEVEL);
+        data.remove(FROZEN_PHASE_END);
+        data.remove(FROZEN_SOURCE);
+    }
+
+    private record FrozenState(int phase, int level, long endsAt) {}
 }

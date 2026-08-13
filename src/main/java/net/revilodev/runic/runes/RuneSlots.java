@@ -19,10 +19,12 @@ import net.revilodev.runic.registry.ModDataComponents;
 import static net.revilodev.runic.registry.ModDataComponents.DATA_COMPONENT_TYPES;
 
 public final class RuneSlots {
+    // master config gate
     public static boolean enabled() {
         return !RunicConfig.disableRuneSlots();
     }
 
+    // stored value wins over derived capacity
     public static int capacity(ItemStack stack) {
         if (!enabled()) return 0;
         Integer stored = stack.get(ModDataComponents.RUNE_SLOTS_CAPACITY.get());
@@ -36,14 +38,17 @@ public final class RuneSlots {
         return v == null ? 0 : Math.max(0, v);
     }
 
+    // count all enhancement sources on the item
     public static int countAppliedEnhancements(ItemStack stack) {
         int total = 0;
 
+        // stat runes count by stat entry
         RuneStats stats = RuneStats.get(stack);
         if (stats != null && !stats.isEmpty()) {
             total += stats.view().size();
         }
 
+        // effect enchants count by valid runic effect
         ItemEnchantments enchants = stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
         if (!enchants.isEmpty()) {
             for (var entry : enchants.entrySet()) {
@@ -53,6 +58,7 @@ public final class RuneSlots {
             }
         }
 
+        // mythic runes use slots too
         total += RunicItemData.getMythicRunes(stack).size();
 
         return total;
@@ -65,6 +71,8 @@ public final class RuneSlots {
             }
             return;
         }
+
+        // never let used drift past what the item really has
         int derived = Math.min(capacity(stack), countAppliedEnhancements(stack));
         if (used(stack) != derived) {
             stack.set(ModDataComponents.RUNE_SLOTS_USED.get(), derived);
@@ -78,12 +86,15 @@ public final class RuneSlots {
     }
 
 
+    // reserve one slot before applying an upgrade
     public static boolean tryConsumeSlot(ItemStack stack) {
         if (!enabled()) return true;
         int cap = capacity(stack);
         if (cap <= 0) return false;
         int u = used(stack);
         if (u >= cap) return false;
+
+        // manual bump for flows that apply one enhancement at a time
         stack.set(ModDataComponents.RUNE_SLOTS_USED.get(), u + 1);
         return true;
     }
@@ -94,16 +105,19 @@ public final class RuneSlots {
         if (u > 0) stack.set(ModDataComponents.RUNE_SLOTS_USED.get(), u - 1);
     }
 
+    // count extra slot inscriptions used
     public static int expansionsUsed(ItemStack stack) {
         Integer v = stack.get(ModDataComponents.RUNE_EXPANSIONS_USED.get());
         return v == null ? 0 : v;
     }
 
+    // track one more expansion use
     public static void incrementExpansion(ItemStack stack) {
         int used = expansionsUsed(stack);
         stack.set(ModDataComponents.RUNE_EXPANSIONS_USED.get(), used + 1);
     }
 
+    // explicit capacity override
     public static void addOneSlot(ItemStack stack) {
         if (!enabled()) return;
         int cap = capacity(stack);
@@ -111,6 +125,7 @@ public final class RuneSlots {
     }
 
 
+    // shrink capacity and clamp usage
     public static void removeOneSlot(ItemStack stack) {
         if (!enabled()) return;
         int cap = capacity(stack);
@@ -129,6 +144,7 @@ public final class RuneSlots {
         int u = used(stack);
         if (cap <= 0) return Component.literal("No rune slots").withStyle(ChatFormatting.DARK_GRAY);
 
+        // filled then open slots
         int rem = Math.max(0, cap - u);
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < u; i++) sb.append('⬤');

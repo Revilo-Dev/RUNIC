@@ -26,6 +26,7 @@ import net.revilodev.runic.screen.ModMenuTypes;
 import java.util.Optional;
 
 public final class EtchingTableMenu extends AbstractContainerMenu {
+    // top row is shifted to line up with the gui art
     public static final int TOP_SLOT_X_OFFSET = 36;
     public static final int ETCHING_XP_COST_LEVELS = 1;
 
@@ -128,6 +129,7 @@ public final class EtchingTableMenu extends AbstractContainerMenu {
         if (match.isPresent()) {
             EtchingTableRecipe recipe = match.get().value();
 
+            // only inscription recipes belong in this menu
             if (!isInscriptionRecipe(recipe) || EnchantBlacklist.isRecipeBlacklisted(recipe)) {
                 clearResult();
                 return;
@@ -164,6 +166,7 @@ public final class EtchingTableMenu extends AbstractContainerMenu {
         if (!lastRecipe.value().matches(in, level)) return;
         if (!canAffordEtchingCost(player)) return;
 
+        // spend xp before consuming inputs
         consumeEtchingCost(player);
 
         input.getItem(0).shrink(1);
@@ -239,6 +242,7 @@ public final class EtchingTableMenu extends AbstractContainerMenu {
         Slot s0 = this.getSlot(0);
         Slot s1 = this.getSlot(1);
 
+        // clear wrong items before pulling replacements
         ensureSlotMatchesOrClear(player, s0, a);
         ensureSlotMatchesOrClear(player, s1, b);
 
