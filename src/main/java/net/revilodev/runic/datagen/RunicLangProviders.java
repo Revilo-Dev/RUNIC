@@ -1,6 +1,7 @@
 package net.revilodev.runic.datagen;
 import net.minecraft.data.PackOutput;
 import net.neoforged.neoforge.common.data.LanguageProvider;
+import net.revilodev.runic.stat.RuneStatType;
 
 /**
  * Generates:
@@ -11,6 +12,9 @@ import net.neoforged.neoforge.common.data.LanguageProvider;
  *  - assets/runic/lang/en_nz.json
  */
 
+// supports runic lang providers
+
+// supports runic lang providers
 public final class RunicLangProviders {
     private RunicLangProviders() {}
 
@@ -38,6 +42,7 @@ public final class RunicLangProviders {
         protected Base(PackOutput output, String locale) {
             super(output, "runic", locale); // MODID
         }
+
 
         protected void addTranslations() {
             add("creativetab.runicmod.runic_items", "RUNIC");
@@ -327,6 +332,9 @@ public final class RunicLangProviders {
             add("tooltip.runic.use_enchanting_table", "Used in an Enchanting Table");
             add("button.runic.reroll_etching", "Reroll");
             add("tooltip.runic.reroll_etching", "Use 1 level and 1 lapis to roll a random etching.");
+            for (RuneStatType stat : RuneStatType.values()) {
+                add("enchantment.runic.stat." + stat.id(), titleCase(stat.id()));
+            }
             add("tooltip.runic.aqua_affinity", "Increases underwater mining speed");
             add("tooltip.runic.bane_of_arthropods", "Deal more damage to arthropod type enemies");
             add("tooltip.runic.binding_curse", "Item cannot be unequipped");
@@ -383,6 +391,21 @@ public final class RunicLangProviders {
             add("tooltip.runic.acrobat", "Reduces dodge roll cooldown");
             add("tooltip.runic.longfooted", "Increases dodge roll distance");
             add("tooltip.runic.multi_roll", "Allows multiple rolls before cooldown");
+        }
+
+        private static String titleCase(String id) {
+            StringBuilder out = new StringBuilder(id.length());
+            boolean capitalize = true;
+            for (char character : id.toCharArray()) {
+                if (character == '_') {
+                    out.append(' ');
+                    capitalize = true;
+                } else {
+                    out.append(capitalize ? Character.toUpperCase(character) : character);
+                    capitalize = false;
+                }
+            }
+            return out.toString();
         }
     }
 }

@@ -11,6 +11,7 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.revilodev.runic.RunicMod;
 import net.revilodev.runic.particle.ModParticles;
 
+
 public class StunningMobEffect extends MobEffect {
 
     public StunningMobEffect() {
@@ -37,6 +38,7 @@ public class StunningMobEffect extends MobEffect {
     }
 
     @Override
+    // applies effect tick
     public boolean applyEffectTick(LivingEntity entity, int amplifier) {
         entity.setJumping(false);
 

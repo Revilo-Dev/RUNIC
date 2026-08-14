@@ -3,6 +3,7 @@ package net.revilodev.runic.gear;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 
+
 public enum GearAttribute {
     SEALED("sealed", Component.literal("Sealed"), ChatFormatting.WHITE),
     CURSED("cursed", Component.literal("Cursed"), ChatFormatting.DARK_RED),

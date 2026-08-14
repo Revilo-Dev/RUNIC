@@ -10,6 +10,7 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.LivingEntity;
 import net.revilodev.runic.RunicMod;
 
+
 public class BleedingMobEffect extends MobEffect {
     private static final ResourceLocation ICON = ResourceLocation.fromNamespaceAndPath(RunicMod.MOD_ID, "textures/mob_effects/bleeding.png");
 
@@ -18,6 +19,7 @@ public class BleedingMobEffect extends MobEffect {
     }
 
     @Override
+    // applies effect tick
     public boolean applyEffectTick(LivingEntity entity, int amplifier) {
         if (!entity.level().isClientSide) {
             float percentPerSecond = 0.05f;

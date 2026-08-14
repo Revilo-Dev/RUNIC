@@ -11,6 +11,7 @@ import net.revilodev.runic.mythic.MythicRuneRegistry;
 import java.util.EnumMap;
 import java.util.Map;
 
+
 public final class GearAttributes {
     // shared level cap
     public static final int MAX_LEVEL = 10;
@@ -45,6 +46,7 @@ public final class GearAttributes {
         }
         return out;
     }
+
 
     public static void addLevel(ItemStack stack, GearAttribute attr, int amount) {
         if (amount == 0) return;

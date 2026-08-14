@@ -14,10 +14,12 @@ import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.revilodev.runic.RunicMod;
 
 @EventBusSubscriber(modid = RunicMod.MOD_ID, value = Dist.CLIENT)
+// responds to item blacklist events
 public final class ItemBlacklistEvents {
     private ItemBlacklistEvents() {}
 
     @SubscribeEvent
+    // responds to build creative tabs
     public static void onBuildCreativeTabs(BuildCreativeModeTabContentsEvent event) {
         if (Minecraft.getInstance().level == null) return;
 

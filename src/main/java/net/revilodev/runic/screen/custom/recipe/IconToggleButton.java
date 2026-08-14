@@ -7,6 +7,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.revilodev.runic.RunicMod;
 
+
 public final class IconToggleButton extends AbstractWidget {
     private static final ResourceLocation ALL =
             ResourceLocation.fromNamespaceAndPath(RunicMod.MOD_ID, "textures/gui/widget/all.png");

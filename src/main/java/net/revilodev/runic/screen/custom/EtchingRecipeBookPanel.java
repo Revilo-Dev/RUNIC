@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+
 public final class EtchingRecipeBookPanel extends AbstractWidget {
     private static final int HEADER_H = 14;
     private static final int FOOTER_H = 46;
@@ -36,6 +37,7 @@ public final class EtchingRecipeBookPanel extends AbstractWidget {
         this.visible = false;
     }
 
+    // runs refresh recipes
     public void refreshRecipes() {
         var mc = Minecraft.getInstance();
         if (mc.level == null) {
@@ -68,6 +70,7 @@ public final class EtchingRecipeBookPanel extends AbstractWidget {
     }
 
     @Override
+    // draws widget
     protected void renderWidget(GuiGraphics gg, int mouseX, int mouseY, float partialTick) {
         if (!visible) return;
 
@@ -145,7 +148,7 @@ public final class EtchingRecipeBookPanel extends AbstractWidget {
             gg.renderItem(mat, footerX + 32, iconsY);
             gg.renderItemDecorations(font, mat, footerX + 32, iconsY);
 
-            gg.drawString(font, Component.literal("→"), footerX + 52, iconsY + 4, 0xFFFFFF, false);
+            gg.drawString(font, Component.literal("ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢"), footerX + 52, iconsY + 4, 0xFFFFFF, false);
 
             gg.renderItem(out, footerX + 68, iconsY);
             gg.renderItemDecorations(font, out, footerX + 68, iconsY);
@@ -182,6 +185,7 @@ public final class EtchingRecipeBookPanel extends AbstractWidget {
     }
 
     @Override
+    // runs mouse clicked
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (!visible) return false;
         if (!isMouseOver(mouseX, mouseY)) return false;

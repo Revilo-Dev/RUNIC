@@ -6,6 +6,7 @@ import net.neoforged.neoforge.event.AddReloadListenerEvent;
 import net.revilodev.runic.RunicMod;
 
 @EventBusSubscriber(modid = RunicMod.MOD_ID)
+// registers rune slot reload listener registrar
 public final class RuneSlotReloadListenerRegistrar {
     @SubscribeEvent
     public static void onAddReloadListeners(AddReloadListenerEvent e) {

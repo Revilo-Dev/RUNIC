@@ -18,6 +18,9 @@ import net.revilodev.runic.stat.RuneStats;
 import java.util.HashSet;
 import java.util.Set;
 
+// supports rune attribute applier
+
+// supports rune attribute applier
 public final class RuneAttributeApplier {
 
     private static final String DURABILITY_BASE_KEY = "runic_base_max_damage";
@@ -54,6 +57,7 @@ public final class RuneAttributeApplier {
         }
     }
 
+
     public static void clearRunicAttributes(ItemStack stack) {
         ItemAttributeModifiers existing =
                 stack.getOrDefault(DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.EMPTY);
@@ -80,6 +84,7 @@ public final class RuneAttributeApplier {
             }
         }
     }
+
 
     public static void rebuildAttributes(ItemStack stack, RuneStats stats) {
         Item item = stack.getItem();
@@ -143,6 +148,7 @@ public final class RuneAttributeApplier {
         }
     }
 
+    // adds flat
     private static void addFlat(ItemAttributeModifiers.Builder builder,
                                 RuneStats stats,
                                 RuneStatType type,
@@ -164,6 +170,7 @@ public final class RuneAttributeApplier {
         );
     }
 
+    // adds percent
     private static void addPercent(ItemAttributeModifiers.Builder builder,
                                    RuneStats stats,
                                    RuneStatType type,
@@ -185,6 +192,7 @@ public final class RuneAttributeApplier {
         );
     }
 
+    // adds ratio
     private static void addRatio(ItemAttributeModifiers.Builder builder,
                                  RuneStats stats,
                                  RuneStatType type,
@@ -206,6 +214,8 @@ public final class RuneAttributeApplier {
         );
     }
 
+
+    // finds slot group
     private static EquipmentSlotGroup resolveSlotGroup(ItemStack stack) {
         Item item = stack.getItem();
 
@@ -244,6 +254,7 @@ public final class RuneAttributeApplier {
         root.remove(DURABILITY_BASE_KEY);
     }
 
+    // applies durability
     public static void applyDurability(ItemStack stack, RuneStats stats, CompoundTag root) {
         if (!stack.isDamageableItem()) return;
 

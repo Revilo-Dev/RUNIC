@@ -19,6 +19,9 @@ import net.revilodev.runic.mythic.MythicRuneRegistry;
 import net.revilodev.runic.stat.RuneStatType;
 import net.revilodev.runic.stat.RuneStats;
 
+// supports runic client models
+
+// supports runic client models
 public final class RunicClientModels {
 
     private RunicClientModels() {}
@@ -40,6 +43,7 @@ public final class RunicClientModels {
     private static void register(Item item, ResourceLocation predicateId) {
         ItemProperties.register(item, predicateId, RunicClientModels::runePredicate);
     }
+
 
     private static float runePredicate(ItemStack stack, ClientLevel level, LivingEntity entity, int seed) {
         if (stack.isEmpty()) return 0.0F;

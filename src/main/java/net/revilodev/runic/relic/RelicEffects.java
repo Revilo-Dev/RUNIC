@@ -58,6 +58,7 @@ import java.util.List;
 import java.util.Optional;
 
 @EventBusSubscriber(modid = RunicMod.MOD_ID)
+// applies relic effects
 public final class RelicEffects {
     private static final String WARDEN_PULSE_COOLDOWN = "runic_warden_pulse_cooldown";
     private static final String RELIC_POWER_COOLDOWN = "runic_relic_power_cooldown";
@@ -69,6 +70,7 @@ public final class RelicEffects {
     private static Method guardianSetActiveAttackTarget;
 
     private RelicEffects() {}
+
 
     public static void useRelicPower(ServerPlayer player) {
         if (player == null || player.level().isClientSide) return;
@@ -112,6 +114,7 @@ public final class RelicEffects {
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
+    // responds to attack entity
     public static void onAttackEntity(AttackEntityEvent event) {
         if (!(event.getEntity() instanceof Player player) || !(event.getTarget() instanceof LivingEntity target)) {
             return;
@@ -147,6 +150,7 @@ public final class RelicEffects {
     }
 
     @SubscribeEvent
+    // responds to item attributes
     public static void onItemAttributes(ItemAttributeModifierEvent event) {
         ItemStack stack = event.getItemStack();
         ResourceLocation relic = RunicItemData.getRelicId(stack);
@@ -181,6 +185,7 @@ public final class RelicEffects {
     }
 
     @SubscribeEvent
+    // responds to incoming damage
     public static void onIncomingDamage(LivingIncomingDamageEvent event) {
         LivingEntity entity = event.getEntity();
         if (entity.level().isClientSide) return;
@@ -205,6 +210,7 @@ public final class RelicEffects {
     }
 
     @SubscribeEvent
+    // responds to break speed
     public static void onBreakSpeed(PlayerEvent.BreakSpeed event) {
         Player player = event.getEntity();
         ItemStack tool = player.getMainHandItem();
@@ -260,6 +266,7 @@ public final class RelicEffects {
     }
 
     @SubscribeEvent
+    // responds to projectile impact
     public static void onProjectileImpact(ProjectileImpactEvent event) {
         if (!(event.getProjectile() instanceof WitherSkull skull) || skull.level().isClientSide) return;
         if (!skull.getPersistentData().getBoolean(RUNIC_WITHER_SKULL)) return;
@@ -277,6 +284,7 @@ public final class RelicEffects {
     }
 
     @SubscribeEvent
+    // responds to entity tick
     public static void onEntityTick(EntityTickEvent.Post event) {
         if (event.getEntity() instanceof LivingEntity living && !living.level().isClientSide
                 && armorCount(living, RelicRegistry.WITHER_CHARGE) > 0 && living.hasEffect(MobEffects.WITHER)) {
@@ -302,6 +310,7 @@ public final class RelicEffects {
         }
     }
 
+    // applies durability modifier
     public static float applyDurabilityModifier(ItemStack stack, float baseDamage, RandomSource random) {
         if (stack.isEmpty() || baseDamage <= 0.0F) {
             return Math.max(0.0F, baseDamage);
@@ -426,6 +435,7 @@ public final class RelicEffects {
         }
     }
 
+
     private static void maybeWardensSoulPulse(LivingEntity wearer, float damageTaken) {
         if (wearer.level().isClientSide || damageTaken <= 0.0F) {
             return;
@@ -503,6 +513,7 @@ public final class RelicEffects {
         return true;
     }
 
+
     private static boolean useSonicBoom(ServerPlayer player) {
         LivingEntity target = targetUnderCrosshair(player, 20.0D);
         Vec3 start = player.getEyePosition();
@@ -542,6 +553,7 @@ public final class RelicEffects {
         return direction.lengthSqr() < 1.0E-6D ? look : direction.normalize();
     }
 
+    // runs target under crosshair
     private static LivingEntity targetUnderCrosshair(ServerPlayer player, double range) {
         Vec3 eye = player.getEyePosition();
         Vec3 look = player.getLookAngle().normalize();
@@ -562,6 +574,7 @@ public final class RelicEffects {
         return best;
     }
 
+    // spawns guardian beam
     private static void spawnGuardianBeam(ServerPlayer player, LivingEntity target) {
         Guardian guardian = new Guardian(EntityType.GUARDIAN, player.level());
         Vec3 source = player.getEyePosition().subtract(0.0D, 0.35D, 0.0D);

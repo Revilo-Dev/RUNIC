@@ -7,6 +7,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.revilodev.runic.RunicMod;
 
+
 public final class RecipePageButton extends AbstractWidget {
     private static final int W = 12;
     private static final int H = 17;

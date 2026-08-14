@@ -27,6 +27,9 @@ import net.revilodev.runic.stat.RuneStatType;
 import java.util.ArrayList;
 import java.util.List;
 
+// supports reroll etching payload
+
+// supports reroll etching payload
 public record RerollEtchingPayload() implements CustomPacketPayload {
     public static final Type<RerollEtchingPayload> TYPE =
             new Type<>(ResourceLocation.fromNamespaceAndPath(RunicMod.MOD_ID, "reroll_etching"));
@@ -41,6 +44,7 @@ public record RerollEtchingPayload() implements CustomPacketPayload {
     public Type<? extends CustomPacketPayload> type() {
         return TYPE;
     }
+
 
     public static void handle(RerollEtchingPayload payload, IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
@@ -74,6 +78,7 @@ public record RerollEtchingPayload() implements CustomPacketPayload {
             player.level().playSound(null, player.blockPosition(), SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.BLOCKS, 1.0F, 0.95F + player.getRandom().nextFloat() * 0.1F);
         });
     }
+
 
     private static ItemStack randomEtching(RandomSource random, ServerPlayer player) {
         List<RuneStatType> stats = new ArrayList<>();

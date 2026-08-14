@@ -35,6 +35,7 @@ import java.util.UUID;
 import java.util.function.Predicate;
 
 @EventBusSubscriber(modid = RunicMod.MOD_ID)
+// applies synergy effects
 public final class SynergyEffects {
     private static final String INTERNAL_DAMAGE = "runic_synergy_internal_damage";
     private static final String FROZEN_PHASE = "runic_frozen_phase";
@@ -57,6 +58,7 @@ public final class SynergyEffects {
 
     private SynergyEffects() {}
 
+    // runs mark frozen
     public static void markFrozen(LivingEntity target, LivingEntity attacker, int level) {
         if (target == null || target.level().isClientSide) return;
         int clampedLevel = Mth.clamp(level, 1, 2);
@@ -110,6 +112,7 @@ public final class SynergyEffects {
         if (has(weapon, SynergyRegistry.REAPER)) applyReaper(attacker, target, weapon);
         if (has(weapon, SynergyRegistry.SOULBURN)) applySoulburnSpread(attacker, target, weapon);
     }
+
 
     public static float onIncomingWeaponDamage(LivingEntity attacker, LivingEntity target, ItemStack weapon, DamageSource source, float amount) {
         if (attacker == null || target == null || weapon.isEmpty() || source == null || isInternalDamage(attacker)) {
@@ -166,6 +169,7 @@ public final class SynergyEffects {
                 RunicConfig.juggernautDurationTicks(), amplifier, false, false, true));
     }
 
+
     public static void onLivingDeath(LivingEntity target, DamageSource source) {
         if (target == null || target.level().isClientSide) return;
         CompoundTag data = target.getPersistentData();
@@ -209,6 +213,7 @@ public final class SynergyEffects {
     }
 
     @SubscribeEvent
+    // responds to entity tick
     public static void onEntityTick(EntityTickEvent.Post event) {
         if (!(event.getEntity() instanceof LivingEntity entity) || entity.level().isClientSide) return;
         FrozenState state = frozenState(entity);
@@ -293,6 +298,7 @@ public final class SynergyEffects {
         }
     }
 
+    // applies tempest
     private static void applyTempest(Player attacker, LivingEntity target, ItemStack weapon, float baseDamage) {
         CompoundTag data = attacker.getPersistentData();
         int hits = data.getInt(TEMPEST_HITS) + 1;
@@ -312,6 +318,7 @@ public final class SynergyEffects {
         }
     }
 
+    // applies berserk
     private static void applyBerserk(Player attacker, LivingEntity target) {
         boolean critical = attacker.fallDistance > 0.0F && !attacker.onGround() && !attacker.isInWater() && !attacker.hasEffect(MobEffects.BLINDNESS) && !attacker.isPassenger();
         if (!critical) return;
@@ -378,6 +385,7 @@ public final class SynergyEffects {
         }
     }
 
+    // applies soulburn
     private static void applySoulburn(LivingEntity attacker, LivingEntity target) {
         long now = target.level().getGameTime();
         CompoundTag data = attacker.getPersistentData();
@@ -417,6 +425,7 @@ public final class SynergyEffects {
         level.addFreshEntity(lightning);
     }
 
+
     private static void spawnBloodfireDeathParticles(LivingEntity target) {
         if (!(target.level() instanceof ServerLevel level)) return;
         level.sendParticles(
@@ -442,6 +451,7 @@ public final class SynergyEffects {
                 0.12D
         );
     }
+
 
     private static void spawnVenomBurstDeathEffect(LivingEntity target, LivingEntity owner) {
         if (!(target.level() instanceof ServerLevel level)) return;
@@ -535,6 +545,7 @@ public final class SynergyEffects {
         return !data.hasUUID(FROZEN_SOURCE) || data.getUUID(FROZEN_SOURCE).equals(attacker.getUUID());
     }
 
+    // runs shatter frozen
     private static void shatterFrozen(LivingEntity target, LivingEntity attacker) {
         FrozenState state = frozenState(target);
         if (state == null || state.phase() != 1) return;

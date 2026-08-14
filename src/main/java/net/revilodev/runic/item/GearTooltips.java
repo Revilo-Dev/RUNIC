@@ -29,6 +29,7 @@ import net.revilodev.runic.synergy.SynergyRegistry;
 
 import java.util.*;
 
+
 public final class GearTooltips {
 
     private GearTooltips() {}
@@ -36,8 +37,9 @@ public final class GearTooltips {
     private static final int ENCHANT_TOOLTIP_PREVIEW_LIMIT = 4;
     private static final String SYNERGY_ICON = "\u2605";
 
-    private static final char SLOT_FILLED = '⬤';
-    private static final char SLOT_EMPTY = '◯';
+    private static final char SLOT_FILLED = 'ÃƒÂ¢Ã‚Â¬Ã‚Â¤';
+    private static final char SLOT_EMPTY = 'ÃƒÂ¢Ã¢â‚¬â€Ã‚Â¯';
+
 
     public static boolean apply(ItemStack stack, List<Component> tooltip) {
         if (!isGear(stack)) return false;
@@ -123,6 +125,7 @@ public final class GearTooltips {
         return RunicItemTargets.isRunicGear(stack);
     }
 
+    // runs should override
     private static boolean shouldOverride(ItemStack stack) {
         if (stack.isEnchanted()) return true;
         if (RuneSlots.capacity(stack) > 0) return true;
@@ -146,6 +149,7 @@ public final class GearTooltips {
         return -1;
     }
 
+    // checks whether likely vanilla stat line
     private static boolean isLikelyVanillaStatLine(Component c) {
         String key = keyOf(c);
         if (key != null) {
@@ -166,6 +170,7 @@ public final class GearTooltips {
         if (trimmed.endsWith(":")) return false;
         return true;
     }
+
 
     private static void moveVanillaStatsToTop(List<Component> tooltip) {
         if (tooltip.size() <= 1) return;
@@ -210,6 +215,7 @@ public final class GearTooltips {
         }
         return end;
     }
+
 
     private static List<Component> buildStatLines(RuneStats stats, boolean showDetails) {
         List<Component> out = new ArrayList<>();
@@ -257,6 +263,7 @@ public final class GearTooltips {
 
         return Component.literal("Durability: " + curr + "/" + max).withStyle(color);
     }
+
 
     private static List<Component> buildEnchantmentLines(ItemStack stack, boolean showDetails) {
         ItemEnchantments live = stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
@@ -310,6 +317,7 @@ public final class GearTooltips {
 
     private record EnchLine(Component name, int level, EnhancementRarity rarity, ResourceLocation id) {}
 
+    // builds rune slots
     private static List<Component> buildRuneSlots(ItemStack stack) {
         int baseCap = RuneSlots.capacity(stack);
         int neg = GearAttributes.getLevel(stack, GearAttribute.NEGATIVE);
@@ -332,6 +340,7 @@ public final class GearTooltips {
 
         return List.of(line);
     }
+
 
     private static List<Component> buildSynergyLines(ItemStack stack, boolean showDetails) {
         List<ResourceLocation> synergies = RunicItemData.getSynergies(stack);
@@ -389,6 +398,7 @@ public final class GearTooltips {
         return descriptionKey(id);
     }
 
+
     private static List<Component> buildAttributeIndicators(ItemStack stack, boolean showDetails) {
         Map<GearAttribute, Integer> attrs = GearAttributes.getAll(stack);
         int potential = RunicItemData.getSynergyPotential(stack);
@@ -424,6 +434,7 @@ public final class GearTooltips {
         return out;
     }
 
+    // runs attribute description
     private static MutableComponent attributeDescription(GearAttribute attr) {
         return switch (attr) {
             case CURSED -> Component.literal("Reduces all runic stat values by 5% per stack.");
@@ -452,6 +463,7 @@ public final class GearTooltips {
         return (v >= 0 ? "+" : "-") + num + (type.isPercentBased() ? "%" : "");
     }
 
+    // runs to roman
     private static String toRoman(int v) {
         if (v <= 0) return "";
         if (v >= 10) return "X";
@@ -473,6 +485,7 @@ public final class GearTooltips {
         if (id == null) return null;
         return "tooltip.runic." + id.getPath();
     }
+
 
     private static String statDescription(RuneStatType type) {
         return switch (type) {

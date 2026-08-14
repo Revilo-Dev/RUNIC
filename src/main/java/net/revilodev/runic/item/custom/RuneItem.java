@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+
 public class RuneItem extends Item implements RarityTintedItemName {
 
     // fixed levels for generated effects
@@ -114,6 +115,7 @@ public class RuneItem extends Item implements RarityTintedItemName {
         return stack;
     }
 
+    // creates random stat rune
     public static ItemStack createRandomStatRune(RandomSource random) {
         RuneStatType[] all = RuneStatType.values();
         List<RuneStatType> allowed = new ArrayList<>();
@@ -131,6 +133,7 @@ public class RuneItem extends Item implements RarityTintedItemName {
         return createStatRune(random, chosen);
     }
 
+    // picks weighted stat
     private static RuneStatType pickWeightedStat(RuneStatType[] all, RandomSource random) {
         int total = 0;
         int[] weights = new int[all.length];
@@ -166,6 +169,8 @@ public class RuneItem extends Item implements RarityTintedItemName {
         return RuneStats.get(stack);
     }
 
+
+    // gets primary effect enchantment
     public static Holder<Enchantment> getPrimaryEffectEnchantment(ItemStack stack) {
         ItemEnchantments stored = stack.getOrDefault(DataComponents.STORED_ENCHANTMENTS, ItemEnchantments.EMPTY);
         ItemEnchantments direct = stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);

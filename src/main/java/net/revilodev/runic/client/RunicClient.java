@@ -20,6 +20,9 @@ import net.revilodev.runic.screen.ModMenuTypes;
 import net.revilodev.runic.screen.custom.ArtisansWorkbenchScreen;
 import net.revilodev.runic.screen.custom.EtchingTableScreen;
 
+// supports runic client
+
+// supports runic client
 public final class RunicClient {
     private static final KeyMapping RELIC_POWER_KEY = new KeyMapping(
             "key.runic.relic_power",
@@ -63,6 +66,7 @@ public final class RunicClient {
         relicMaxDurationTicks = Math.max(0, maxDurationTicks);
         relicMaxCooldownTicks = Math.max(0, maxCooldownTicks);
     }
+
 
     public static void onRenderGui(RenderGuiEvent.Post event) {
         Minecraft mc = Minecraft.getInstance();

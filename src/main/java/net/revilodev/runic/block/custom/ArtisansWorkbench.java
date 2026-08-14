@@ -23,6 +23,9 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.revilodev.runic.screen.custom.ArtisansWorkbenchMenu;
 
+// supports artisans workbench
+
+// supports artisans workbench
 public class ArtisansWorkbench extends HorizontalDirectionalBlock {
 
     public static final MapCodec<ArtisansWorkbench> CODEC =
@@ -57,6 +60,7 @@ public class ArtisansWorkbench extends HorizontalDirectionalBlock {
     }
 
     @Override
+    // uses without item
     protected InteractionResult useWithoutItem(
             BlockState state,
             Level level,

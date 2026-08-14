@@ -20,6 +20,7 @@ import net.neoforged.neoforge.event.tick.EntityTickEvent;
 import net.revilodev.runic.RunicMod;
 
 @EventBusSubscriber(modid = RunicMod.MOD_ID)
+// responds to stat events
 public final class RuneStatEvents {
     private static final String STONE_TICK = "runic_stone_tick";
 
@@ -72,6 +73,7 @@ public final class RuneStatEvents {
     }
 
     @SubscribeEvent
+    // responds to entity join
     public static void onEntityJoin(EntityJoinLevelEvent event) {
         if (!(event.getEntity() instanceof LivingEntity entity)) return;
         if (entity.level().isClientSide) return;
@@ -100,6 +102,7 @@ public final class RuneStatEvents {
     }
 
     @SubscribeEvent
+    // responds to living tick
     public static void onLivingTick(EntityTickEvent.Post event) {
         if (!(event.getEntity() instanceof LivingEntity entity)) return;
         if (entity.level().isClientSide) return;

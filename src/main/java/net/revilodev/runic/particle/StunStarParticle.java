@@ -8,6 +8,9 @@ import net.minecraft.client.particle.SpriteSet;
 import net.minecraft.client.particle.TextureSheetParticle;
 import net.minecraft.core.particles.SimpleParticleType;
 
+
+
+// supports stun star particle
 public class StunStarParticle extends TextureSheetParticle {
 
     private final SpriteSet sprites;
@@ -22,7 +25,7 @@ public class StunStarParticle extends TextureSheetParticle {
         this.sprites = sprites;
 
         this.setSize(0.16F, 0.16F);
-        this.lifetime = 2;          // very short → effectively 1 visible star per spot
+        this.lifetime = 2;          // 1 visible star per spot
         this.gravity = 0.0F;
         this.xd = 0.0D;
         this.yd = 0.0D;

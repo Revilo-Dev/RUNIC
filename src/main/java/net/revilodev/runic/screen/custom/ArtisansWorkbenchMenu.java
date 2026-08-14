@@ -252,6 +252,7 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
         return stack.getItem() instanceof EtchingItem;
     }
 
+    // checks whether inscription
     private static boolean isInscription(ItemStack stack) {
         return stack.is(ModItems.REPAIR_INSCRIPTION.get())
                 || stack.is(ModItems.EXPANSION_INSCRIPTION.get())
@@ -350,6 +351,7 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
         return RuneItem.clampEffectLevel(enchantment, cappedRequested);
     }
 
+    // checks whether it can apply any effect enchant
     private boolean canApplyAnyEffectEnchant(ItemStack target, ItemEnchantments enchants, boolean fromEtching) {
         if (enchants == null || enchants.isEmpty()) return false;
 
@@ -375,6 +377,7 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
         return false;
     }
 
+    // checks whether it can apply nullification
     private boolean canApplyNullification(ItemStack target) {
         if (GearAttributes.has(target, GearAttribute.SEALED)) return false;
 
@@ -650,6 +653,7 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
         else stack.set(DataComponents.CUSTOM_DATA, CustomData.of(root));
     }
 
+    // runs strip preview delta
     private static void stripPreviewDelta(ItemStack stack) {
         CompoundTag root = getRootCopy(stack);
 
@@ -678,6 +682,7 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
         return true;
     }
 
+    // creates invalid preview
     private ItemStack createInvalidPreview(ItemStack base, String failureKey) {
         ItemStack preview = base.copy();
         CompoundTag delta = new CompoundTag();
@@ -1070,6 +1075,7 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
         if (Math.abs(delta) > 1e-6) tag.putDouble(key, delta);
     }
 
+    // runs reduce max durability
     private static boolean reduceMaxDurability(ItemStack stack, double fraction) {
         if (!stack.isDamageableItem()) return false;
 
@@ -1116,6 +1122,7 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
         }
     }
 
+    // applies nullification
     private void applyNullification(ItemStack taken) {
         taken.remove(DataComponents.ENCHANTMENTS);
         taken.remove(DataComponents.STORED_ENCHANTMENTS);
@@ -1140,6 +1147,7 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
         RuneSlots.incrementExpansion(taken);
     }
 
+    // applies cursed delta
     private void applyCursedDelta(ItemStack stack, int deltaLevels) {
         if (deltaLevels <= 0) return;
 
@@ -1401,11 +1409,33 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
     private boolean applyDissonant(ItemStack taken) {
         if (!canApplyDissonant(taken)) return false;
         RunicItemData.setSynergyPotential(taken, 0);
+        RunicItemData.clearSynergies(taken);
         RunicItemData.clearMythicRunes(taken);
+        clearDissonantConditions(taken);
         GearAttributes.addLevel(taken, GearAttribute.DISSONANT, 1);
         RuneSlots.syncUsedToContents(taken);
         updateGlintAfter(taken);
         return true;
+    }
+
+    // clears dissonant conditions
+    private void clearDissonantConditions(ItemStack stack) {
+        for (GearAttribute attribute : List.of(
+                GearAttribute.CURSED,
+                GearAttribute.INSTABLE,
+                GearAttribute.NEGATIVE,
+                GearAttribute.BRITTLE,
+                GearAttribute.FRACTURED,
+                GearAttribute.EXHAUSTED,
+                GearAttribute.OVERFORGED,
+                GearAttribute.CHAOTIC
+        )) {
+            int level = GearAttributes.getLevel(stack, attribute);
+            if (level > 0) {
+                GearAttributes.addLevel(stack, attribute, -level);
+            }
+        }
+        GearAttributes.setCursedAppliedLevel(stack, 0);
     }
 
     private boolean mutateOneEnhancement(ItemStack taken) {
@@ -1447,6 +1477,7 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
         return false;
     }
 
+    // chooses random replacement
     private ResourceLocation randomReplacement(ResourceLocation original, EnhancementCategory category) {
         List<ResourceLocation> candidates = new ArrayList<>();
         for (RuneStatType stat : RuneStatType.values()) {
@@ -1882,6 +1913,7 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
         });
     }
 
+    // adds stat input
     private void addStatInput(ItemStack stack, ResourceLocation input) {
         if (input == null || !input.getNamespace().equals(RunicMod.MOD_ID) || !input.getPath().startsWith("stat/")) {
             return;
@@ -1898,6 +1930,7 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
         RuneStats.set(stack, new RuneStats(map));
     }
 
+    // runs enhancement ref
     private ResourceLocation enhancementRef(ItemStack enhancement) {
         ResourceLocation mythicId = MythicRuneRegistry.getItemRuneId(enhancement);
         if (mythicId != null) {

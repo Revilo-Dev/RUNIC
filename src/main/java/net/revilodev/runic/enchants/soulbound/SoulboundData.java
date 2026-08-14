@@ -14,6 +14,9 @@ import net.revilodev.runic.RunicMod;
 
 import java.util.Optional;
 
+// stores soulbound data
+
+// stores soulbound data
 public final class SoulboundData {
     public static final ResourceKey<Enchantment> SOULBOUND = ResourceKey.create(Registries.ENCHANTMENT, ResourceLocation.fromNamespaceAndPath(RunicMod.MOD_ID, "soulbound"));
 

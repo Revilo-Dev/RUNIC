@@ -26,6 +26,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
+// generates mod recipe provider
+
+// generates mod recipe provider
 public final class ModRecipeProvider extends RecipeProvider {
     private static final EnumMap<RuneStatType, ItemLike> STAT_MATERIALS = new EnumMap<>(RuneStatType.class);
 
@@ -211,6 +214,7 @@ public final class ModRecipeProvider extends RecipeProvider {
     }
 
     @Override
+    // builds recipes
     protected void buildRecipes(RecipeOutput output) {
         ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.BLANK_ETCHING.get())
                 .pattern("SSS")
@@ -294,12 +298,13 @@ public final class ModRecipeProvider extends RecipeProvider {
         addUtility(output, "upgrade_rune", base, Items.LAPIS_BLOCK, ModItems.UPGRADE_INSCRIPTION.get());
         addUtility(output, "reroll_inscription", base, Items.GOLD_BLOCK, ModItems.REROLL_INSCRIPTION.get());
         addUtility(output, "extraction_inscription", base, Items.EMERALD_BLOCK, ModItems.EXTRACTION_INSCRIPTION.get());
-        addUtility(output, "purification_inscription", base, Items.MILK_BUCKET, ModItems.PURIFICATION_INSCRIPTION.get());
+        addUtility(output, "purification_inscription", base, Items.SCULK_CATALYST, ModItems.PURIFICATION_INSCRIPTION.get());
         addUtility(output, "stabilization_inscription", base, Items.AMETHYST_SHARD, ModItems.STABILIZATION_INSCRIPTION.get());
         addUtility(output, "tempering_inscription", base, Items.IRON_BLOCK, ModItems.TEMPERING_INSCRIPTION.get());
         addUtility(output, "relic_socket_inscription", base, Items.ECHO_SHARD, ModItems.RELIC_SOCKET_INSCRIPTION.get());
     }
 
+    // adds utility
     private static void addUtility(
             RecipeOutput output,
             String idPath,
@@ -324,6 +329,7 @@ public final class ModRecipeProvider extends RecipeProvider {
         output.accept(id, recipe, null);
     }
 
+    // adds mythic
     private static void addMythic(RecipeOutput output, Ingredient base, ItemLike material, ResourceLocation mythicId) {
         ResourceLocation id = ResourceLocation.fromNamespaceAndPath(
                 RunicMod.MOD_ID,

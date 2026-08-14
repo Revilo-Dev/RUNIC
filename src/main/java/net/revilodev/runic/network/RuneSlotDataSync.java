@@ -12,6 +12,9 @@ import net.revilodev.runic.runes.RuneSlotCapacityData;
 import java.util.HashMap;
 import java.util.Map;
 
+// syncs rune slot data sync
+
+// syncs rune slot data sync
 public record RuneSlotDataSync(Map<ResourceLocation,Integer> items,
                                Map<String,Integer> defaults,
                                Map<ResourceLocation,Integer> tagCapacities,
@@ -25,6 +28,7 @@ public record RuneSlotDataSync(Map<ResourceLocation,Integer> items,
     public static final StreamCodec<RegistryFriendlyByteBuf, RuneSlotDataSync> CODEC =
             new StreamCodec<>() {
                 @Override
+                // runs decode
                 public RuneSlotDataSync decode(RegistryFriendlyByteBuf buf) {
                     // item capacities
                     int count = buf.readVarInt();
@@ -64,6 +68,7 @@ public record RuneSlotDataSync(Map<ResourceLocation,Integer> items,
                 }
 
                 @Override
+                // runs encode
                 public void encode(RegistryFriendlyByteBuf buf, RuneSlotDataSync msg) {
                     // item capacities
                     buf.writeVarInt(msg.items().size());

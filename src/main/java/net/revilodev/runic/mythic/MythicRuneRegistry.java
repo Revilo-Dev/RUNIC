@@ -20,6 +20,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+// stores mythic rune registry definitions
+
+// stores mythic rune registry definitions
 public final class MythicRuneRegistry {
     public static final ResourceLocation RUIN = id("ruin");
     public static final ResourceLocation DOMINION = id("dominion");
@@ -223,6 +226,7 @@ public final class MythicRuneRegistry {
         return out;
     }
 
+    // saves list
     public static void writeList(CompoundTag runic, String key, List<ResourceLocation> ids) {
         if (ids == null || ids.isEmpty()) {
             runic.remove(key);

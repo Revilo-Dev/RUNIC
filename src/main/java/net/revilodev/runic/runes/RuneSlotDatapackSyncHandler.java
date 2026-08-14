@@ -10,6 +10,7 @@ import net.revilodev.runic.network.RuneSlotDataSync;
 import net.revilodev.runic.RunicMod;
 
 @EventBusSubscriber(modid = RunicMod.MOD_ID)
+// runs rune slot datapack sync handler
 public class RuneSlotDatapackSyncHandler {
     @SubscribeEvent
     public static void onDatapackSync(OnDatapackSyncEvent e) {

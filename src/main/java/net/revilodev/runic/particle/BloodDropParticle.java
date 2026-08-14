@@ -8,6 +8,7 @@ import net.minecraft.client.particle.SpriteSet;
 import net.minecraft.client.particle.TextureSheetParticle;
 import net.minecraft.core.particles.SimpleParticleType;
 
+// supports blood drop particle
 public class BloodDropParticle extends TextureSheetParticle {
 
     private final SpriteSet sprites;

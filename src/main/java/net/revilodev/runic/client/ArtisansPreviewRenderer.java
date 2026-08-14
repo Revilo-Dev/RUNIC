@@ -13,6 +13,9 @@ import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
+// draws artisans preview renderer
+
+// draws artisans preview renderer
 public final class ArtisansPreviewRenderer {
     private ArtisansPreviewRenderer() {}
 

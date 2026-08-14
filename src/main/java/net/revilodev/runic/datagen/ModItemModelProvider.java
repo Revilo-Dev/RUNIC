@@ -9,6 +9,9 @@ import net.revilodev.runic.RunicMod;
 import net.revilodev.runic.item.ModItems;
 import net.revilodev.runic.item.RuneModelMappings;
 
+// generates mod item model provider
+
+// generates mod item model provider
 public class ModItemModelProvider extends ItemModelProvider {
 
     private static final ResourceLocation RUNE_MODEL_PRED =
@@ -19,6 +22,7 @@ public class ModItemModelProvider extends ItemModelProvider {
     }
 
     @Override
+    // registers models
     protected void registerModels() {
         basicItem(ModItems.BLANK_INSCRIPTION.get());
         withExistingParent("item/blank_etching", "minecraft:item/generated")
@@ -60,11 +64,12 @@ public class ModItemModelProvider extends ItemModelProvider {
         generateLayeredSet("etching", "item/etching_base", "etching");
     }
 
+
     private void generateLayeredSet(String itemModelName, String baseTexture, String folderName) {
         java.util.Set<String> generatedModels = new java.util.HashSet<>();
         for (RuneModelMappings.ModelDef def : RuneModelMappings.modelDefs()) {
             String modelPath = "item/" + folderName + "/" + def.subPath();
-            String iconTex = "item/icons/" + def.subPath();
+            String iconTex = iconTextureFor(def.subPath());
             if (!generatedModels.add(modelPath)) {
                 continue;
             }
@@ -84,5 +89,13 @@ public class ModItemModelProvider extends ItemModelProvider {
                     .model(getExistingFile(modLoc(modelPath)))
                     .end();
         }
+    }
+
+    private String iconTextureFor(String subPath) {
+        return switch (subPath) {
+            case "mythic" -> "item/inscriptions/mythic-inscription";
+            case "synergy" -> "item/inscriptions/synergy-inscription";
+            default -> "item/icons/" + subPath;
+        };
     }
 }

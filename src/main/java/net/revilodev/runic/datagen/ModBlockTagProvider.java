@@ -12,6 +12,9 @@ import net.revilodev.runic.block.ModBlocks;
 import javax.annotation.Nullable;
 import java.util.concurrent.CompletableFuture;
 
+// generates mod block tag provider
+
+// generates mod block tag provider
 public class ModBlockTagProvider extends BlockTagsProvider {
     public ModBlockTagProvider(PackOutput output,
                                CompletableFuture<HolderLookup.Provider> lookupProvider,

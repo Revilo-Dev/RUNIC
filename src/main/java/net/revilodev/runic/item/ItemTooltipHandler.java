@@ -11,6 +11,7 @@ import net.revilodev.runic.RunicMod;
 import java.util.List;
 
 @EventBusSubscriber(modid = RunicMod.MOD_ID, value = Dist.CLIENT)
+// runs item tooltip handler
 public final class ItemTooltipHandler {
     private ItemTooltipHandler() {}
 

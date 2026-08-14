@@ -41,6 +41,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+// supports runic structure loot injector
+
+// supports runic structure loot injector
 public class RunicStructureLootInjector extends LootModifier {
     public static final float DEFAULT_RUNE_CHANCE = 0.35F;
 
@@ -71,6 +74,7 @@ public class RunicStructureLootInjector extends LootModifier {
     }
 
     @Override
+    // runs do apply
     protected ObjectArrayList<ItemStack> doApply(ObjectArrayList<ItemStack> generated, LootContext ctx) {
         if (RunicConfig.disableRunicLoot()) {
             return generated;
@@ -112,6 +116,7 @@ public class RunicStructureLootInjector extends LootModifier {
                 id.contains("bastion") || id.contains("ancient_city") || id.contains("shipwreck") ||
                 id.contains("fortress") || id.contains("stronghold") || id.contains("mineshaft");
     }
+
 
     private void maybeAddRunes(ObjectArrayList<ItemStack> generated, RandomSource rand, Level level, String tableId) {
         if (rand.nextFloat() >= this.runeChance) {
@@ -227,6 +232,7 @@ public class RunicStructureLootInjector extends LootModifier {
         return List.copyOf(out);
     }
 
+
     private static List<RuneChoice> uniqueRunePool(String tableId) {
         List<RuneChoice> pool = new ArrayList<>();
 
@@ -281,6 +287,7 @@ public class RunicStructureLootInjector extends LootModifier {
         }
     }
 
+    // chooses random effect rune
     private static ItemStack randomEffectRune(Level level, RandomSource rand) {
         Registry<Enchantment> reg = level.registryAccess().registryOrThrow(Registries.ENCHANTMENT);
         List<Holder<Enchantment>> pool = new ArrayList<>();
@@ -344,6 +351,7 @@ public class RunicStructureLootInjector extends LootModifier {
         }
     }
 
+    // picks weighted stat
     private static RuneStatType pickWeightedStat(List<WeightedStatChoice> pool, RandomSource rand) {
         int total = 0;
         for (WeightedStatChoice choice : pool) {
@@ -381,6 +389,7 @@ public class RunicStructureLootInjector extends LootModifier {
         return RuneItem.createEffectRune(holder);
     }
 
+    // runs rune choice
     private record RuneChoice(RuneStatType stat, ResourceLocation effect) {
         static RuneChoice stat(RuneStatType stat) {
             return new RuneChoice(stat, null);
@@ -403,6 +412,7 @@ public class RunicStructureLootInjector extends LootModifier {
         }
     }
 
+    // picks weighted effect
     private static Holder<Enchantment> pickWeightedEffect(List<Holder<Enchantment>> pool, RandomSource rand) {
         int total = 0;
         int[] weights = new int[pool.size()];
@@ -439,6 +449,7 @@ public class RunicStructureLootInjector extends LootModifier {
 
     private record WeightedStatChoice(RuneStatType type, int weight) {}
 
+    // runs generic stat rarity distribution
     public static Map<EnhancementRarity, Double> genericStatRarityDistribution() {
         EnumMap<EnhancementRarity, Double> out = new EnumMap<>(EnhancementRarity.class);
         EnumMap<EnhancementRarity, Integer> weights = new EnumMap<>(EnhancementRarity.class);
@@ -473,6 +484,7 @@ public class RunicStructureLootInjector extends LootModifier {
         out.sort(String::compareTo);
         return List.copyOf(out);
     }
+
 
     private void maybeAddLootAttribute(ObjectArrayList<ItemStack> generated, RandomSource rand) {
         if (generated.isEmpty() || rand.nextFloat() >= this.armorChance) {

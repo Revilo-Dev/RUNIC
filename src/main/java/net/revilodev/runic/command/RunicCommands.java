@@ -36,6 +36,9 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+// runs runic commands
+
+// runs runic commands
 public final class RunicCommands {
     private static final SimpleCommandExceptionType INVALID_TARGET =
             new SimpleCommandExceptionType(Component.literal("Target must be a living entity holding an item."));
@@ -51,6 +54,7 @@ public final class RunicCommands {
             new SimpleCommandExceptionType(Component.literal("Unknown runic config target."));
 
     private RunicCommands() {}
+
 
     public static void register(RegisterCommandsEvent event) {
         var apply = Commands.literal("apply")
@@ -160,6 +164,7 @@ public final class RunicCommands {
         );
     }
 
+    // applies stat
     private static int applyStat(CommandSourceStack source, String statName, float amount, Collection<? extends Entity> targets)
             throws CommandSyntaxException {
         RuneStatType type = RuneStatType.byId(statName);
@@ -179,6 +184,7 @@ public final class RunicCommands {
         return changed;
     }
 
+    // applies effect
     private static int applyEffect(CommandSourceStack source, String effectName, int level, Collection<? extends Entity> targets)
             throws CommandSyntaxException {
         Holder<Enchantment> enchantment = resolveEffect(source, effectName);
@@ -195,6 +201,7 @@ public final class RunicCommands {
         return changed;
     }
 
+    // applies synergy
     private static int applySynergy(CommandSourceStack source, String synergyName, Collection<? extends Entity> targets)
             throws CommandSyntaxException {
         ResourceLocation synergyId = resolveSynergy(synergyName);
@@ -224,6 +231,7 @@ public final class RunicCommands {
         return changed;
     }
 
+    // runs inscribe
     private static int inscribe(CommandSourceStack source, String inscription, Collection<? extends Entity> targets)
             throws CommandSyntaxException {
         if (!RunicCommandHelper.inscriptionIds().contains(normalizeInscription(inscription))) {
@@ -256,6 +264,7 @@ public final class RunicCommands {
         source.sendSuccess(() -> Component.literal("/runic test droprate <structure>"), false);
         return 1;
     }
+
 
     private static int dropRate(CommandSourceStack source, String structure) {
         String table = structure == null || structure.isBlank()
@@ -298,6 +307,7 @@ public final class RunicCommands {
         return out;
     }
 
+    // runs generic effect rarity distribution
     private static Map<EnhancementRarity, Double> genericEffectRarityDistribution(CommandSourceStack source) {
         EnumMap<EnhancementRarity, Double> out = new EnumMap<>(EnhancementRarity.class);
         EnumMap<EnhancementRarity, Integer> weights = new EnumMap<>(EnhancementRarity.class);
@@ -379,6 +389,7 @@ public final class RunicCommands {
         return net.revilodev.runic.item.custom.RuneItem.isEffectEnchantment(enchantment);
     }
 
+    // runs config disable suggestions
     private static Set<String> configDisableSuggestions() {
         Set<String> suggestions = new LinkedHashSet<>();
         suggestions.add("rune_slots");

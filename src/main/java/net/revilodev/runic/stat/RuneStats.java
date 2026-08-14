@@ -14,6 +14,9 @@ import net.revilodev.runic.runes.RuneAttributeApplier;
 import java.util.EnumMap;
 import java.util.Map;
 
+
+
+// supports rune stats
 public final class RuneStats {
 
     // custom data keys
@@ -94,6 +97,7 @@ public final class RuneStats {
         return rollForApplication(template, random, false);
     }
 
+    // rolls for application
     public static RuneStats rollForApplication(RuneStats template, RandomSource random, boolean etching) {
         if (template == null || template.isEmpty()) {
             return EMPTY;

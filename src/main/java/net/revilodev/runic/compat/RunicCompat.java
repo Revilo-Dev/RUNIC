@@ -3,6 +3,9 @@ package net.revilodev.runic.compat;
 import net.neoforged.fml.ModList;
 import net.revilodev.runic.stat.RuneStatType;
 
+// supports runic compat
+
+// supports runic compat
 public final class RunicCompat {
     private RunicCompat() {}
 

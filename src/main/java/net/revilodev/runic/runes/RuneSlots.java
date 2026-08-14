@@ -18,6 +18,9 @@ import net.revilodev.runic.registry.ModDataComponents;
 
 import static net.revilodev.runic.registry.ModDataComponents.DATA_COMPONENT_TYPES;
 
+// supports rune slots
+
+// supports rune slots
 public final class RuneSlots {
     // master config gate
     public static boolean enabled() {
@@ -147,8 +150,8 @@ public final class RuneSlots {
         // filled then open slots
         int rem = Math.max(0, cap - u);
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < u; i++) sb.append('⬤');
-        for (int i = 0; i < rem; i++) sb.append('◯');
+        for (int i = 0; i < u; i++) sb.append('ÃƒÂ¢Ã‚Â¬Ã‚Â¤');
+        for (int i = 0; i < rem; i++) sb.append('ÃƒÂ¢Ã¢â‚¬â€Ã‚Â¯');
         return Component.literal(sb.toString()).withStyle(ChatFormatting.AQUA);
     }
 

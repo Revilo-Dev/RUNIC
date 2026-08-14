@@ -22,6 +22,7 @@ import net.revilodev.runic.runes.UniqueRuneSources;
 import net.revilodev.runic.synergy.SynergyRegistry;
 import net.revilodev.runic.stat.RuneStatType;
 
+
 public class ModCreativeModeTabs {
     public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS =
             DeferredRegister.create(Registries.CREATIVE_MODE_TAB, RunicMod.MOD_ID);

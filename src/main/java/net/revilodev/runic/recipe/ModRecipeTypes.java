@@ -7,6 +7,8 @@ import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.revilodev.runic.RunicMod;
 
+
+
 public final class ModRecipeTypes {
     private ModRecipeTypes() {}
 

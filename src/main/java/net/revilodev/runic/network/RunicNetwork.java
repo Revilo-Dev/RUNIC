@@ -7,6 +7,8 @@ import net.revilodev.runic.network.payload.RerollEtchingPayload;
 import net.revilodev.runic.network.payload.RelicPowerStatusPayload;
 import net.revilodev.runic.network.payload.UseRelicPowerPayload;
 
+
+// supports runic network
 public final class RunicNetwork {
     private RunicNetwork() {
     }

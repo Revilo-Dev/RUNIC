@@ -78,6 +78,7 @@ public final class EtchingRecipeBookPanel extends AbstractWidget {
         return hoveredRecipeName;
     }
 
+    // runs refresh
     public void refresh() {
         Minecraft mc = Minecraft.getInstance();
         this.all.clear();
@@ -126,6 +127,8 @@ public final class EtchingRecipeBookPanel extends AbstractWidget {
         if (page + 1 < totalPages) page++;
     }
 
+
+    // rebuilds filtered
     private void rebuildFiltered() {
         Minecraft mc = Minecraft.getInstance();
         this.filtered.clear();
@@ -151,6 +154,7 @@ public final class EtchingRecipeBookPanel extends AbstractWidget {
         if (this.page >= this.totalPages) this.page = this.totalPages - 1;
     }
 
+    // runs recipe display name
     private Component recipeDisplayName(RecipeHolder<EtchingTableRecipe> h) {
         EtchingTableRecipe r = h.value();
 
@@ -171,6 +175,7 @@ public final class EtchingRecipeBookPanel extends AbstractWidget {
         return r.result().getHoverName();
     }
 
+    // checks whether visible for loaded mods
     private boolean isVisibleForLoadedMods(RecipeHolder<EtchingTableRecipe> h) {
         String sourceMod = compatSourceModFromRecipeId(h.id());
         if (sourceMod != null && !sourceMod.equals("minecraft") && !sourceMod.equals(RunicMod.MOD_ID)) {
@@ -213,6 +218,7 @@ public final class EtchingRecipeBookPanel extends AbstractWidget {
     }
 
     @Override
+    // draws widget
     protected void renderWidget(GuiGraphics gg, int mouseX, int mouseY, float partialTick) {
         if (!this.visible) return;
 
@@ -251,6 +257,7 @@ public final class EtchingRecipeBookPanel extends AbstractWidget {
     }
 
     @Override
+    // runs mouse clicked
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (!this.visible) return false;
         if (button != 0) return false;
@@ -288,6 +295,7 @@ public final class EtchingRecipeBookPanel extends AbstractWidget {
         return true;
     }
 
+    // checks whether craftable
     private boolean isCraftable(Minecraft mc, RecipeHolder<EtchingTableRecipe> holder) {
         if (mc.player == null) return false;
         if (!(mc.player.containerMenu instanceof EtchingTableMenu menu)) return false;

@@ -7,6 +7,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.revilodev.runic.RunicMod;
 import net.revilodev.runic.stat.RuneStatType;
 
+
 public enum EnhancementCategory {
     OFFENSIVE("offensive", ChatFormatting.RED),
     DEFENSIVE("defensive", ChatFormatting.BLUE),
@@ -38,6 +39,7 @@ public enum EnhancementCategory {
             case MOVEMENT_SPEED, MINING_SPEED, JUMP_HEIGHT, ABILITY_POWER -> UTILITY;
         };
     }
+
 
     public static EnhancementCategory forEnchantment(ResourceLocation id) {
         if (id == null) {

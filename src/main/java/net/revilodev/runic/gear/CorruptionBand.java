@@ -2,6 +2,7 @@ package net.revilodev.runic.gear;
 
 import net.minecraft.network.chat.Component;
 
+
 public enum CorruptionBand {
     STABLE("stable", 0, 24),
     TAINTED("tainted", 25, 49),

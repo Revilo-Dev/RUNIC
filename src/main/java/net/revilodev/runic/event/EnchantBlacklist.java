@@ -15,11 +15,13 @@ import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.Set;
 
+
+// blacklist of enchants not inlcuded in runic
 public final class EnchantBlacklist {
     private EnchantBlacklist() {}
 
     /* ===============================
-       HARD (PERMANENT) DISABLED
+       HARD DISABLED
        =============================== */
     private static final Set<ResourceLocation> HARD_DISABLED = Set.of(
             ResourceLocation.parse("minecraft:bane_of_arthropods"),
@@ -37,7 +39,7 @@ public final class EnchantBlacklist {
     );
 
     /* ===============================
-       CONFIG DISABLED (RUNTIME)
+       CONFIG DISABLED
        =============================== */
     private static final Set<ResourceLocation> CONFIG_DISABLED = new HashSet<>();
     private static final Set<String> CONFIG_DISABLED_STATS = new HashSet<>();
@@ -94,6 +96,7 @@ public final class EnchantBlacklist {
     /* ===============================
        STRIPPING
        =============================== */
+    // runs strip
     public static boolean strip(ItemStack stack) {
         boolean changed = false;
 

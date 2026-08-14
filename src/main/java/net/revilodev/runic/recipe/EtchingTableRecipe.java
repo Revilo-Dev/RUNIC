@@ -28,6 +28,8 @@ import net.revilodev.runic.stat.RuneStats;
 
 import java.util.Optional;
 
+
+
 public final class EtchingTableRecipe implements Recipe<EtchingTableInput> {
     private static final ResourceKey<Registry<Enchantment>> ENCHANTMENT_REGISTRY =
             ResourceKey.createRegistryKey(ResourceLocation.fromNamespaceAndPath("minecraft", "enchantment"));
@@ -92,6 +94,7 @@ public final class EtchingTableRecipe implements Recipe<EtchingTableInput> {
     }
 
     @Override
+    // runs matches
     public boolean matches(EtchingTableInput input, net.minecraft.world.level.Level level) {
         if (RunicConfig.disableEtchingCrafting()) return false;
         if (stat.map(EnchantBlacklist::isStatBlacklisted).orElse(false)) return false;
@@ -109,6 +112,7 @@ public final class EtchingTableRecipe implements Recipe<EtchingTableInput> {
     }
 
     @Override
+    // runs assemble
     public ItemStack assemble(EtchingTableInput input, HolderLookup.Provider registries) {
         if (RunicConfig.disableEtchingCrafting()) {
             return ItemStack.EMPTY;
@@ -151,6 +155,7 @@ public final class EtchingTableRecipe implements Recipe<EtchingTableInput> {
         return !direct.isEmpty();
     }
 
+    // runs stack has enchantment id
     private static boolean stackHasEnchantmentId(ItemStack stack, ResourceLocation id) {
         ItemEnchantments stored = stack.getOrDefault(DataComponents.STORED_ENCHANTMENTS, ItemEnchantments.EMPTY);
         if (!stored.isEmpty()) {

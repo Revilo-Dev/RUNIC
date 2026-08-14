@@ -12,6 +12,9 @@ import net.revilodev.runic.screen.custom.EtchingTableMenu;
 
 import java.util.Optional;
 
+// supports place etching recipe payload
+
+// supports place etching recipe payload
 public record PlaceEtchingRecipePayload(ResourceLocation recipeId) implements CustomPacketPayload {
     public static final Type<PlaceEtchingRecipePayload> TYPE =
             new Type<>(ResourceLocation.fromNamespaceAndPath(RunicMod.MOD_ID, "place_etching_recipe"));
@@ -24,6 +27,7 @@ public record PlaceEtchingRecipePayload(ResourceLocation recipeId) implements Cu
         return TYPE;
     }
 
+    // runs handle
     public static void handle(PlaceEtchingRecipePayload payload, IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
             if (!(ctx.player() instanceof ServerPlayer sp)) return;

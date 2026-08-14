@@ -11,6 +11,7 @@ import net.revilodev.runic.RunicMod;
 import java.util.List;
 
 @EventBusSubscriber(modid = RunicMod.MOD_ID)
+// responds to villager trade blacklist events
 public final class VillagerTradeBlacklistEvents {
     private VillagerTradeBlacklistEvents() {
     }

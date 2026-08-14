@@ -6,6 +6,7 @@ import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.revilodev.runic.RunicMod;
 
 @EventBusSubscriber(modid = RunicMod.MOD_ID)
+// supports rune network
 public final class RuneNetwork {
     @SubscribeEvent
     public static void onRegisterPayloads(RegisterPayloadHandlersEvent event) {

@@ -13,6 +13,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
+
+// config settings
 public final class RunicConfig {
 
     public static final ModConfigSpec SPEC;
@@ -802,6 +804,7 @@ public final class RunicConfig {
     public static double icePrisonBossDurationMultiplier() { return ICE_PRISON_BOSS_DURATION_MULTIPLIER_CACHE; }
     public static int icePrisonCooldownTicks() { return ICE_PRISON_COOLDOWN_TICKS_CACHE; }
 
+
     public static boolean disableConfigByName(String name) {
         if (name == null || name.isBlank()) return false;
         String key = name.trim().toLowerCase();
@@ -842,6 +845,7 @@ public final class RunicConfig {
     private static void onConfigReloading(final ModConfigEvent.Reloading event) {
         if (event.getConfig().getSpec() == SPEC) rebuildCache();
     }
+
 
     private static void rebuildCache() {
         Set<ResourceLocation> parsed = BLACKLIST_RAW.get().stream()

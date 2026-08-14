@@ -7,6 +7,7 @@ import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.revilodev.runic.RunicMod;
 
+
 public final class ModMobEffects {
 
     public static final DeferredRegister<MobEffect> MOB_EFFECTS =

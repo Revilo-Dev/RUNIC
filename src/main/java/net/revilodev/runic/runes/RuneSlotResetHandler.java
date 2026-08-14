@@ -12,11 +12,13 @@ import net.revilodev.runic.registry.ModDataComponents;
 import net.revilodev.runic.stat.RuneStats;
 
 @EventBusSubscriber(modid = RunicMod.MOD_ID)
+// runs rune slot reset handler
 public final class RuneSlotResetHandler {
 
     private RuneSlotResetHandler() {}
 
     @SubscribeEvent
+    // responds to place
     public static void onPlace(GrindstoneEvent.OnPlaceItem e) {
         ItemStack top = e.getTopItem();
         ItemStack bottom = e.getBottomItem();

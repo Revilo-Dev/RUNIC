@@ -1,4 +1,4 @@
-// src/main/java/net/revilodev/runic/screen/custom/ForgeButton.java
+
 package net.revilodev.runic.screen.custom;
 
 import net.minecraft.client.gui.GuiGraphics;
@@ -7,6 +7,7 @@ import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.revilodev.runic.RunicMod;
+
 
 public final class ForgeButton extends AbstractButton {
     private static final ResourceLocation TEX =

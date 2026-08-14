@@ -500,103 +500,103 @@
       }
     },
     {
-      "model": "runic:item/rune/stat/attack_damage",
+      "model": "runic:item/rune/mythic",
       "predicate": {
         "runic:rune_model": 84.0
       }
     },
     {
-      "model": "runic:item/rune/stat/durability",
+      "model": "runic:item/rune/mythic",
       "predicate": {
         "runic:rune_model": 85.0
       }
     },
     {
-      "model": "runic:item/rune/stat/leeching_chance",
+      "model": "runic:item/rune/mythic",
       "predicate": {
         "runic:rune_model": 86.0
       }
     },
     {
-      "model": "runic:item/rune/stat/withering_chance",
+      "model": "runic:item/rune/mythic",
       "predicate": {
         "runic:rune_model": 87.0
       }
     },
     {
-      "model": "runic:item/rune/stat/health",
+      "model": "runic:item/rune/mythic",
       "predicate": {
         "runic:rune_model": 88.0
       }
     },
     {
-      "model": "runic:item/rune/effect/binding_curse",
+      "model": "runic:item/rune/synergy",
       "predicate": {
         "runic:rune_model": 89.0
       }
     },
     {
-      "model": "runic:item/rune/effect/binding_curse",
+      "model": "runic:item/rune/synergy",
       "predicate": {
         "runic:rune_model": 90.0
       }
     },
     {
-      "model": "runic:item/rune/effect/binding_curse",
+      "model": "runic:item/rune/synergy",
       "predicate": {
         "runic:rune_model": 91.0
       }
     },
     {
-      "model": "runic:item/rune/effect/binding_curse",
+      "model": "runic:item/rune/synergy",
       "predicate": {
         "runic:rune_model": 92.0
       }
     },
     {
-      "model": "runic:item/rune/effect/binding_curse",
+      "model": "runic:item/rune/synergy",
       "predicate": {
         "runic:rune_model": 93.0
       }
     },
     {
-      "model": "runic:item/rune/effect/binding_curse",
+      "model": "runic:item/rune/synergy",
       "predicate": {
         "runic:rune_model": 94.0
       }
     },
     {
-      "model": "runic:item/rune/effect/binding_curse",
+      "model": "runic:item/rune/synergy",
       "predicate": {
         "runic:rune_model": 95.0
       }
     },
     {
-      "model": "runic:item/rune/effect/binding_curse",
+      "model": "runic:item/rune/synergy",
       "predicate": {
         "runic:rune_model": 96.0
       }
     },
     {
-      "model": "runic:item/rune/effect/binding_curse",
+      "model": "runic:item/rune/synergy",
       "predicate": {
         "runic:rune_model": 97.0
       }
     },
     {
-      "model": "runic:item/rune/effect/binding_curse",
+      "model": "runic:item/rune/synergy",
       "predicate": {
         "runic:rune_model": 98.0
       }
     },
     {
-      "model": "runic:item/rune/effect/binding_curse",
+      "model": "runic:item/rune/synergy",
       "predicate": {
         "runic:rune_model": 99.0
       }
     },
     {
-      "model": "runic:item/rune/effect/binding_curse",
+      "model": "runic:item/rune/synergy",
       "predicate": {
         "runic:rune_model": 100.0
       }

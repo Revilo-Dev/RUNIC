@@ -20,6 +20,7 @@ import net.revilodev.runic.screen.custom.recipe.EtchingRecipeBookPanel;
 import net.revilodev.runic.screen.custom.recipe.RecipeBookButton;
 import net.revilodev.runic.screen.custom.recipe.RecipePageButton;
 
+
 public final class EtchingTableScreen extends AbstractContainerScreen<EtchingTableMenu> {
     private static final ResourceLocation TEX =
             ResourceLocation.fromNamespaceAndPath(RunicMod.MOD_ID, "textures/gui/container/etching_table.png");
@@ -54,6 +55,7 @@ public final class EtchingTableScreen extends AbstractContainerScreen<EtchingTab
     }
 
     @Override
+    // runs init
     protected void init() {
         super.init();
 
@@ -96,6 +98,7 @@ public final class EtchingTableScreen extends AbstractContainerScreen<EtchingTab
         syncPageControls();
     }
 
+
     private void updateLayout() {
         this.topPos = (this.height - this.imageHeight) / 2;
 
@@ -133,6 +136,7 @@ public final class EtchingTableScreen extends AbstractContainerScreen<EtchingTab
 
         syncPageControls();
     }
+
 
     private void syncPageControls() {
         if (this.pageBack == null) return;
@@ -190,6 +194,7 @@ public final class EtchingTableScreen extends AbstractContainerScreen<EtchingTab
     }
 
     @Override
+    // runs render
     public void render(GuiGraphics gg, int mouseX, int mouseY, float partialTick) {
         super.render(gg, mouseX, mouseY, partialTick);
 
@@ -295,6 +300,7 @@ public final class EtchingTableScreen extends AbstractContainerScreen<EtchingTab
     }
 
     @Override
+    // runs mouse clicked
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         boolean handled = super.mouseClicked(mouseX, mouseY, button);
 

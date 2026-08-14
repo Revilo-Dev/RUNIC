@@ -7,6 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+// mappings for rune texture models
 public final class RuneModelMappings {
     private static final Map<String, Float> STAT_PREDICATES = new LinkedHashMap<>();
     private static final Map<String, Float> ENCHANT_PREDICATES = new LinkedHashMap<>();
@@ -98,23 +99,23 @@ public final class RuneModelMappings {
         addEnchant("minecraft:depth_strider", 81f, "effect/depth_strider");
         addEnchant("minecraft:feather_falling", 82f, "effect/feather_falling");
         addStat("ability_power", 83f, "stat/ability_power");
-        addMythic("ruin", 84f, "stat/attack_damage");
-        addMythic("dominion", 85f, "stat/durability");
-        addMythic("hunger", 86f, "stat/leeching_chance");
-        addMythic("void", 87f, "stat/withering_chance");
-        addMythic("ascendance", 88f, "stat/health");
-        addSynergy("shatter", 89f, "effect/binding_curse");
-        addSynergy("bloodfire", 90f, "effect/binding_curse");
-        addSynergy("corrosion", 91f, "effect/binding_curse");
-        addSynergy("fury", 92f, "effect/binding_curse");
-        addSynergy("juggernaut", 93f, "effect/binding_curse");
-        addSynergy("tempest", 94f, "effect/binding_curse");
-        addSynergy("reaper", 95f, "effect/binding_curse");
-        addSynergy("soulburn", 96f, "effect/binding_curse");
-        addSynergy("frostbite", 97f, "effect/binding_curse");
-        addSynergy("venom_burst", 98f, "effect/binding_curse");
-        addSynergy("berserk", 99f, "effect/binding_curse");
-        addSynergy("ice_burst", 100f, "effect/binding_curse");
+        addMythic("ruin", 84f, "mythic");
+        addMythic("dominion", 85f, "mythic");
+        addMythic("hunger", 86f, "mythic");
+        addMythic("void", 87f, "mythic");
+        addMythic("ascendance", 88f, "mythic");
+        addSynergy("shatter", 89f, "synergy");
+        addSynergy("bloodfire", 90f, "synergy");
+        addSynergy("corrosion", 91f, "synergy");
+        addSynergy("fury", 92f, "synergy");
+        addSynergy("juggernaut", 93f, "synergy");
+        addSynergy("tempest", 94f, "synergy");
+        addSynergy("reaper", 95f, "synergy");
+        addSynergy("soulburn", 96f, "synergy");
+        addSynergy("frostbite", 97f, "synergy");
+        addSynergy("venom_burst", 98f, "synergy");
+        addSynergy("berserk", 99f, "synergy");
+        addSynergy("ice_burst", 100f, "synergy");
 
         MODEL_DEFS = List.copyOf(buildModelDefs());
     }

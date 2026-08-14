@@ -10,6 +10,7 @@ import net.revilodev.runic.RunicMod;
 import net.revilodev.runic.screen.custom.ArtisansWorkbenchMenu;
 import net.revilodev.runic.screen.custom.EtchingTableMenu;
 
+
 public final class ModMenuTypes {
     private ModMenuTypes() {}
 

@@ -8,6 +8,9 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.*;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
 
+// supports runic item targets
+
+// supports runic item targets
 public final class RunicItemTargets {
     private RunicItemTargets() {}
 
@@ -46,6 +49,7 @@ public final class RunicItemTargets {
         return armorSlot(stack) != null;
     }
 
+    // runs armor slot
     public static EquipmentSlot armorSlot(ItemStack stack) {
         Item item = stack.getItem();
         if (RuneSlotCapacityData.isCategory(stack, "helmet")) return EquipmentSlot.HEAD;

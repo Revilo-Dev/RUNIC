@@ -10,6 +10,7 @@ import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.block.Blocks;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -21,6 +22,7 @@ import net.revilodev.runic.effect.ModMobEffects;
 import net.revilodev.runic.synergy.SynergyEffects;
 
 @EventBusSubscriber(modid = RunicMod.MOD_ID, value = Dist.CLIENT)
+// applies frozen client effects
 public final class FrozenClientEffects {
     private static final ResourceLocation POWDER_SNOW_OUTLINE =
             ResourceLocation.withDefaultNamespace("textures/misc/powder_snow_outline.png");
@@ -43,6 +45,7 @@ public final class FrozenClientEffects {
     }
 
     @SubscribeEvent
+    // responds to render frozen overlay
     public static void onRenderFrozenOverlay(RenderGuiEvent.Pre event) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null || mc.options.hideGui || SynergyEffects.frozenPhase(mc.player) <= 0) return;
@@ -74,13 +77,20 @@ public final class FrozenClientEffects {
     }
 
     @SubscribeEvent
+    // responds to render living post
     public static <T extends LivingEntity, M extends EntityModel<T>> void onRenderLivingPost(RenderLivingEvent.Post<T, M> event) {
         LivingEntity entity = event.getEntity();
-        if (frozenPhase(entity) != 1) return;
+        if (frozenPhase(entity) <= 0) return;
 
         MultiBufferSource buffers = event.getMultiBufferSource();
         var poseStack = event.getPoseStack();
         var model = event.getRenderer().getModel();
+
+        renderIcePrison(entity, poseStack, buffers, event.getPackedLight());
+
+        // Render the Runic ice texture over the mob as well.  This is deliberately
+        // done for both freeze phases; the prior phase-one-only branch meant the
+        // fully frozen target never received the visual layer.
         var buffer = buffers.getBuffer(RenderType.entityTranslucent(ICE_TEXTURE));
 
         poseStack.pushPose();
@@ -89,7 +99,21 @@ public final class FrozenClientEffects {
                 buffer,
                 event.getPackedLight(),
                 OverlayTexture.NO_OVERLAY,
-                0x90C8FFFF
+                0xD0C8FFFF
+        );
+        poseStack.popPose();
+    }
+
+    private static void renderIcePrison(LivingEntity entity, com.mojang.blaze3d.vertex.PoseStack poseStack,
+                                        MultiBufferSource buffers, int packedLight) {
+        float width = entity.getBbWidth() + 0.16F;
+        float height = entity.getBbHeight() + 0.16F;
+
+        poseStack.pushPose();
+        poseStack.translate(-width * 0.5F, 0.0F, -width * 0.5F);
+        poseStack.scale(width, height, width);
+        Minecraft.getInstance().getBlockRenderer().renderSingleBlock(
+                Blocks.ICE.defaultBlockState(), poseStack, buffers, packedLight, OverlayTexture.NO_OVERLAY
         );
         poseStack.popPose();
     }

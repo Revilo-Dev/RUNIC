@@ -25,6 +25,7 @@ import net.revilodev.runic.stat.RuneStats;
 
 import java.util.*;
 
+
 public final class EnhancementToolTips {
     private static final String STAR = "\u2605";
 
@@ -68,6 +69,7 @@ public final class EnhancementToolTips {
 
         return true;
     }
+
 
     private static List<Component> buildStatBlocks(RuneStats stats, boolean isEtching) {
         List<Component> out = new ArrayList<>();
@@ -132,6 +134,7 @@ public final class EnhancementToolTips {
         });
     }
 
+
     private static List<Component> buildEnchantBlocks(List<EnchLine> enchLines, boolean isRune) {
         List<Component> out = new ArrayList<>();
         for (EnchLine e : enchLines) {
@@ -166,6 +169,7 @@ public final class EnhancementToolTips {
         return isRune && UniqueRuneSources.isUniqueEtchingEffect(id);
     }
 
+    // runs append mythic rune
     private static void appendMythicRune(List<Component> tooltip, ItemStack stack) {
         ResourceLocation id = MythicRuneRegistry.getItemRuneId(stack);
         MythicRuneDefinition definition = MythicRuneRegistry.get(id);
@@ -248,6 +252,7 @@ public final class EnhancementToolTips {
         return Character.toUpperCase(key.charAt(0)) + key.substring(1);
     }
 
+
     private static String statDescription(RuneStatType type) {
         return switch (type) {
             case ATTACK_SPEED -> "Increases attack speed.";
@@ -285,6 +290,7 @@ public final class EnhancementToolTips {
         };
     }
 
+    // runs to roman
     private static String toRoman(int v) {
         if (v <= 0) return "";
         if (v >= 10) return "X";

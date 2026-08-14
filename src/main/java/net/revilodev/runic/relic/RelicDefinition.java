@@ -6,6 +6,9 @@ import net.minecraft.world.item.ItemStack;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
+// stores relic definition
+
+// stores relic definition
 public record RelicDefinition(
         ResourceLocation id,
         String translationKey,

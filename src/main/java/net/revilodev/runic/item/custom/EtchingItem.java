@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+
 public class EtchingItem extends Item {
 
     public EtchingItem(Properties props) {
@@ -37,17 +38,33 @@ public class EtchingItem extends Item {
 
     @Override
     public boolean isPrimaryItemFor(ItemStack stack, Holder<Enchantment> enchantment) {
-        return stack.is(ModItems.BLANK_ETCHING.get())
-                && isEffectEnchantment(enchantment)
-                && !EnchantBlacklist.isBlacklisted(enchantment);
+        if (!stack.is(ModItems.BLANK_ETCHING.get())) {
+            return false;
+        }
+
+        RuneStatType stat = statTypeForTableEnchantment(enchantment);
+        if (stat != null) {
+            return !EnchantBlacklist.isStatBlacklisted(stat) && RunicCompat.isStatAvailable(stat);
+        }
+
+        return isEffectEnchantment(enchantment) && !EnchantBlacklist.isBlacklisted(enchantment);
     }
 
     @Override
+    // applies enchantments
     public ItemStack applyEnchantments(ItemStack stack, List<EnchantmentInstance> enchantments) {
         if (!stack.is(ModItems.BLANK_ETCHING.get())) {
             return super.applyEnchantments(stack, enchantments);
         }
         for (EnchantmentInstance enchantment : enchantments) {
+            RuneStatType stat = statTypeForTableEnchantment(enchantment.enchantment);
+            if (stat != null) {
+                ItemStack etching = createStatEtching(RandomSource.create(), stat);
+                if (!etching.isEmpty()) {
+                    return etching;
+                }
+            }
+
             ItemStack etching = createEffectEtching(enchantment.enchantment);
             if (!etching.isEmpty()) {
                 return etching;
@@ -80,13 +97,23 @@ public class EtchingItem extends Item {
     }
 
     public static ItemStack createStatEtching(RandomSource random, RuneStatType type) {
-        if (!RunicCompat.isStatAvailable(type)) {
+        if (type == null || EnchantBlacklist.isStatBlacklisted(type) || !RunicCompat.isStatAvailable(type)) {
             return ItemStack.EMPTY;
         }
         RuneStats stats = RuneStats.singleUnrolled(type);
         ItemStack stack = new ItemStack(ModItems.ETCHING.get());
         RuneStats.set(stack, stats);
         return stack;
+    }
+
+    private static RuneStatType statTypeForTableEnchantment(Holder<Enchantment> enchantment) {
+        return enchantment.unwrapKey()
+                .map(ResourceKey::location)
+                .filter(id -> id.getNamespace().equals(RunicMod.MOD_ID))
+                .map(ResourceLocation::getPath)
+                .filter(path -> path.startsWith("stat/"))
+                .map(path -> RuneStatType.byId(path.substring("stat/".length())))
+                .orElse(null);
     }
 
     public static ItemStack createRandomStatEtching(RandomSource random) {
@@ -115,6 +142,7 @@ public class EtchingItem extends Item {
         return RuneStats.get(stack);
     }
 
+    // gets primary effect enchantment
     public static Holder<Enchantment> getPrimaryEffectEnchantment(ItemStack stack) {
         ItemEnchantments stored = stack.getOrDefault(DataComponents.STORED_ENCHANTMENTS, ItemEnchantments.EMPTY);
         ItemEnchantments direct = stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);

@@ -1,4 +1,4 @@
-// src/main/java/net/revilodev/runic/screen/custom/ArtisansWorkbenchScreen.java
+
 package net.revilodev.runic.screen.custom;
 
 import net.minecraft.ChatFormatting;
@@ -25,6 +25,7 @@ import net.revilodev.runic.stat.RuneStatType;
 import net.revilodev.runic.stat.RuneStats;
 
 import java.util.*;
+
 
 public final class ArtisansWorkbenchScreen extends AbstractContainerScreen<ArtisansWorkbenchMenu> {
     private static final ResourceLocation TEX =
@@ -80,6 +81,7 @@ public final class ArtisansWorkbenchScreen extends AbstractContainerScreen<Artis
     }
 
     @Override
+    // draws bg
     protected void renderBg(GuiGraphics gg, float partialTick, int mouseX, int mouseY) {
         gg.blit(TEX, this.leftPos, this.topPos, 0, 0, this.imageWidth, this.imageHeight, 176, 166);
 
@@ -111,6 +113,7 @@ public final class ArtisansWorkbenchScreen extends AbstractContainerScreen<Artis
      * Renders a stable tooltip panel to the right of the GUI (or left if no space),
      * with the full item tooltip and a "Changes" section appended at the bottom.
      */
+    // draws forge preview tooltip
     private void renderForgePreviewTooltip(GuiGraphics gg) {
         ItemStack base = this.menu.getGearStack();
         ItemStack preview = this.menu.getPreviewStack();
@@ -160,6 +163,7 @@ public final class ArtisansWorkbenchScreen extends AbstractContainerScreen<Artis
 
         gg.renderTooltip(this.font, lines, Optional.empty(), x, y);
     }
+
 
     private List<Component> buildDeltaLines(ItemStack base, ItemStack preview, ItemStack enhancement) {
         if (hidesOutcomePreview(enhancement)) return List.of();
@@ -275,6 +279,7 @@ public final class ArtisansWorkbenchScreen extends AbstractContainerScreen<Artis
         return sb.toString();
     }
 
+    // adds attribute delta lines
     private static void addAttributeDeltaLines(List<Component> out, CompoundTag delta) {
         if (delta == null || !delta.contains("attrs", Tag.TAG_COMPOUND)) return;
         CompoundTag attrs = delta.getCompound("attrs");
@@ -304,6 +309,7 @@ public final class ArtisansWorkbenchScreen extends AbstractContainerScreen<Artis
             return stack.getOrDefault(DataComponents.CUSTOM_DATA, net.minecraft.world.item.component.CustomData.EMPTY).copyTag().getBoolean(PREVIEW_INVALID);
         }
     }
+
 
     private List<Component> buildStatRollLines(ItemStack gear, ItemStack enhancement) {
         if (!Screen.hasControlDown()) return List.of();
@@ -335,6 +341,7 @@ public final class ArtisansWorkbenchScreen extends AbstractContainerScreen<Artis
         );
     }
 
+    // checks whether inscription
     private static boolean isInscription(ItemStack stack) {
         return stack.is(ModItems.REPAIR_INSCRIPTION.get())
                 || stack.is(ModItems.EXPANSION_INSCRIPTION.get())
@@ -402,6 +409,7 @@ public final class ArtisansWorkbenchScreen extends AbstractContainerScreen<Artis
         return sb.toString().trim();
     }
 
+    // runs to roman
     private static String toRoman(int v) {
         if (v <= 0) return "0";
         if (v >= 10) return "X";
@@ -418,6 +426,7 @@ public final class ArtisansWorkbenchScreen extends AbstractContainerScreen<Artis
             default -> "";
         };
     }
+
 
     private static void moveVanillaStatsToTop(List<Component> tooltip) {
         if (tooltip.size() <= 1) return;
@@ -452,6 +461,7 @@ public final class ArtisansWorkbenchScreen extends AbstractContainerScreen<Artis
         tooltip.addAll(insertAt, statLines);
     }
 
+    // checks whether likely vanilla stat line
     private static boolean isLikelyVanillaStatLine(Component c) {
         String key = keyOf(c);
         if (key != null) {

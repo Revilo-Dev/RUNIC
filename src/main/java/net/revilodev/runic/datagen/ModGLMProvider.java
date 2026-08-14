@@ -10,6 +10,9 @@ import net.revilodev.runic.loot.RunicStructureLootInjector;
 
 import java.util.concurrent.CompletableFuture;
 
+// generates mod glmprovider
+
+// generates mod glmprovider
 public class ModGLMProvider extends GlobalLootModifierProvider {
     public ModGLMProvider(PackOutput output, CompletableFuture<HolderLookup.Provider> lookupProvider) {
         super(output, lookupProvider, RunicMod.MOD_ID);

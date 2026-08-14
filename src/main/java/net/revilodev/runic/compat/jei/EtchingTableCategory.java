@@ -24,6 +24,9 @@ import net.revilodev.runic.mythic.MythicRuneRegistry;
 import net.revilodev.runic.recipe.EtchingTableRecipe;
 import net.revilodev.runic.stat.RuneStats;
 
+// supports etching table category
+
+// supports etching table category
 public final class EtchingTableCategory implements IRecipeCategory<EtchingTableRecipe> {
     public static final RecipeType<EtchingTableRecipe> RECIPE_TYPE =
             RecipeType.create(RunicMod.MOD_ID, "etching_table", EtchingTableRecipe.class);

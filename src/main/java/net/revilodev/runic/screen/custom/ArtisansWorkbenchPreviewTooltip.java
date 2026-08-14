@@ -1,4 +1,4 @@
-// src/main/java/net/revilodev/runic/screen/custom/ArtisansWorkbenchPreviewTooltip.java
+
 package net.revilodev.runic.screen.custom;
 
 import net.minecraft.ChatFormatting;
@@ -15,6 +15,8 @@ import net.revilodev.runic.gear.GearAttribute;
 
 import java.util.*;
 
+
+// draws artisans workbench preview tooltip
 public final class ArtisansWorkbenchPreviewTooltip {
 
     private static final String ROOT = "runic";
@@ -22,6 +24,8 @@ public final class ArtisansWorkbenchPreviewTooltip {
 
     private ArtisansWorkbenchPreviewTooltip() {}
 
+
+    // runs build
     public static List<Component> build(ItemStack base, ItemStack out) {
         CompoundTag delta = getPreviewDelta(out);
         if (delta == null || delta.isEmpty()) return List.of();
@@ -46,6 +50,7 @@ public final class ArtisansWorkbenchPreviewTooltip {
 
         return lines;
     }
+
 
     private static void addItemStats(List<Component> out, CompoundTag delta) {
         CompoundTag item = delta.contains("item_stats", Tag.TAG_COMPOUND) ? delta.getCompound("item_stats") : null;
@@ -90,6 +95,7 @@ public final class ArtisansWorkbenchPreviewTooltip {
         }
     }
 
+    // adds rune stats
     private static void addRuneStats(List<Component> out, CompoundTag delta) {
         if (!delta.contains("rune_stats", Tag.TAG_COMPOUND)) return;
         CompoundTag rs = delta.getCompound("rune_stats");
@@ -109,6 +115,7 @@ public final class ArtisansWorkbenchPreviewTooltip {
             );
         }
     }
+
 
     private static void addEnchantChanges(List<Component> out, ItemStack base, ItemStack result) {
         ItemEnchantments b = base.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
@@ -165,6 +172,7 @@ public final class ArtisansWorkbenchPreviewTooltip {
         }
     }
 
+
     private static void addUpdateFiveChanges(List<Component> out, CompoundTag delta) {
         if (delta.getBoolean("corruption_risk_negative")) {
             out.add(Component.translatable("tooltip.runic.preview_risk_negative").withStyle(ChatFormatting.RED));
@@ -199,6 +207,7 @@ public final class ArtisansWorkbenchPreviewTooltip {
             }
         }
     }
+
 
     private static void addAttributeChanges(List<Component> out, CompoundTag delta) {
         CompoundTag attrs = delta.contains("attrs", Tag.TAG_COMPOUND) ? delta.getCompound("attrs") : new CompoundTag();
@@ -273,6 +282,7 @@ public final class ArtisansWorkbenchPreviewTooltip {
         return sb.toString();
     }
 
+    // runs to roman
     private static String toRoman(int v) {
         if (v <= 0) return "";
         if (v >= 10) return "X";
@@ -290,6 +300,7 @@ public final class ArtisansWorkbenchPreviewTooltip {
         };
     }
 
+    // gets preview delta
     private static CompoundTag getPreviewDelta(ItemStack stack) {
         CustomData cd = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
         CompoundTag root = cd.copyTag();

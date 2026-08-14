@@ -9,6 +9,7 @@ import net.revilodev.runic.RunicMod;
 import net.revilodev.runic.network.EnhancementRarityDataSync;
 
 @EventBusSubscriber(modid = RunicMod.MOD_ID)
+// runs enhancement rarity datapack sync handler
 public class EnhancementRarityDatapackSyncHandler {
     @SubscribeEvent
     public static void onDatapackSync(OnDatapackSyncEvent e) {

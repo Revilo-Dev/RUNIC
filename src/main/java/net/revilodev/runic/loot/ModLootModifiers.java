@@ -8,6 +8,9 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 import net.neoforged.neoforge.registries.NeoForgeRegistries;
 import net.revilodev.runic.RunicMod;
 
+// supports mod loot modifiers
+
+// supports mod loot modifiers
 public class ModLootModifiers {
     public static final DeferredRegister<MapCodec<? extends IGlobalLootModifier>> LOOT_MODIFIERS =
             DeferredRegister.create(NeoForgeRegistries.Keys.GLOBAL_LOOT_MODIFIER_SERIALIZERS, RunicMod.MOD_ID);

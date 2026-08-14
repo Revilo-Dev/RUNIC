@@ -9,6 +9,7 @@ import net.revilodev.runic.RunicMod;
 
 import java.util.function.Consumer;
 
+
 public final class CraftableToggleButton extends AbstractWidget {
     private static final ResourceLocation ALL =
             ResourceLocation.fromNamespaceAndPath(RunicMod.MOD_ID, "textures/gui/widget/all.png");

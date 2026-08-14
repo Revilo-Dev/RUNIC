@@ -5,6 +5,9 @@ import net.minecraft.world.item.ItemStack;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+// supports soulbound storage
+
+// supports soulbound storage
 public final class SoulboundStorage {
     private static final Map<UUID, List<ItemStack>> MAP = new ConcurrentHashMap<>();
 

@@ -8,6 +8,9 @@ import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.revilodev.runic.RunicMod;
 
+
+
+// supports mod particles
 public final class ModParticles {
 
     public static final DeferredRegister<ParticleType<?>> PARTICLES =

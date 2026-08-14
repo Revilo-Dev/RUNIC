@@ -7,6 +7,8 @@ import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextColor;
 import net.minecraft.world.item.ItemStack;
 
+
+// tinted rarity names - animator and apply
 public interface RarityTintedItemName {
 
     ChatFormatting nameColor();
@@ -35,6 +37,7 @@ public interface RarityTintedItemName {
         int color = lerpColor(lightPurple, lighterPurple, pulse);
         return Component.literal(text).withStyle(Style.EMPTY.withColor(TextColor.fromRgb(color)));
     }
+
 
     private static Component shimmeringLegendary(String text) {
         if (text.isEmpty()) {
@@ -66,6 +69,7 @@ public interface RarityTintedItemName {
         }
         return result;
     }
+
 
     private static Component shimmeringMythic(String text) {
         if (text.isEmpty()) {

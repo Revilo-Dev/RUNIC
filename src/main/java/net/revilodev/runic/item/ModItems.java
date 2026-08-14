@@ -22,6 +22,7 @@ import net.revilodev.runic.relic.RelicRegistry;
 
 import java.util.List;
 
+
 public final class ModItems {
     private ModItems() {}
 
@@ -108,9 +109,11 @@ public final class ModItems {
         return inscription(tooltipKey, rarity, craftable, false, attributeIds);
     }
 
+
     private static Item inscription(String tooltipKey, EnhancementRarity rarity, boolean craftable, boolean creativeOnly, String... attributeIds) {
         return new Item(new Item.Properties().stacksTo(64)) {
             @Override
+            // runs append hover text
             public void appendHoverText(ItemStack stack, TooltipContext ctx, List<Component> tooltip, TooltipFlag flag) {
                 tooltip.add(Component.translatable("tooltip.runic.use_artisans_workbench").withStyle(ChatFormatting.DARK_GRAY));
                 Component desc = Component.translatable(tooltipKey).withStyle(ChatFormatting.GRAY);
@@ -143,6 +146,7 @@ public final class ModItems {
         return attributeIds.length > 0 || isKnownInscriptionTooltip(tooltipKey);
     }
 
+    // checks whether known inscription tooltip
     private static boolean isKnownInscriptionTooltip(String tooltipKey) {
         return switch (tooltipKey) {
             case "tooltip.runic.repair_rune",
@@ -163,6 +167,7 @@ public final class ModItems {
         };
     }
 
+    // runs corruption for inscription
     private static int corruptionForInscription(String tooltipKey) {
         return switch (tooltipKey) {
             case "tooltip.runic.repair_rune" -> -RunicConfig.restorationInscriptionCorruptionReduction();

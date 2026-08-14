@@ -32,6 +32,9 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
+// supports runic command helper
+
+// supports runic command helper
 public final class RunicCommandHelper {
     private static final String ROOT = "runic";
     private static final String CURSED_APPLIED = "cursed_applied";
@@ -43,6 +46,7 @@ public final class RunicCommandHelper {
 
     private RunicCommandHelper() {}
 
+    // applies stat
     public static boolean applyStat(ItemStack stack, RuneStatType type, float amount) {
         if (stack.isEmpty() || type == null || amount == 0.0F || EnchantBlacklist.isStatBlacklisted(type) || !canApplyStatTo(stack, type)) {
             return false;
@@ -62,6 +66,7 @@ public final class RunicCommandHelper {
         RuneSlots.syncUsedToContents(stack);
         return true;
     }
+
 
     public static boolean applyEffect(ItemStack stack, Holder<Enchantment> enchantment, int level) {
         if (stack.isEmpty() || enchantment == null || !RuneItem.isEffectEnchantment(enchantment)
@@ -106,6 +111,7 @@ public final class RunicCommandHelper {
         updateGlintAfter(stack);
         return true;
     }
+
 
     public static boolean clear(ItemStack stack) {
         if (stack.isEmpty()) {
@@ -170,6 +176,7 @@ public final class RunicCommandHelper {
         return changed;
     }
 
+    // runs inscribe
     public static boolean inscribe(ItemStack stack, String inscription) {
         if (stack.isEmpty() || inscription == null || inscription.isBlank()) {
             return false;
@@ -208,6 +215,7 @@ public final class RunicCommandHelper {
         };
     }
 
+    // checks whether it can apply stat to
     private static boolean canApplyStatTo(ItemStack target, RuneStatType stat) {
         EquipmentSlot armorSlot = RunicItemTargets.armorSlot(target);
 
@@ -244,6 +252,7 @@ public final class RunicCommandHelper {
         return true;
     }
 
+    // applies expansion inscription
     private static boolean applyExpansionInscription(ItemStack stack) {
         if (!RuneSlots.enabled()) {
             return false;
@@ -284,6 +293,7 @@ public final class RunicCommandHelper {
         }
         return RuneSlots.used(stack) > 0 || stack.has(DataComponents.ENCHANTMENT_GLINT_OVERRIDE);
     }
+
 
     private static boolean applyUpgrade(ItemStack stack) {
         RuneStats stats = RuneStats.get(stack);
@@ -329,6 +339,7 @@ public final class RunicCommandHelper {
         return true;
     }
 
+
     private static boolean applyReroll(ItemStack stack) {
         if (GearAttributes.getLevel(stack, GearAttribute.INSTABLE) >= MAX_ATTR_LEVEL) {
             return false;
@@ -363,6 +374,7 @@ public final class RunicCommandHelper {
         updateGlintAfter(stack);
         return true;
     }
+
 
     private static boolean applyCursedInscription(ItemStack stack) {
         if (GearAttributes.getLevel(stack, GearAttribute.CURSED) >= MAX_ATTR_LEVEL) {
@@ -413,6 +425,7 @@ public final class RunicCommandHelper {
         return true;
     }
 
+
     private static boolean applyWild(ItemStack stack) {
         if (GearAttributes.getLevel(stack, GearAttribute.CURSED) >= MAX_ATTR_LEVEL) {
             return false;
@@ -457,6 +470,7 @@ public final class RunicCommandHelper {
         updateGlintAfter(stack);
         return true;
     }
+
 
     private static boolean applyExtraction(ItemStack stack) {
         if (GearAttributes.getLevel(stack, GearAttribute.SEALED) >= MAX_ATTR_LEVEL) {
@@ -538,6 +552,7 @@ public final class RunicCommandHelper {
         return value * GearAttributes.enhancementMultiplier(stack);
     }
 
+    // applies cursed delta
     private static void applyCursedDelta(ItemStack stack, int deltaLevels) {
         if (deltaLevels <= 0) {
             return;
@@ -559,6 +574,7 @@ public final class RunicCommandHelper {
         GearAttributes.setCursedAppliedLevel(stack, GearAttributes.getLevel(stack, GearAttribute.CURSED));
         updateGlintAfter(stack);
     }
+
 
     private static boolean reduceMaxDurability(ItemStack stack, double fraction) {
         if (!stack.isDamageableItem()) {

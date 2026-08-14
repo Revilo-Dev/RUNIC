@@ -16,6 +16,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
+
 public final class RunicItemData {
     private static final String ROOT = "runic";
     private static final String CORRUPTION = "corruption";
@@ -189,6 +190,7 @@ public final class RunicItemData {
         writeRunic(stack, root, runic);
     }
 
+    // gets mythic runes
     public static List<ResourceLocation> getMythicRunes(ItemStack stack) {
         CompoundTag runic = getRunic(stack);
         if (runic == null || !runic.contains(MYTHIC_RUNES, Tag.TAG_LIST)) {
@@ -304,6 +306,7 @@ public final class RunicItemData {
         else stack.set(DataComponents.CUSTOM_DATA, CustomData.of(root));
     }
 
+    // rolls corruption consequences
     private static void rollCorruptionConsequences(ItemStack stack, int previousCorruption, int currentCorruption) {
         if (stack.isEmpty() || currentCorruption <= previousCorruption || isExhausted(stack)) {
             return;
@@ -325,6 +328,7 @@ public final class RunicItemData {
         }
     }
 
+    // rolls attribute
     private static void rollAttribute(ItemStack stack, List<GearAttribute> pool, boolean negative, ThreadLocalRandom random) {
         if (pool.isEmpty()) {
             return;

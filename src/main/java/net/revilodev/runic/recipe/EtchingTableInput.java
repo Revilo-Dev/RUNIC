@@ -3,6 +3,8 @@ package net.revilodev.runic.recipe;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeInput;
 
+
+// stores etching table input
 public record EtchingTableInput(ItemStack base, ItemStack material) implements RecipeInput {
     @Override
     public int size() {

@@ -35,6 +35,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JeiPlugin
+// supports runic jei plugin
 public final class RunicJeiPlugin implements IModPlugin {
     private static final ResourceLocation UID =
             ResourceLocation.fromNamespaceAndPath(RunicMod.MOD_ID, "jei_plugin");
@@ -82,6 +83,7 @@ public final class RunicJeiPlugin implements IModPlugin {
 
         registration.addExtraItemStacks(extra);
     }
+
 
     private static void registerRuneInfo(IRecipeRegistration registration) {
         Minecraft mc = Minecraft.getInstance();
@@ -133,6 +135,7 @@ public final class RunicJeiPlugin implements IModPlugin {
         }
     }
 
+    // registers relic info
     private static void registerRelicInfo(IRecipeRegistration registration) {
         List<ItemStack> relics = List.of(
                 new ItemStack(ModItems.DRAGON_HEART.get()),
@@ -150,6 +153,7 @@ public final class RunicJeiPlugin implements IModPlugin {
             registration.addIngredientInfo(List.of(stack), VanillaTypes.ITEM_STACK, lines.toArray(Component[]::new));
         }
     }
+
 
     private static List<ItemStack> buildRuneStacks(net.minecraft.core.Registry<Enchantment> registry) {
         List<ItemStack> out = new ArrayList<>();
@@ -177,6 +181,7 @@ public final class RunicJeiPlugin implements IModPlugin {
         return out;
     }
 
+    // builds etching stacks
     private static List<ItemStack> buildEtchingStacks(net.minecraft.core.Registry<Enchantment> registry) {
         List<ItemStack> out = new ArrayList<>();
 

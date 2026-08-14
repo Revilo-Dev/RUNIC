@@ -11,6 +11,7 @@ import net.revilodev.runic.relic.RelicRegistry;
 
 import java.util.List;
 
+
 public final class RelicItem extends Item {
     private final ResourceLocation relicId;
 
