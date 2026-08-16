@@ -16,7 +16,6 @@ import net.revilodev.runic.gear.GearAttribute;
 import java.util.*;
 
 
-// draws artisans workbench preview tooltip
 public final class ArtisansWorkbenchPreviewTooltip {
 
     private static final String ROOT = "runic";
@@ -25,7 +24,6 @@ public final class ArtisansWorkbenchPreviewTooltip {
     private ArtisansWorkbenchPreviewTooltip() {}
 
 
-    // runs build
     public static List<Component> build(ItemStack base, ItemStack out) {
         CompoundTag delta = getPreviewDelta(out);
         if (delta == null || delta.isEmpty()) return List.of();
@@ -282,7 +280,6 @@ public final class ArtisansWorkbenchPreviewTooltip {
         return sb.toString();
     }
 
-    // runs to roman
     private static String toRoman(int v) {
         if (v <= 0) return "";
         if (v >= 10) return "X";

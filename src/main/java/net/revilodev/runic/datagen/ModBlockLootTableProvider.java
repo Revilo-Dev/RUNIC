@@ -11,9 +11,6 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-// generates mod block loot table provider
-
-// generates mod block loot table provider
 public class ModBlockLootTableProvider extends BlockLootSubProvider {
     protected ModBlockLootTableProvider(HolderLookup.Provider lookup) {
         super(Set.of(), FeatureFlags.REGISTRY.allFlags(), lookup);

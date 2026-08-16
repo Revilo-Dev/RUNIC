@@ -8,7 +8,6 @@ import net.minecraft.network.chat.TextColor;
 import net.minecraft.world.item.ItemStack;
 
 
-// tinted rarity names - animator and apply
 public interface RarityTintedItemName {
 
     ChatFormatting nameColor();

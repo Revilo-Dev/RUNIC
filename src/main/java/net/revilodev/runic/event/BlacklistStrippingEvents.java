@@ -14,7 +14,6 @@ import net.neoforged.neoforge.event.entity.player.PlayerContainerEvent;
 import net.revilodev.runic.RunicMod;
 
 @EventBusSubscriber(modid = RunicMod.MOD_ID)
-// responds to blacklist stripping events
 public final class BlacklistStrippingEvents {
     private BlacklistStrippingEvents() {}
 
@@ -43,7 +42,6 @@ public final class BlacklistStrippingEvents {
     }
 
     @SubscribeEvent
-    // responds to container open
     public static void onContainerOpen(PlayerContainerEvent.Open event) {
         Player player = event.getEntity();
         if (player.level().isClientSide) return;

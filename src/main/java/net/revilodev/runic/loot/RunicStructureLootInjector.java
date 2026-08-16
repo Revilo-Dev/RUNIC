@@ -41,9 +41,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-// supports runic structure loot injector
-
-// supports runic structure loot injector
 public class RunicStructureLootInjector extends LootModifier {
     public static final float DEFAULT_RUNE_CHANCE = 0.35F;
 
@@ -74,7 +71,6 @@ public class RunicStructureLootInjector extends LootModifier {
     }
 
     @Override
-    // runs do apply
     protected ObjectArrayList<ItemStack> doApply(ObjectArrayList<ItemStack> generated, LootContext ctx) {
         if (RunicConfig.disableRunicLoot()) {
             return generated;
@@ -389,7 +385,6 @@ public class RunicStructureLootInjector extends LootModifier {
         return RuneItem.createEffectRune(holder);
     }
 
-    // runs rune choice
     private record RuneChoice(RuneStatType stat, ResourceLocation effect) {
         static RuneChoice stat(RuneStatType stat) {
             return new RuneChoice(stat, null);
@@ -449,7 +444,6 @@ public class RunicStructureLootInjector extends LootModifier {
 
     private record WeightedStatChoice(RuneStatType type, int weight) {}
 
-    // runs generic stat rarity distribution
     public static Map<EnhancementRarity, Double> genericStatRarityDistribution() {
         EnumMap<EnhancementRarity, Double> out = new EnumMap<>(EnhancementRarity.class);
         EnumMap<EnhancementRarity, Integer> weights = new EnumMap<>(EnhancementRarity.class);

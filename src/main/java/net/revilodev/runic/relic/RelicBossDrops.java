@@ -11,7 +11,6 @@ import net.revilodev.runic.RunicMod;
 import net.revilodev.runic.item.ModItems;
 
 @EventBusSubscriber(modid = RunicMod.MOD_ID)
-// supports relic boss drops
 public final class RelicBossDrops {
     private RelicBossDrops() {}
 

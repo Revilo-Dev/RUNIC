@@ -11,9 +11,6 @@ import net.revilodev.runic.RunicMod;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
-// supports mod datapack entries
-
-// supports mod datapack entries
 public class ModDatapackEntries extends DatapackBuiltinEntriesProvider {
 
     public static final RegistrySetBuilder BUILDER = new RegistrySetBuilder();

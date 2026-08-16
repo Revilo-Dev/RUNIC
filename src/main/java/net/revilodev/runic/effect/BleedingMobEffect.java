@@ -19,7 +19,6 @@ public class BleedingMobEffect extends MobEffect {
     }
 
     @Override
-    // applies effect tick
     public boolean applyEffectTick(LivingEntity entity, int amplifier) {
         if (!entity.level().isClientSide) {
             float percentPerSecond = 0.05f;

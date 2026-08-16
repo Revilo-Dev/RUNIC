@@ -13,9 +13,6 @@ import net.revilodev.runic.RunicMod;
 import java.util.HashMap;
 import java.util.Map;
 
-// stores enhancement rarity data
-
-// stores enhancement rarity data
 public class EnhancementRarityData extends SimpleJsonResourceReloadListener {
     private static final Gson GSON = new GsonBuilder().setLenient().create();
     public static final String FOLDER = "rarities";
@@ -25,7 +22,6 @@ public class EnhancementRarityData extends SimpleJsonResourceReloadListener {
     }
 
     @Override
-    // runs apply
     protected void apply(Map<ResourceLocation, JsonElement> objects,
                          ResourceManager rm,
                          ProfilerFiller profiler) {

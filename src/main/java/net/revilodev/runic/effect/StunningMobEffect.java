@@ -38,7 +38,6 @@ public class StunningMobEffect extends MobEffect {
     }
 
     @Override
-    // applies effect tick
     public boolean applyEffectTick(LivingEntity entity, int amplifier) {
         entity.setJumping(false);
 

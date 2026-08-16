@@ -55,7 +55,6 @@ public final class EtchingTableScreen extends AbstractContainerScreen<EtchingTab
     }
 
     @Override
-    // runs init
     protected void init() {
         super.init();
 
@@ -194,7 +193,6 @@ public final class EtchingTableScreen extends AbstractContainerScreen<EtchingTab
     }
 
     @Override
-    // runs render
     public void render(GuiGraphics gg, int mouseX, int mouseY, float partialTick) {
         super.render(gg, mouseX, mouseY, partialTick);
 
@@ -300,7 +298,6 @@ public final class EtchingTableScreen extends AbstractContainerScreen<EtchingTab
     }
 
     @Override
-    // runs mouse clicked
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         boolean handled = super.mouseClicked(mouseX, mouseY, button);
 

@@ -78,7 +78,6 @@ public final class EtchingRecipeBookPanel extends AbstractWidget {
         return hoveredRecipeName;
     }
 
-    // runs refresh
     public void refresh() {
         Minecraft mc = Minecraft.getInstance();
         this.all.clear();
@@ -154,7 +153,6 @@ public final class EtchingRecipeBookPanel extends AbstractWidget {
         if (this.page >= this.totalPages) this.page = this.totalPages - 1;
     }
 
-    // runs recipe display name
     private Component recipeDisplayName(RecipeHolder<EtchingTableRecipe> h) {
         EtchingTableRecipe r = h.value();
 
@@ -218,7 +216,6 @@ public final class EtchingRecipeBookPanel extends AbstractWidget {
     }
 
     @Override
-    // draws widget
     protected void renderWidget(GuiGraphics gg, int mouseX, int mouseY, float partialTick) {
         if (!this.visible) return;
 
@@ -257,7 +254,6 @@ public final class EtchingRecipeBookPanel extends AbstractWidget {
     }
 
     @Override
-    // runs mouse clicked
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (!this.visible) return false;
         if (button != 0) return false;

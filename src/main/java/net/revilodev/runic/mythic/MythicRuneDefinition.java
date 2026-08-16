@@ -5,9 +5,6 @@ import net.minecraft.world.item.ItemStack;
 
 import java.util.function.Supplier;
 
-// stores mythic rune definition
-
-// stores mythic rune definition
 public record MythicRuneDefinition(
         ResourceLocation id,
         String translationKey,

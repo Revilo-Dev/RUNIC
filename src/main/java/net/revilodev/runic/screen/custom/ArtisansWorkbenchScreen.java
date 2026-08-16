@@ -81,7 +81,6 @@ public final class ArtisansWorkbenchScreen extends AbstractContainerScreen<Artis
     }
 
     @Override
-    // draws bg
     protected void renderBg(GuiGraphics gg, float partialTick, int mouseX, int mouseY) {
         gg.blit(TEX, this.leftPos, this.topPos, 0, 0, this.imageWidth, this.imageHeight, 176, 166);
 
@@ -109,11 +108,7 @@ public final class ArtisansWorkbenchScreen extends AbstractContainerScreen<Artis
         this.renderTooltip(gg, mouseX, mouseY);
     }
 
-    /**
-     * Renders a stable tooltip panel to the right of the GUI (or left if no space),
-     * with the full item tooltip and a "Changes" section appended at the bottom.
-     */
-    // draws forge preview tooltip
+    // forge preview tooltip
     private void renderForgePreviewTooltip(GuiGraphics gg) {
         ItemStack base = this.menu.getGearStack();
         ItemStack preview = this.menu.getPreviewStack();
@@ -149,7 +144,7 @@ public final class ArtisansWorkbenchScreen extends AbstractContainerScreen<Artis
         for (Component c : lines) tw = Math.max(tw, this.font.width(c));
         int th = lines.size() * this.font.lineHeight;
 
-        // If it doesn't fit on the right, move to the left of the GUI
+        // move panel left
         if (x + tw + 12 > this.width) {
             x = this.leftPos - tw - 20;
         }
@@ -157,7 +152,7 @@ public final class ArtisansWorkbenchScreen extends AbstractContainerScreen<Artis
         x -= 13;
         y += 8;
 
-        // Clamp on screen (never "return" and disappear)
+        // keep panel onscreen
         x = Math.max(6, Math.min(x, this.width - tw - 12));
         y = Math.max(6, Math.min(y, this.height - th - 12));
 
@@ -409,7 +404,6 @@ public final class ArtisansWorkbenchScreen extends AbstractContainerScreen<Artis
         return sb.toString().trim();
     }
 
-    // runs to roman
     private static String toRoman(int v) {
         if (v <= 0) return "0";
         if (v >= 10) return "X";

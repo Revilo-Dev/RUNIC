@@ -7,7 +7,6 @@ import net.neoforged.neoforge.common.ModConfigSpec;
 import net.revilodev.runic.RunicMod;
 
 @EventBusSubscriber(modid = RunicMod.MOD_ID, bus = EventBusSubscriber.Bus.MOD)
-// stores soulbound config settings
 public final class SoulboundConfig {
     private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
     private static final ModConfigSpec.BooleanValue ALLOW_BREAK_ITEM = BUILDER.define("allowBreakItem", false);

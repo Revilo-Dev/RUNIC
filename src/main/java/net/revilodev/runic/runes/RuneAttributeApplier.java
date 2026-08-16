@@ -18,9 +18,6 @@ import net.revilodev.runic.stat.RuneStats;
 import java.util.HashSet;
 import java.util.Set;
 
-// supports rune attribute applier
-
-// supports rune attribute applier
 public final class RuneAttributeApplier {
 
     private static final String DURABILITY_BASE_KEY = "runic_base_max_damage";
@@ -254,7 +251,6 @@ public final class RuneAttributeApplier {
         root.remove(DURABILITY_BASE_KEY);
     }
 
-    // applies durability
     public static void applyDurability(ItemStack stack, RuneStats stats, CompoundTag root) {
         if (!stack.isDamageableItem()) return;
 

@@ -34,7 +34,6 @@ import net.revilodev.runic.synergy.SynergyEffects;
 import java.util.Random;
 
 @EventBusSubscriber(modid = RunicMod.MOD_ID)
-// runs combat handler
 public final class CombatHandler {
     private static final Random RNG = new Random();
     private static final String ROOT = "runic";
@@ -52,7 +51,6 @@ public final class CombatHandler {
     }
 
     @SubscribeEvent
-    // responds to incoming damage
     public static void onIncomingDamage(LivingIncomingDamageEvent event) {
         LivingEntity target = event.getEntity();
         DamageSource source = event.getSource();

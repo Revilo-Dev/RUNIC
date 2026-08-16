@@ -16,7 +16,6 @@ import java.util.Map;
 
 
 
-// supports rune stats
 public final class RuneStats {
 
     // custom data keys

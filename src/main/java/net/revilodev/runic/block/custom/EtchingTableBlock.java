@@ -19,9 +19,6 @@ import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.phys.BlockHitResult;
 import net.revilodev.runic.screen.custom.EtchingTableMenu;
 
-// defines etching table block
-
-// defines etching table block
 public class EtchingTableBlock extends HorizontalDirectionalBlock {
     public static final MapCodec<EtchingTableBlock> CODEC = simpleCodec(EtchingTableBlock::new);
 

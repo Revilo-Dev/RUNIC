@@ -169,7 +169,6 @@ public final class EnhancementToolTips {
         return isRune && UniqueRuneSources.isUniqueEtchingEffect(id);
     }
 
-    // runs append mythic rune
     private static void appendMythicRune(List<Component> tooltip, ItemStack stack) {
         ResourceLocation id = MythicRuneRegistry.getItemRuneId(stack);
         MythicRuneDefinition definition = MythicRuneRegistry.get(id);
@@ -290,7 +289,6 @@ public final class EnhancementToolTips {
         };
     }
 
-    // runs to roman
     private static String toRoman(int v) {
         if (v <= 0) return "";
         if (v >= 10) return "X";

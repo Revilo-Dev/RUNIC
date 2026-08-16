@@ -24,25 +24,22 @@ import net.revilodev.runic.mythic.MythicRuneRegistry;
 import net.revilodev.runic.recipe.EtchingTableRecipe;
 import net.revilodev.runic.stat.RuneStats;
 
-// supports etching table category
-
-// supports etching table category
 public final class EtchingTableCategory implements IRecipeCategory<EtchingTableRecipe> {
-    public static final RecipeType<EtchingTableRecipe> RECIPE_TYPE =
+    public static final RecipeType<EtchingTableRecipe> TYPE =
             RecipeType.create(RunicMod.MOD_ID, "etching_table", EtchingTableRecipe.class);
 
-    private static final int WIDTH = 118;
-    private static final int HEIGHT = 32;
+    private static final int W = 118;
+    private static final int H = 32;
 
     private final IDrawable icon;
 
-    public EtchingTableCategory(IGuiHelper guiHelper) {
-        this.icon = guiHelper.createDrawableItemStack(new ItemStack(ModBlocks.ETCHING_TABLE.get()));
+    public EtchingTableCategory(IGuiHelper gui) {
+        this.icon = gui.createDrawableItemStack(new ItemStack(ModBlocks.ETCHING_TABLE.get()));
     }
 
     @Override
     public RecipeType<EtchingTableRecipe> getRecipeType() {
-        return RECIPE_TYPE;
+        return TYPE;
     }
 
     @Override
@@ -52,12 +49,12 @@ public final class EtchingTableCategory implements IRecipeCategory<EtchingTableR
 
     @Override
     public int getWidth() {
-        return WIDTH;
+        return W;
     }
 
     @Override
     public int getHeight() {
-        return HEIGHT;
+        return H;
     }
 
     @Override
@@ -66,21 +63,21 @@ public final class EtchingTableCategory implements IRecipeCategory<EtchingTableR
     }
 
     @Override
-    public void setRecipe(IRecipeLayoutBuilder builder, EtchingTableRecipe recipe, IFocusGroup focuses) {
-        builder.addSlot(RecipeIngredientRole.INPUT, 4, 8)
+    public void setRecipe(IRecipeLayoutBuilder b, EtchingTableRecipe recipe, IFocusGroup focuses) {
+        b.addSlot(RecipeIngredientRole.INPUT, 4, 8)
                 .addIngredients(recipe.base());
 
-        builder.addSlot(RecipeIngredientRole.INPUT, 26, 8)
+        b.addSlot(RecipeIngredientRole.INPUT, 26, 8)
                 .addIngredients(recipe.material());
 
-        builder.addSlot(RecipeIngredientRole.INPUT, 48, 8)
+        b.addSlot(RecipeIngredientRole.INPUT, 48, 8)
                 .addItemStack(new ItemStack(Items.LAPIS_LAZULI, 1));
 
-        builder.addSlot(RecipeIngredientRole.OUTPUT, 90, 8)
-                .addItemStack(buildOutput(recipe));
+        b.addSlot(RecipeIngredientRole.OUTPUT, 90, 8)
+                .addItemStack(output(recipe));
     }
 
-    private static ItemStack buildOutput(EtchingTableRecipe recipe) {
+    private static ItemStack output(EtchingTableRecipe recipe) {
         ItemStack out = recipe.result().copy();
 
         recipe.stat().ifPresent(stat -> RuneStats.set(out, RuneStats.singleUnrolled(stat)));

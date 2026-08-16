@@ -101,7 +101,7 @@ public class RuneItem extends Item implements RarityTintedItemName {
 
         // effect runes store the enchant directly on the item
         ItemStack stack = new ItemStack(ModItems.ENHANCED_RUNE.get());
-        stack.enchant(enchantment, forcedEffectLevel(enchantment)); // Level 2 (clamped)
+        stack.enchant(enchantment, forcedEffectLevel(enchantment));
         return stack;
     }
 

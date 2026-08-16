@@ -13,9 +13,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-// stores runic effect enchantment data
-
-// stores runic effect enchantment data
 public final class RunicEffectEnchantmentData extends SimpleJsonResourceReloadListener {
     private static final Gson GSON = new GsonBuilder().setLenient().create();
     private static final String FOLDER = "runic_effects";
@@ -25,7 +22,6 @@ public final class RunicEffectEnchantmentData extends SimpleJsonResourceReloadLi
     }
 
     @Override
-    // runs apply
     protected void apply(Map<ResourceLocation, JsonElement> objects,
                          ResourceManager manager,
                          ProfilerFiller profiler) {

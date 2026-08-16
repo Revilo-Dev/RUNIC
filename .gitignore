@@ -12,6 +12,8 @@ out
 *.iws
 *.iml
 .idea
+.fleet
+.vscode
 
 # gradle
 build
@@ -28,5 +30,15 @@ hs_err_pid*
 replay_pid*
 *.log
 .run
+
+# local machine files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# JVM crash dumps and recordings
+*.class
+*.hprof
+*.jfr
 
 repo

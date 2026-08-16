@@ -13,7 +13,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 
-// syncs runic effect data sync
 public record RunicEffectDataSync(Set<ResourceLocation> effects) implements CustomPacketPayload {
     // sync packet for allowed effect ids
     public static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath(RunicMod.MOD_ID, "runic_effects");

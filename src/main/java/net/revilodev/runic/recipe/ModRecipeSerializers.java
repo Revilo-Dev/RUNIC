@@ -8,7 +8,6 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 import net.revilodev.runic.RunicMod;
 
 
-//  recipe serializers
 public final class ModRecipeSerializers {
     private ModRecipeSerializers() {}
 

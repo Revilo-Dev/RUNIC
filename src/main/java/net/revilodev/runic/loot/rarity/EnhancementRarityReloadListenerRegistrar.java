@@ -6,7 +6,6 @@ import net.neoforged.neoforge.event.AddReloadListenerEvent;
 import net.revilodev.runic.RunicMod;
 
 @EventBusSubscriber(modid = RunicMod.MOD_ID)
-// registers enhancement rarity reload listener registrar
 public final class EnhancementRarityReloadListenerRegistrar {
     private EnhancementRarityReloadListenerRegistrar() {
     }

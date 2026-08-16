@@ -5,9 +5,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 
-// supports enhancement rarity
-
-// supports enhancement rarity
 public enum EnhancementRarity {
     COMMON("common", ChatFormatting.GRAY, 20, 0),
     UNCOMMON("uncommon", ChatFormatting.GREEN, 12, 1),

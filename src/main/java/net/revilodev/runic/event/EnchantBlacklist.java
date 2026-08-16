@@ -16,7 +16,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 
-// blacklist of enchants not inlcuded in runic
 public final class EnchantBlacklist {
     private EnchantBlacklist() {}
 
@@ -96,7 +95,6 @@ public final class EnchantBlacklist {
     /* ===============================
        STRIPPING
        =============================== */
-    // runs strip
     public static boolean strip(ItemStack stack) {
         boolean changed = false;
 

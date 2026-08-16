@@ -8,9 +8,6 @@ import net.minecraft.world.item.enchantment.Enchantment;
 import java.util.HashSet;
 import java.util.Set;
 
-// supports runic effect enchantments
-
-// supports runic effect enchantments
 public final class RunicEffectEnchantments {
     // built in effect whitelist
     private static final Set<ResourceLocation> BUILTIN_EFFECTS = Set.of(

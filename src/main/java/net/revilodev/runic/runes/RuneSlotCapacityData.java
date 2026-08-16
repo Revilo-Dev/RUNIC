@@ -26,9 +26,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-// stores rune slot capacity data
-
-// stores rune slot capacity data
 public final class RuneSlotCapacityData extends SimpleJsonResourceReloadListener {
     // permissive parser for datapack json
     private static final Gson GSON = new GsonBuilder().setLenient().create();
@@ -46,7 +43,6 @@ public final class RuneSlotCapacityData extends SimpleJsonResourceReloadListener
     }
 
     @Override
-    // runs apply
     protected void apply(Map<ResourceLocation, JsonElement> objects,
                          ResourceManager manager,
                          ProfilerFiller profiler) {
@@ -247,7 +243,6 @@ public final class RuneSlotCapacityData extends SimpleJsonResourceReloadListener
         return 0;
     }
 
-    // runs capacity
     public static int capacity(ItemStack stack) {
         Integer direct = CAPACITIES.get(stack.getItem());
         if (direct != null) return direct;
@@ -266,7 +261,6 @@ public final class RuneSlotCapacityData extends SimpleJsonResourceReloadListener
     }
 
 
-    // runs classify
     private static String classify(Item item) {
         // vanilla item classes first
         if (item instanceof ArmorItem armor) {

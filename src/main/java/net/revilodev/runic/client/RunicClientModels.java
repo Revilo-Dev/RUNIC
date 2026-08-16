@@ -19,9 +19,7 @@ import net.revilodev.runic.mythic.MythicRuneRegistry;
 import net.revilodev.runic.stat.RuneStatType;
 import net.revilodev.runic.stat.RuneStats;
 
-// supports runic client models
 
-// supports runic client models
 public final class RunicClientModels {
 
     private RunicClientModels() {}
@@ -31,26 +29,26 @@ public final class RunicClientModels {
     }
 
     public static void onClientSetup(FMLClientSetupEvent event) {
-        event.enqueueWork(RunicClientModels::registerAllRuneLikeItems);
+        event.enqueueWork(RunicClientModels::registerRuneModels);
     }
 
-    private static void registerAllRuneLikeItems() {
+    private static void registerRuneModels() {
         ResourceLocation pred = id("rune_model");
         register(ModItems.ENHANCED_RUNE.get(), pred);
         register(ModItems.ETCHING.get(), pred);
     }
 
-    private static void register(Item item, ResourceLocation predicateId) {
-        ItemProperties.register(item, predicateId, RunicClientModels::runePredicate);
+    private static void register(Item item, ResourceLocation pred) {
+        ItemProperties.register(item, pred, RunicClientModels::runeModel);
     }
 
 
-    private static float runePredicate(ItemStack stack, ClientLevel level, LivingEntity entity, int seed) {
+    private static float runeModel(ItemStack stack, ClientLevel level, LivingEntity entity, int seed) {
         if (stack.isEmpty()) return 0.0F;
 
-        ResourceLocation synergyId = RuneItem.getItemSynergyId(stack);
-        if (synergyId != null) {
-            return RuneModelMappings.predicateForSynergy(synergyId);
+        ResourceLocation synId = RuneItem.getItemSynergyId(stack);
+        if (synId != null) {
+            return RuneModelMappings.predicateForSynergy(synId);
         }
 
         ResourceLocation mythicId = MythicRuneRegistry.getItemRuneId(stack);
@@ -64,12 +62,12 @@ public final class RunicClientModels {
             return RuneModelMappings.predicateForStat(type);
         }
 
-        ItemEnchantments enchants = stack.getOrDefault(DataComponents.STORED_ENCHANTMENTS, ItemEnchantments.EMPTY);
-        if (enchants.isEmpty()) enchants = stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
-        if (enchants.isEmpty()) return 0.0F;
+        ItemEnchantments ench = stack.getOrDefault(DataComponents.STORED_ENCHANTMENTS, ItemEnchantments.EMPTY);
+        if (ench.isEmpty()) ench = stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
+        if (ench.isEmpty()) return 0.0F;
 
-        Holder<Enchantment> ench = enchants.keySet().iterator().next();
-        ResourceLocation rl = ench.unwrapKey().map(k -> k.location()).orElse(null);
+        Holder<Enchantment> enchant = ench.keySet().iterator().next();
+        ResourceLocation rl = enchant.unwrapKey().map(k -> k.location()).orElse(null);
         if (rl == null) return 0.0F;
 
         return RuneModelMappings.predicateForEnchant(rl);

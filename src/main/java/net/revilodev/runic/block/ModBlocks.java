@@ -13,9 +13,6 @@ import net.revilodev.runic.RunicMod;
 import net.revilodev.runic.block.custom.ArtisansWorkbench;
 import net.revilodev.runic.block.custom.EtchingTableBlock;
 
-// supports mod blocks
-
-// defines mod blocks
 public final class ModBlocks {
     private ModBlocks() {}
 

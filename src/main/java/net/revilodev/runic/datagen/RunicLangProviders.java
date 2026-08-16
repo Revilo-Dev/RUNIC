@@ -3,18 +3,7 @@ import net.minecraft.data.PackOutput;
 import net.neoforged.neoforge.common.data.LanguageProvider;
 import net.revilodev.runic.stat.RuneStatType;
 
-/**
- * Generates:
- *  - assets/runic/lang/en_us.json
- *  - assets/runic/lang/en_gb.json
- *  - assets/runic/lang/en_au.json
- *  - assets/runic/lang/en_ca.json
- *  - assets/runic/lang/en_nz.json
- */
 
-// supports runic lang providers
-
-// supports runic lang providers
 public final class RunicLangProviders {
     private RunicLangProviders() {}
 

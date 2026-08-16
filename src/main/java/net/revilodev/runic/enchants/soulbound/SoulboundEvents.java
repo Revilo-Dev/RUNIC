@@ -13,7 +13,6 @@ import java.util.Iterator;
 import java.util.List;
 
 @EventBusSubscriber(modid = RunicMod.MOD_ID)
-// responds to soulbound events
 public final class SoulboundEvents {
     @SubscribeEvent
     public static void onPlayerDrops(LivingDropsEvent event) {

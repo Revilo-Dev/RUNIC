@@ -20,9 +20,6 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import net.minecraft.core.HolderLookup;
 
-// generates runic etching recipe provider
-
-// generates runic etching recipe provider
 public final class RunicEtchingRecipeProvider extends RecipeProvider {
     private static final Set<ResourceLocation> DISABLED_EFFECT_ETCHING_RECIPES = Set.of(
             ResourceLocation.fromNamespaceAndPath("deeperdarker", "catalysis"),

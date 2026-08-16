@@ -32,9 +32,6 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
-// supports runic command helper
-
-// supports runic command helper
 public final class RunicCommandHelper {
     private static final String ROOT = "runic";
     private static final String CURSED_APPLIED = "cursed_applied";
@@ -46,7 +43,6 @@ public final class RunicCommandHelper {
 
     private RunicCommandHelper() {}
 
-    // applies stat
     public static boolean applyStat(ItemStack stack, RuneStatType type, float amount) {
         if (stack.isEmpty() || type == null || amount == 0.0F || EnchantBlacklist.isStatBlacklisted(type) || !canApplyStatTo(stack, type)) {
             return false;
@@ -176,7 +172,6 @@ public final class RunicCommandHelper {
         return changed;
     }
 
-    // runs inscribe
     public static boolean inscribe(ItemStack stack, String inscription) {
         if (stack.isEmpty() || inscription == null || inscription.isBlank()) {
             return false;
@@ -252,7 +247,6 @@ public final class RunicCommandHelper {
         return true;
     }
 
-    // applies expansion inscription
     private static boolean applyExpansionInscription(ItemStack stack) {
         if (!RuneSlots.enabled()) {
             return false;
@@ -552,7 +546,6 @@ public final class RunicCommandHelper {
         return value * GearAttributes.enhancementMultiplier(stack);
     }
 
-    // applies cursed delta
     private static void applyCursedDelta(ItemStack stack, int deltaLevels) {
         if (deltaLevels <= 0) {
             return;

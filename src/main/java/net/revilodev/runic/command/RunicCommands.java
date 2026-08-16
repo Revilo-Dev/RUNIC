@@ -36,9 +36,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-// runs runic commands
-
-// runs runic commands
 public final class RunicCommands {
     private static final SimpleCommandExceptionType INVALID_TARGET =
             new SimpleCommandExceptionType(Component.literal("Target must be a living entity holding an item."));
@@ -137,7 +134,7 @@ public final class RunicCommands {
                                 .then(Commands.literal("disable")
                                         .then(Commands.argument("name", StringArgumentType.word())
                                                 .suggests((context, builder) -> {
-                                                    for (String id : configDisableSuggestions()) {
+                                                    for (String id : configTargets()) {
                                                         builder.suggest(id);
                                                     }
                                                     return builder.buildFuture();
@@ -147,24 +144,23 @@ public final class RunicCommands {
                                                         StringArgumentType.getString(context, "name")
                                                 )))))
                         .then(Commands.literal("test")
-                                .executes(context -> runicTestHelp(context.getSource()))
+                                .executes(context -> testHelp(context.getSource()))
                                 .then(Commands.literal("droprate")
-                                        .executes(context -> dropRate(context.getSource(), null))
+                                        .executes(context -> dropRates(context.getSource(), null))
                                         .then(Commands.argument("structure", StringArgumentType.greedyString())
                                                 .suggests((context, builder) -> {
-                                                    for (String id : structureSuggestions()) {
+                                                    for (String id : structs()) {
                                                         builder.suggest(id);
                                                     }
                                                     return builder.buildFuture();
                                                 })
-                                                .executes(context -> dropRate(
+                                                .executes(context -> dropRates(
                                                         context.getSource(),
                                                         StringArgumentType.getString(context, "structure")
                                                 )))))
         );
     }
 
-    // applies stat
     private static int applyStat(CommandSourceStack source, String statName, float amount, Collection<? extends Entity> targets)
             throws CommandSyntaxException {
         RuneStatType type = RuneStatType.byId(statName);
@@ -174,79 +170,76 @@ public final class RunicCommands {
 
         int changed = 0;
         for (Entity entity : targets) {
-            ItemStack stack = requireHeldItem(entity);
+            ItemStack stack = held(entity);
             if (RunicCommandHelper.applyStat(stack, type, amount)) {
                 changed++;
             }
         }
 
-        sendSummary(source, "Applied stat " + type.id() + " (" + amount + ") to", changed, targets.size());
+        summary(source, "Applied stat " + type.id() + " (" + amount + ") to", changed, targets.size());
         return changed;
     }
 
-    // applies effect
     private static int applyEffect(CommandSourceStack source, String effectName, int level, Collection<? extends Entity> targets)
             throws CommandSyntaxException {
-        Holder<Enchantment> enchantment = resolveEffect(source, effectName);
+        Holder<Enchantment> enchantment = effect(source, effectName);
 
         int changed = 0;
         for (Entity entity : targets) {
-            ItemStack stack = requireHeldItem(entity);
+            ItemStack stack = held(entity);
             if (RunicCommandHelper.applyEffect(stack, enchantment, level)) {
                 changed++;
             }
         }
 
-        sendSummary(source, "Applied effect " + effectName + " (" + level + ") to", changed, targets.size());
+        summary(source, "Applied effect " + effectName + " (" + level + ") to", changed, targets.size());
         return changed;
     }
 
-    // applies synergy
     private static int applySynergy(CommandSourceStack source, String synergyName, Collection<? extends Entity> targets)
             throws CommandSyntaxException {
-        ResourceLocation synergyId = resolveSynergy(synergyName);
+        ResourceLocation synergyId = synergy(synergyName);
 
         int changed = 0;
         for (Entity entity : targets) {
-            ItemStack stack = requireHeldItem(entity);
+            ItemStack stack = held(entity);
             if (RunicCommandHelper.applySynergy(stack, synergyId)) {
                 changed++;
             }
         }
 
-        sendSummary(source, "Applied synergy " + synergyName + " to", changed, targets.size());
+        summary(source, "Applied synergy " + synergyName + " to", changed, targets.size());
         return changed;
     }
 
     private static int clear(CommandSourceStack source, Collection<? extends Entity> targets) throws CommandSyntaxException {
         int changed = 0;
         for (Entity entity : targets) {
-            ItemStack stack = requireHeldItem(entity);
+            ItemStack stack = held(entity);
             if (RunicCommandHelper.clear(stack)) {
                 changed++;
             }
         }
 
-        sendSummary(source, "Cleared runic data on", changed, targets.size());
+        summary(source, "Cleared runic data on", changed, targets.size());
         return changed;
     }
 
-    // runs inscribe
     private static int inscribe(CommandSourceStack source, String inscription, Collection<? extends Entity> targets)
             throws CommandSyntaxException {
-        if (!RunicCommandHelper.inscriptionIds().contains(normalizeInscription(inscription))) {
+        if (!RunicCommandHelper.inscriptionIds().contains(inscriptionId(inscription))) {
             throw UNKNOWN_INSCRIPTION.create();
         }
 
         int changed = 0;
         for (Entity entity : targets) {
-            ItemStack stack = requireHeldItem(entity);
+            ItemStack stack = held(entity);
             if (RunicCommandHelper.inscribe(stack, inscription)) {
                 changed++;
             }
         }
 
-        sendSummary(source, "Applied inscription " + inscription + " to", changed, targets.size());
+        summary(source, "Applied inscription " + inscription + " to", changed, targets.size());
         return changed;
     }
 
@@ -258,7 +251,7 @@ public final class RunicCommands {
         return 1;
     }
 
-    private static int runicTestHelp(CommandSourceStack source) {
+    private static int testHelp(CommandSourceStack source) {
         source.sendSuccess(() -> Component.literal("Runic test commands:"), false);
         source.sendSuccess(() -> Component.literal("/runic test droprate"), false);
         source.sendSuccess(() -> Component.literal("/runic test droprate <structure>"), false);
@@ -266,16 +259,16 @@ public final class RunicCommands {
     }
 
 
-    private static int dropRate(CommandSourceStack source, String structure) {
+    private static int dropRates(CommandSourceStack source, String structure) {
         String table = structure == null || structure.isBlank()
                 ? "base"
                 : structure.trim().toLowerCase(Locale.ROOT);
         boolean specific = !"base".equals(table);
         int rolls = specific && (table.contains("bastion") || table.contains("ancient_city")) ? 2 : 1;
         double runeChance = RunicStructureLootInjector.DEFAULT_RUNE_CHANCE;
-        double mythicPerRoll = mythicChancePerRoll(table);
+        double mythicPerRoll = mythicChance(table);
         double genericFactor = runeChance * rolls * Math.max(0.0D, 1.0D - mythicPerRoll) * 0.75D;
-        Map<EnhancementRarity, Double> distribution = combinedGenericDistribution(source);
+        Map<EnhancementRarity, Double> distribution = rarityMix(source);
 
         source.sendSuccess(() -> Component.literal("Runic droprate report: " + table), false);
         source.sendSuccess(() -> Component.literal("Rune roll chance: " + percent(runeChance) + " per chest; rolls: " + rolls), false);
@@ -297,18 +290,17 @@ public final class RunicCommands {
         return 1;
     }
 
-    private static Map<EnhancementRarity, Double> combinedGenericDistribution(CommandSourceStack source) {
+    private static Map<EnhancementRarity, Double> rarityMix(CommandSourceStack source) {
         EnumMap<EnhancementRarity, Double> out = new EnumMap<>(EnhancementRarity.class);
         Map<EnhancementRarity, Double> stat = RunicStructureLootInjector.genericStatRarityDistribution();
-        Map<EnhancementRarity, Double> effect = genericEffectRarityDistribution(source);
+        Map<EnhancementRarity, Double> effect = effectRarities(source);
         for (EnhancementRarity rarity : EnhancementRarity.values()) {
             out.put(rarity, (stat.getOrDefault(rarity, 0.0D) * 0.8D) + (effect.getOrDefault(rarity, 0.0D) * 0.2D));
         }
         return out;
     }
 
-    // runs generic effect rarity distribution
-    private static Map<EnhancementRarity, Double> genericEffectRarityDistribution(CommandSourceStack source) {
+    private static Map<EnhancementRarity, Double> effectRarities(CommandSourceStack source) {
         EnumMap<EnhancementRarity, Double> out = new EnumMap<>(EnhancementRarity.class);
         EnumMap<EnhancementRarity, Integer> weights = new EnumMap<>(EnhancementRarity.class);
         int total = 0;
@@ -330,7 +322,7 @@ public final class RunicCommands {
         return out;
     }
 
-    private static double mythicChancePerRoll(String table) {
+    private static double mythicChance(String table) {
         if (table == null || table.equals("base")) return 0.0D;
         if (!RunicConfig.mythicRunesEnabled() || !RunicConfig.mythicRuneLootEnabled()) return 0.0D;
         if (!RunicStructureLootInjector.isMythicSource(table)
@@ -344,12 +336,12 @@ public final class RunicCommands {
         return String.format(Locale.ROOT, "%.2f%%", Math.max(0.0D, chance) * 100.0D);
     }
 
-    private static List<String> structureSuggestions() {
+    private static List<String> structs() {
         return List.of("ancient_city", "bastion", "fortress", "ocean_monument", "end_city",
                 "stronghold", "dungeon", "trial_chamber", "woodland_mansion", "pillager_outpost");
     }
 
-    private static ItemStack requireHeldItem(Entity entity) throws CommandSyntaxException {
+    private static ItemStack held(Entity entity) throws CommandSyntaxException {
         if (!(entity instanceof LivingEntity living)) {
             throw INVALID_TARGET.create();
         }
@@ -361,7 +353,7 @@ public final class RunicCommands {
         return stack;
     }
 
-    private static Holder<Enchantment> resolveEffect(CommandSourceStack source, String name) throws CommandSyntaxException {
+    private static Holder<Enchantment> effect(CommandSourceStack source, String name) throws CommandSyntaxException {
         ResourceLocation id = name.contains(":")
                 ? ResourceLocation.parse(name)
                 : ResourceLocation.withDefaultNamespace(name.toLowerCase(Locale.ROOT));
@@ -374,7 +366,7 @@ public final class RunicCommands {
                 .orElseThrow(UNKNOWN_EFFECT::create);
     }
 
-    private static ResourceLocation resolveSynergy(String name) throws CommandSyntaxException {
+    private static ResourceLocation synergy(String name) throws CommandSyntaxException {
         String normalized = name.toLowerCase(Locale.ROOT);
         ResourceLocation id = normalized.contains(":")
                 ? ResourceLocation.parse(normalized)
@@ -389,8 +381,7 @@ public final class RunicCommands {
         return net.revilodev.runic.item.custom.RuneItem.isEffectEnchantment(enchantment);
     }
 
-    // runs config disable suggestions
-    private static Set<String> configDisableSuggestions() {
+    private static Set<String> configTargets() {
         Set<String> suggestions = new LinkedHashSet<>();
         suggestions.add("rune_slots");
         suggestions.add("runic_loot");
@@ -410,7 +401,7 @@ public final class RunicCommands {
         return suggestions;
     }
 
-    private static String normalizeInscription(String inscription) {
+    private static String inscriptionId(String inscription) {
         return switch (inscription.toLowerCase(Locale.ROOT)) {
             case "repair_rune", "repair_inscription" -> "repair";
             case "expansion_rune", "expansion_inscription" -> "expansion";
@@ -424,7 +415,7 @@ public final class RunicCommands {
         };
     }
 
-    private static void sendSummary(CommandSourceStack source, String action, int changed, int totalTargets) {
-        source.sendSuccess(() -> Component.literal(action + " " + changed + "/" + totalTargets + " target(s)."), true);
+    private static void summary(CommandSourceStack source, String action, int changed, int total) {
+        source.sendSuccess(() -> Component.literal(action + " " + changed + "/" + total + " target(s)."), true);
     }
 }

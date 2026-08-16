@@ -35,7 +35,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JeiPlugin
-// supports runic jei plugin
 public final class RunicJeiPlugin implements IModPlugin {
     private static final ResourceLocation UID =
             ResourceLocation.fromNamespaceAndPath(RunicMod.MOD_ID, "jei_plugin");
@@ -59,7 +58,7 @@ public final class RunicJeiPlugin implements IModPlugin {
                     .stream()
                     .map(RecipeHolder::value)
                     .toList();
-            registration.addRecipes(EtchingTableCategory.RECIPE_TYPE, recipes);
+            registration.addRecipes(EtchingTableCategory.TYPE, recipes);
         }
 
         registerRuneInfo(registration);
@@ -68,7 +67,7 @@ public final class RunicJeiPlugin implements IModPlugin {
 
     @Override
     public void registerRecipeCatalysts(IRecipeCatalystRegistration registration) {
-        registration.addRecipeCatalyst(new ItemStack(ModBlocks.ETCHING_TABLE.get()), EtchingTableCategory.RECIPE_TYPE);
+        registration.addRecipeCatalyst(new ItemStack(ModBlocks.ETCHING_TABLE.get()), EtchingTableCategory.TYPE);
     }
 
     @Override

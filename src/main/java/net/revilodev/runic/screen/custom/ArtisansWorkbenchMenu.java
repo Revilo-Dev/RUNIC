@@ -653,7 +653,6 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
         else stack.set(DataComponents.CUSTOM_DATA, CustomData.of(root));
     }
 
-    // runs strip preview delta
     private static void stripPreviewDelta(ItemStack stack) {
         CompoundTag root = getRootCopy(stack);
 
@@ -1075,7 +1074,6 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
         if (Math.abs(delta) > 1e-6) tag.putDouble(key, delta);
     }
 
-    // runs reduce max durability
     private static boolean reduceMaxDurability(ItemStack stack, double fraction) {
         if (!stack.isDamageableItem()) return false;
 
@@ -1122,7 +1120,6 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
         }
     }
 
-    // applies nullification
     private void applyNullification(ItemStack taken) {
         taken.remove(DataComponents.ENCHANTMENTS);
         taken.remove(DataComponents.STORED_ENCHANTMENTS);
@@ -1147,7 +1144,6 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
         RuneSlots.incrementExpansion(taken);
     }
 
-    // applies cursed delta
     private void applyCursedDelta(ItemStack stack, int deltaLevels) {
         if (deltaLevels <= 0) return;
 
@@ -1930,7 +1926,6 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
         RuneStats.set(stack, new RuneStats(map));
     }
 
-    // runs enhancement ref
     private ResourceLocation enhancementRef(ItemStack enhancement) {
         ResourceLocation mythicId = MythicRuneRegistry.getItemRuneId(enhancement);
         if (mythicId != null) {

@@ -7,7 +7,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-// mappings for rune texture models
 public final class RuneModelMappings {
     private static final Map<String, Float> STAT_PREDICATES = new LinkedHashMap<>();
     private static final Map<String, Float> ENCHANT_PREDICATES = new LinkedHashMap<>();

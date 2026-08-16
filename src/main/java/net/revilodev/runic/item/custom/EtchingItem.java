@@ -51,7 +51,6 @@ public class EtchingItem extends Item {
     }
 
     @Override
-    // applies enchantments
     public ItemStack applyEnchantments(ItemStack stack, List<EnchantmentInstance> enchantments) {
         if (!stack.is(ModItems.BLANK_ETCHING.get())) {
             return super.applyEnchantments(stack, enchantments);

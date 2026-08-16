@@ -14,7 +14,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 
-// config settings
 public final class RunicConfig {
 
     public static final ModConfigSpec SPEC;

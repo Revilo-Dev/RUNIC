@@ -7,9 +7,6 @@ import net.minecraft.world.item.enchantment.Enchantment;
 
 import java.util.Map;
 
-// supports enhancement rarities
-
-// supports enhancement rarities
 public final class EnhancementRarities {
     private static final Map<ResourceLocation, EnhancementRarity> MAP = Maps.newHashMap();
     private static EnhancementRarity DEFAULT = EnhancementRarity.COMMON;

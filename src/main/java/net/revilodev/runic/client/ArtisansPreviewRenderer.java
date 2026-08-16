@@ -13,9 +13,6 @@ import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
-// draws artisans preview renderer
-
-// draws artisans preview renderer
 public final class ArtisansPreviewRenderer {
     private ArtisansPreviewRenderer() {}
 
@@ -35,14 +32,14 @@ public final class ArtisansPreviewRenderer {
 
         ps.pushPose();
 
-        // Draw above GUI
+        // keep the preview above the rest of the screen
         ps.translate(absX + w / 2f, absY + (h * 0.55f), 200.0f);
 
-        // Scale model to the box; item models are ~16 units
+        // fit model to box
         float s = ((Math.min(w, h) * 0.9f) / 16f) * 10f;
         ps.scale(s, -s, s);
 
-        // gentle tilt + spin over time
+        // tilt + spin over time
         float t = level != null ? (level.getGameTime() + partialTick)
                 : (float) (Util.getMillis() / 50.0);
         float yaw = (t * 2.0f) % 360.0f;  // slow spin

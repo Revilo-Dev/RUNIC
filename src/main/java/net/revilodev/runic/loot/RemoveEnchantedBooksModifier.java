@@ -11,9 +11,6 @@ import net.neoforged.neoforge.common.loot.IGlobalLootModifier;
 import net.neoforged.neoforge.common.loot.LootModifier;
 import net.revilodev.runic.RunicConfig;
 
-// supports remove enchanted books modifier
-
-// supports remove enchanted books modifier
 public class RemoveEnchantedBooksModifier extends LootModifier {
     public static final MapCodec<RemoveEnchantedBooksModifier> CODEC =
             RecordCodecBuilder.mapCodec(inst -> codecStart(inst).apply(inst, RemoveEnchantedBooksModifier::new));

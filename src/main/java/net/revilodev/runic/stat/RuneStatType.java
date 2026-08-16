@@ -11,9 +11,6 @@ import java.util.EnumMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-// supports rune stat type
-
-// supports rune stat type
 public enum RuneStatType implements StringRepresentable {
     ATTACK_SPEED("attack_speed", 10, 28, 5, 14, 0.0F),
     ATTACK_DAMAGE("attack_damage", 2.0F, 3.5F, 1.0F, 2.0F, 0.0F, false, 0.1F),

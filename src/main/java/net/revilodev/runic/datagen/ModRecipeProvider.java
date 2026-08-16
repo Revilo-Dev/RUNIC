@@ -26,9 +26,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-// generates mod recipe provider
-
-// generates mod recipe provider
 public final class ModRecipeProvider extends RecipeProvider {
     private static final EnumMap<RuneStatType, ItemLike> STAT_MATERIALS = new EnumMap<>(RuneStatType.class);
 

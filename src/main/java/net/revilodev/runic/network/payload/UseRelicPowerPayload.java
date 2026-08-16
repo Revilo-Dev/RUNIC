@@ -9,9 +9,6 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 import net.revilodev.runic.RunicMod;
 import net.revilodev.runic.relic.RelicEffects;
 
-// supports use relic power payload
-
-// supports use relic power payload
 public record UseRelicPowerPayload() implements CustomPacketPayload {
     public static final Type<UseRelicPowerPayload> TYPE =
             new Type<>(ResourceLocation.fromNamespaceAndPath(RunicMod.MOD_ID, "use_relic_power"));

@@ -12,9 +12,6 @@ import net.revilodev.runic.loot.rarity.EnhancementRarities;
 import java.util.HashMap;
 import java.util.Map;
 
-// syncs enhancement rarity data sync
-
-// syncs enhancement rarity data sync
 public record EnhancementRarityDataSync(String defaultKey,
                                         Map<ResourceLocation, String> entries) implements CustomPacketPayload {
     public static final ResourceLocation ID =

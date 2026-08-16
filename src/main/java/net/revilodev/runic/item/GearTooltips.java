@@ -125,7 +125,6 @@ public final class GearTooltips {
         return RunicItemTargets.isRunicGear(stack);
     }
 
-    // runs should override
     private static boolean shouldOverride(ItemStack stack) {
         if (stack.isEnchanted()) return true;
         if (RuneSlots.capacity(stack) > 0) return true;
@@ -434,7 +433,6 @@ public final class GearTooltips {
         return out;
     }
 
-    // runs attribute description
     private static MutableComponent attributeDescription(GearAttribute attr) {
         return switch (attr) {
             case CURSED -> Component.literal("Reduces all runic stat values by 5% per stack.");
@@ -463,7 +461,6 @@ public final class GearTooltips {
         return (v >= 0 ? "+" : "-") + num + (type.isPercentBased() ? "%" : "");
     }
 
-    // runs to roman
     private static String toRoman(int v) {
         if (v <= 0) return "";
         if (v >= 10) return "X";

@@ -9,9 +9,6 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 import net.revilodev.runic.RunicMod;
 import net.revilodev.runic.client.RunicClient;
 
-// supports relic power status payload
-
-// supports relic power status payload
 public record RelicPowerStatusPayload(int durationTicks, int maxDurationTicks, int cooldownTicks, int maxCooldownTicks) implements CustomPacketPayload {
     public static final Type<RelicPowerStatusPayload> TYPE =
             new Type<>(ResourceLocation.fromNamespaceAndPath(RunicMod.MOD_ID, "relic_power_status"));

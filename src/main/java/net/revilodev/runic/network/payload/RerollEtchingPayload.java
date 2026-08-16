@@ -27,9 +27,6 @@ import net.revilodev.runic.stat.RuneStatType;
 import java.util.ArrayList;
 import java.util.List;
 
-// supports reroll etching payload
-
-// supports reroll etching payload
 public record RerollEtchingPayload() implements CustomPacketPayload {
     public static final Type<RerollEtchingPayload> TYPE =
             new Type<>(ResourceLocation.fromNamespaceAndPath(RunicMod.MOD_ID, "reroll_etching"));

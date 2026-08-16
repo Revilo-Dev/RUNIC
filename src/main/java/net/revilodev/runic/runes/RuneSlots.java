@@ -18,9 +18,6 @@ import net.revilodev.runic.registry.ModDataComponents;
 
 import static net.revilodev.runic.registry.ModDataComponents.DATA_COMPONENT_TYPES;
 
-// supports rune slots
-
-// supports rune slots
 public final class RuneSlots {
     // master config gate
     public static boolean enabled() {

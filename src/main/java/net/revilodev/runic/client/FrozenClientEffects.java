@@ -22,11 +22,10 @@ import net.revilodev.runic.effect.ModMobEffects;
 import net.revilodev.runic.synergy.SynergyEffects;
 
 @EventBusSubscriber(modid = RunicMod.MOD_ID, value = Dist.CLIENT)
-// applies frozen client effects
 public final class FrozenClientEffects {
-    private static final ResourceLocation POWDER_SNOW_OUTLINE =
+    private static final ResourceLocation SNOW_OUTLINE =
             ResourceLocation.withDefaultNamespace("textures/misc/powder_snow_outline.png");
-    private static final ResourceLocation ICE_TEXTURE =
+    private static final ResourceLocation ICE_TEX =
             ResourceLocation.fromNamespaceAndPath(RunicMod.MOD_ID, "renderlayer/ice.png");
 
     private FrozenClientEffects() {}
@@ -45,26 +44,25 @@ public final class FrozenClientEffects {
     }
 
     @SubscribeEvent
-    // responds to render frozen overlay
-    public static void onRenderFrozenOverlay(RenderGuiEvent.Pre event) {
+    public static void onFrozenOverlay(RenderGuiEvent.Pre event) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null || mc.options.hideGui || SynergyEffects.frozenPhase(mc.player) <= 0) return;
 
-        GuiGraphics graphics = event.getGuiGraphics();
-        int width = graphics.guiWidth();
-        int height = graphics.guiHeight();
+        GuiGraphics gg = event.getGuiGraphics();
+        int w = gg.guiWidth();
+        int h = gg.guiHeight();
 
         RenderSystem.enableBlend();
-        graphics.setColor(1.0F, 1.0F, 1.0F, 0.45F);
-        graphics.blit(POWDER_SNOW_OUTLINE, 0, 0, 0, 0.0F, 0.0F, width, height, width, height);
-        graphics.setColor(0.82F, 0.93F, 1.0F, 1.0F);
-        graphics.fill(0, 0, width, height, 0x30A6D8FF);
-        graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
+        gg.setColor(1.0F, 1.0F, 1.0F, 0.45F);
+        gg.blit(SNOW_OUTLINE, 0, 0, 0, 0.0F, 0.0F, w, h, w, h);
+        gg.setColor(0.82F, 0.93F, 1.0F, 1.0F);
+        gg.fill(0, 0, w, h, 0x30A6D8FF);
+        gg.setColor(1.0F, 1.0F, 1.0F, 1.0F);
         RenderSystem.disableBlend();
     }
 
     @SubscribeEvent
-    public static void onRenderLivingPre(RenderLivingEvent.Pre<?, ?> event) {
+    public static void onLivingPre(RenderLivingEvent.Pre<?, ?> event) {
         LivingEntity entity = event.getEntity();
         int phase = frozenPhase(entity);
         if (phase <= 0) return;
@@ -77,8 +75,7 @@ public final class FrozenClientEffects {
     }
 
     @SubscribeEvent
-    // responds to render living post
-    public static <T extends LivingEntity, M extends EntityModel<T>> void onRenderLivingPost(RenderLivingEvent.Post<T, M> event) {
+    public static <T extends LivingEntity, M extends EntityModel<T>> void onLivingPost(RenderLivingEvent.Post<T, M> event) {
         LivingEntity entity = event.getEntity();
         if (frozenPhase(entity) <= 0) return;
 
@@ -86,12 +83,10 @@ public final class FrozenClientEffects {
         var poseStack = event.getPoseStack();
         var model = event.getRenderer().getModel();
 
-        renderIcePrison(entity, poseStack, buffers, event.getPackedLight());
+        drawIcePrison(entity, poseStack, buffers, event.getPackedLight());
 
-        // Render the Runic ice texture over the mob as well.  This is deliberately
-        // done for both freeze phases; the prior phase-one-only branch meant the
-        // fully frozen target never received the visual layer.
-        var buffer = buffers.getBuffer(RenderType.entityTranslucent(ICE_TEXTURE));
+        // ice layer
+        var buffer = buffers.getBuffer(RenderType.entityTranslucent(ICE_TEX));
 
         poseStack.pushPose();
         model.renderToBuffer(
@@ -104,7 +99,7 @@ public final class FrozenClientEffects {
         poseStack.popPose();
     }
 
-    private static void renderIcePrison(LivingEntity entity, com.mojang.blaze3d.vertex.PoseStack poseStack,
+    private static void drawIcePrison(LivingEntity entity, com.mojang.blaze3d.vertex.PoseStack poseStack,
                                         MultiBufferSource buffers, int packedLight) {
         float width = entity.getBbWidth() + 0.16F;
         float height = entity.getBbHeight() + 0.16F;
@@ -118,7 +113,7 @@ public final class FrozenClientEffects {
         poseStack.popPose();
     }
 
-    // Persistent data is server-only, so client rendering must derive the phase from the synced effect.
+    // frozen phase
     private static int frozenPhase(LivingEntity entity) {
         MobEffectInstance effect = entity.getEffect(ModMobEffects.FROZEN);
         return effect == null ? 0 : (effect.getAmplifier() >= 2 ? 2 : 1);

@@ -18,9 +18,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-// stores relic registry definitions
-
-// stores relic registry definitions
 public final class RelicRegistry {
     public static final ResourceLocation DRAGON_HEART = relicId("dragon_heart");
     public static final ResourceLocation ELDER_GUARDIANS_EYE = relicId("elder_guardians_eye");
@@ -103,7 +100,6 @@ public final class RelicRegistry {
         return definition != null && definition.canApplyTo(target);
     }
 
-    // runs count equipped relics
     public static int countEquippedRelics(LivingEntity entity, ResourceLocation relicId) {
         if (entity == null || relicId == null) {
             return 0;
@@ -147,7 +143,6 @@ public final class RelicRegistry {
                 : Component.translatable(definition.translationKey());
     }
 
-    // runs append relic item tooltip
     public static void appendRelicItemTooltip(ResourceLocation relicId, List<Component> tooltip, boolean detailed) {
         RelicDefinition definition = get(relicId);
         if (definition == null) {

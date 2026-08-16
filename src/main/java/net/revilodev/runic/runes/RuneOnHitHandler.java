@@ -26,7 +26,6 @@ import net.revilodev.runic.stat.RuneStats;
 import net.revilodev.runic.synergy.SynergyEffects;
 
 @EventBusSubscriber(modid = RunicMod.MOD_ID)
-// runs rune on hit handler
 public final class RuneOnHitHandler {
 
     private static final ResourceLocation BLEEDING_ID =
@@ -39,7 +38,6 @@ public final class RuneOnHitHandler {
     private RuneOnHitHandler() {}
 
     @SubscribeEvent
-    // responds to attack entity
     public static void onAttackEntity(AttackEntityEvent event) {
         if (!(event.getEntity() instanceof Player player)) return;
         if (!(event.getTarget() instanceof LivingEntity target)) return;
@@ -100,7 +98,6 @@ public final class RuneOnHitHandler {
     }
 
 
-    // applies custom effect or skip
     private static boolean applyCustomEffectOrSkip(LivingEntity target,
                                                    ResourceLocation id,
                                                    int duration,
@@ -126,7 +123,6 @@ public final class RuneOnHitHandler {
         return true;
     }
 
-    // runs summon shocking lightning
     private static void summonShockingLightning(Player player, LivingEntity target) {
         if (!(target.level() instanceof ServerLevel level)) {
             return;
@@ -138,7 +134,7 @@ public final class RuneOnHitHandler {
         }
 
         lightning.moveTo(target.getX(), target.getY(), target.getZ());
-        // Visual-only lightning cannot ignite blocks and does not damage entities.
+        // visual only lightning
         lightning.setVisualOnly(true);
         if (player instanceof ServerPlayer serverPlayer) {
             lightning.setCause(serverPlayer);

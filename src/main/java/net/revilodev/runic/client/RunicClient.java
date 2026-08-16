@@ -20,9 +20,6 @@ import net.revilodev.runic.screen.ModMenuTypes;
 import net.revilodev.runic.screen.custom.ArtisansWorkbenchScreen;
 import net.revilodev.runic.screen.custom.EtchingTableScreen;
 
-// supports runic client
-
-// supports runic client
 public final class RunicClient {
     private static final KeyMapping RELIC_POWER_KEY = new KeyMapping(
             "key.runic.relic_power",
@@ -30,10 +27,10 @@ public final class RunicClient {
             InputConstants.KEY_X,
             "key.categories.runic"
     );
-    private static long relicDurationEndMillis;
-    private static long relicCooldownEndMillis;
-    private static int relicMaxDurationTicks;
-    private static int relicMaxCooldownTicks;
+    private static long relicEndMs;
+    private static long cdEndMs;
+    private static int relicTicks;
+    private static int cdTicks;
 
     private RunicClient() {
     }
@@ -59,12 +56,12 @@ public final class RunicClient {
         }
     }
 
-    public static void updateRelicPowerHud(int durationTicks, int maxDurationTicks, int cooldownTicks, int maxCooldownTicks) {
+    public static void updateRelicPowerHud(int dur, int maxDur, int cd, int maxCd) {
         long now = System.currentTimeMillis();
-        relicDurationEndMillis = durationTicks > 0 ? now + durationTicks * 50L : 0L;
-        relicCooldownEndMillis = cooldownTicks > 0 ? now + cooldownTicks * 50L : 0L;
-        relicMaxDurationTicks = Math.max(0, maxDurationTicks);
-        relicMaxCooldownTicks = Math.max(0, maxCooldownTicks);
+        relicEndMs = dur > 0 ? now + dur * 50L : 0L;
+        cdEndMs = cd > 0 ? now + cd * 50L : 0L;
+        relicTicks = Math.max(0, maxDur);
+        cdTicks = Math.max(0, maxCd);
     }
 
 
@@ -72,46 +69,46 @@ public final class RunicClient {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null || mc.options.hideGui) return;
         long now = System.currentTimeMillis();
-        int durationRemaining = remainingTicks(relicDurationEndMillis, now);
-        int cooldownRemaining = remainingTicks(relicCooldownEndMillis, now);
-        if (durationRemaining <= 0 && cooldownRemaining <= 0) return;
+        int durLeft = remainingTicks(relicEndMs, now);
+        int cdLeft = remainingTicks(cdEndMs, now);
+        if (durLeft <= 0 && cdLeft <= 0) return;
 
-        GuiGraphics graphics = event.getGuiGraphics();
-        int width = graphics.guiWidth();
-        int height = graphics.guiHeight();
-        int barWidth = 44;
-        int barHeight = 4;
-        int x = (width - barWidth) / 2;
-        int y = height / 2 + 16;
+        GuiGraphics gg = event.getGuiGraphics();
+        int w = gg.guiWidth();
+        int h = gg.guiHeight();
+        int barW = 44;
+        int barH = 4;
+        int x = (w - barW) / 2;
+        int y = h / 2 + 16;
 
-        if (durationRemaining > 0 && relicMaxDurationTicks > 0) {
-            String seconds = secondsText(durationRemaining);
-            graphics.drawCenteredString(mc.font, seconds, width / 2, y - 10, 0xFF50D8FF);
-            drawBar(graphics, x, y, barWidth, barHeight, (float) durationRemaining / (float) relicMaxDurationTicks, 0xFF50D8FF);
+        if (durLeft > 0 && relicTicks > 0) {
+            String secs = secondsText(durLeft);
+            gg.drawCenteredString(mc.font, secs, w / 2, y - 10, 0xFF50D8FF);
+            drawBar(gg, x, y, barW, barH, (float) durLeft / relicTicks, 0xFF50D8FF);
             y += 8;
         }
 
-        if (cooldownRemaining > 0 && relicMaxCooldownTicks > 0) {
-            drawBar(graphics, x, y, barWidth, barHeight, (float) cooldownRemaining / (float) relicMaxCooldownTicks, 0xFFEFEFEF);
-            graphics.drawCenteredString(mc.font, secondsText(cooldownRemaining), width / 2, y + 6, 0xFFFFFFFF);
+        if (cdLeft > 0 && cdTicks > 0) {
+            drawBar(gg, x, y, barW, barH, (float) cdLeft / cdTicks, 0xFFEFEFEF);
+            gg.drawCenteredString(mc.font, secondsText(cdLeft), w / 2, y + 6, 0xFFFFFFFF);
         }
     }
 
-    private static int remainingTicks(long endMillis, long nowMillis) {
-        if (endMillis <= nowMillis) return 0;
-        return Mth.ceil((endMillis - nowMillis) / 50.0D);
+    private static int remainingTicks(long endMs, long nowMs) {
+        if (endMs <= nowMs) return 0;
+        return Mth.ceil((endMs - nowMs) / 50.0D);
     }
 
     private static String secondsText(int ticks) {
         return String.format(java.util.Locale.ROOT, "%.1fs", Math.max(0.0D, ticks / 20.0D));
     }
 
-    private static void drawBar(GuiGraphics graphics, int x, int y, int width, int height, float progress, int fillColor) {
-        int clamped = Math.max(0, Math.min(width, Math.round(width * progress)));
-        graphics.fill(x - 1, y - 1, x + width + 1, y + height + 1, 0xAA000000);
-        graphics.fill(x, y, x + width, y + height, 0xAA202020);
-        if (clamped > 0) {
-            graphics.fill(x, y, x + clamped, y + height, fillColor);
+    private static void drawBar(GuiGraphics gg, int x, int y, int w, int h, float pct, int color) {
+        int fill = Math.max(0, Math.min(w, Math.round(w * pct)));
+        gg.fill(x - 1, y - 1, x + w + 1, y + h + 1, 0xAA000000);
+        gg.fill(x, y, x + w, y + h, 0xAA202020);
+        if (fill > 0) {
+            gg.fill(x, y, x + fill, y + h, color);
         }
     }
 

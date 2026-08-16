@@ -9,9 +9,6 @@ import net.revilodev.runic.RunicMod;
 import net.revilodev.runic.item.ModItems;
 import net.revilodev.runic.item.RuneModelMappings;
 
-// generates mod item model provider
-
-// generates mod item model provider
 public class ModItemModelProvider extends ItemModelProvider {
 
     private static final ResourceLocation RUNE_MODEL_PRED =

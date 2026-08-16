@@ -15,9 +15,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
-// stores synergy registry definitions
-
-// stores synergy registry definitions
 public final class SynergyRegistry {
     public static final ResourceLocation SHATTER = synergyId("shatter");
     public static final ResourceLocation BLOODFIRE = synergyId("bloodfire");

@@ -20,7 +20,6 @@ import net.neoforged.neoforge.event.tick.EntityTickEvent;
 import net.revilodev.runic.RunicMod;
 
 @EventBusSubscriber(modid = RunicMod.MOD_ID)
-// responds to stat events
 public final class RuneStatEvents {
     private static final String STONE_TICK = "runic_stone_tick";
 
@@ -73,14 +72,13 @@ public final class RuneStatEvents {
     }
 
     @SubscribeEvent
-    // responds to entity join
     public static void onEntityJoin(EntityJoinLevelEvent event) {
         if (!(event.getEntity() instanceof LivingEntity entity)) return;
         if (entity.level().isClientSide) return;
 
         if (entity instanceof ServerPlayer player) {
             // Re-apply runic attributes once on join so persisted runic stats
-            // always restore their modifiers (notably MAX_HEALTH on armor).
+            // restore armor health
             reapplyRunicInventory(player);
         }
 
@@ -102,7 +100,6 @@ public final class RuneStatEvents {
     }
 
     @SubscribeEvent
-    // responds to living tick
     public static void onLivingTick(EntityTickEvent.Post event) {
         if (!(event.getEntity() instanceof LivingEntity entity)) return;
         if (entity.level().isClientSide) return;
@@ -163,9 +160,7 @@ public final class RuneStatEvents {
         RuneStats stats = RuneStats.get(crafted);
         if (stats == null || stats.isEmpty()) return;
 
-        // Rebuild runic attributes against the crafted item's current base item.
-        // This keeps smithing-upgraded gear (diamond -> netherite, etc.) aligned
-        // with the new tier's base attack damage/speed/range while preserving runic bonuses.
+        // refresh upgraded base stats
         RuneStats.set(crafted, stats);
     }
 

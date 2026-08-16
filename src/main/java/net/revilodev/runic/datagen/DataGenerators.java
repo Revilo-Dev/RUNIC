@@ -12,9 +12,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-// supports data generators
-
-// supports data generators
 public final class DataGenerators {
     private DataGenerators() {}
 

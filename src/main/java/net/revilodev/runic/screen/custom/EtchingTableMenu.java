@@ -26,7 +26,6 @@ import net.revilodev.runic.screen.ModMenuTypes;
 import java.util.Optional;
 
 
-// controls etching table menu
 public final class EtchingTableMenu extends AbstractContainerMenu {
     // top row is shifted to line up with the gui art
     public static final int TOP_SLOT_X_OFFSET = 36;
@@ -157,7 +156,6 @@ public final class EtchingTableMenu extends AbstractContainerMenu {
     }
 
 
-    // runs craft
     private void craft(Player player) {
         if (lastRecipe == null || RunicConfig.disableEtchingCrafting()) return;
 
@@ -207,7 +205,6 @@ public final class EtchingTableMenu extends AbstractContainerMenu {
     }
 
     @Override
-    // runs quick move stack
     public ItemStack quickMoveStack(Player player, int index) {
         Slot slot = this.slots.get(index);
         if (slot == null || !slot.hasItem()) return ItemStack.EMPTY;
@@ -237,7 +234,6 @@ public final class EtchingTableMenu extends AbstractContainerMenu {
         return copy;
     }
 
-    // runs place recipe from book
     public void placeRecipeFromBook(ServerPlayer player, RecipeHolder<EtchingTableRecipe> recipe) {
         if (player.containerMenu != this) return;
         if (!isInscriptionRecipe(recipe.value())) return;
@@ -271,7 +267,6 @@ public final class EtchingTableMenu extends AbstractContainerMenu {
         }
     }
 
-    // runs pull one into slot
     private void pullOneIntoSlot(ServerPlayer player, Slot dest, Ingredient ing) {
         for (int i = 3; i < 3 + 36; i++) {
             Slot src = this.getSlot(i);

@@ -10,7 +10,6 @@ import net.minecraft.core.particles.SimpleParticleType;
 
 
 
-// supports stun star particle
 public class StunStarParticle extends TextureSheetParticle {
 
     private final SpriteSet sprites;

@@ -21,7 +21,6 @@ import net.neoforged.neoforge.event.entity.player.CriticalHitEvent;
 import net.revilodev.runic.RunicMod;
 
 @EventBusSubscriber(modid = RunicMod.MOD_ID)
-// responds to mod enchantment events
 public class ModEnchantmentEvents {
     private static final ResourceKey<Enchantment> POISON_CLOUD_KEY =
             ResourceKey.create(
@@ -42,7 +41,6 @@ public class ModEnchantmentEvents {
             );
 
     @SubscribeEvent
-    // responds to crit
     public static void onCrit(CriticalHitEvent event) {
         Player player = event.getEntity();
         if (player == null) return;
@@ -60,7 +58,6 @@ public class ModEnchantmentEvents {
     }
 
     @SubscribeEvent
-    // responds to damage
     public static void onDamage(LivingIncomingDamageEvent event) {
         Entity src = event.getSource().getEntity();
         if (!(src instanceof LivingEntity attacker)) return;

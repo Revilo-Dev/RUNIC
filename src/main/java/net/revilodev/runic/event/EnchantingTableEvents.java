@@ -7,7 +7,6 @@ import net.revilodev.runic.RunicMod;
 import net.revilodev.runic.item.ModItems;
 
 @EventBusSubscriber(modid = RunicMod.MOD_ID)
-// responds to enchanting table events
 public final class EnchantingTableEvents {
     private static final int MAX_ETCHING_COST = 20;
 
@@ -16,7 +15,7 @@ public final class EnchantingTableEvents {
     @SubscribeEvent
     public static void onEnchantmentLevelSet(EnchantmentLevelSetEvent event) {
         if (!event.getItem().is(ModItems.BLANK_ETCHING.get())) {
-            // A zero offer is rejected by EnchantmentMenu before it can consume lapis or XP.
+            // block the xp cost
             event.setEnchantLevel(0);
             return;
         }

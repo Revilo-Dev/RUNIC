@@ -19,14 +19,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 @EventBusSubscriber(modid = RunicMod.MOD_ID)
-// applies mythic rune effects
 public final class MythicRuneEffects {
     private static final String COMBAT_UNTIL = "runic_mythic_combat_until";
     private static final String VOID_NEXT = "runic_void_next_tick";
 
     private MythicRuneEffects() {}
 
-    // runs modify outgoing damage
     public static float modifyOutgoingDamage(LivingEntity attacker, LivingEntity target, ItemStack weapon, float amount) {
         if (attacker == null || target == null || weapon.isEmpty() || amount <= 0.0F) {
             return amount;
@@ -44,7 +42,6 @@ public final class MythicRuneEffects {
     }
 
     @SubscribeEvent
-    // responds to post damage
     public static void onPostDamage(LivingDamageEvent.Post event) {
         LivingEntity target = event.getEntity();
         LivingEntity attacker = event.getSource().getEntity() instanceof LivingEntity living ? living : null;
@@ -71,7 +68,6 @@ public final class MythicRuneEffects {
     }
 
     @SubscribeEvent
-    // responds to living death
     public static void onLivingDeath(LivingDeathEvent event) {
         LivingEntity attacker = event.getSource().getEntity() instanceof LivingEntity living ? living : null;
         if (attacker == null || attacker.level().isClientSide) {
@@ -90,7 +86,6 @@ public final class MythicRuneEffects {
     }
 
     @SubscribeEvent
-    // responds to living tick
     public static void onLivingTick(EntityTickEvent.Post event) {
         if (!(event.getEntity() instanceof LivingEntity living) || living.level().isClientSide) {
             return;
