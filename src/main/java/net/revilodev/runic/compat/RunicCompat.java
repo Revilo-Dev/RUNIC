@@ -14,6 +14,6 @@ public final class RunicCompat {
     }
 
     public static boolean isStatAvailable(RuneStatType stat) {
-        return stat != RuneStatType.ABILITY_POWER || isAuraLoaded();
+        return true;
     }
 }

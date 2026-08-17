@@ -147,8 +147,8 @@ public final class RuneSlots {
         // filled then open slots
         int rem = Math.max(0, cap - u);
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < u; i++) sb.append('ÃƒÂ¢Ã‚Â¬Ã‚Â¤');
-        for (int i = 0; i < rem; i++) sb.append('ÃƒÂ¢Ã¢â‚¬â€Ã‚Â¯');
+        for (int i = 0; i < u; i++) sb.append('\u2B24');
+        for (int i = 0; i < rem; i++) sb.append('\u25EF');
         return Component.literal(sb.toString()).withStyle(ChatFormatting.AQUA);
     }
 

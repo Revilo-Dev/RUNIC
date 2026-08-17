@@ -77,7 +77,7 @@ public final class RunicClient {
         int w = gg.guiWidth();
         int h = gg.guiHeight();
         int barW = 44;
-        int barH = 4;
+        int barH = 2;
         int x = (w - barW) / 2;
         int y = h / 2 + 16;
 
@@ -105,7 +105,6 @@ public final class RunicClient {
 
     private static void drawBar(GuiGraphics gg, int x, int y, int w, int h, float pct, int color) {
         int fill = Math.max(0, Math.min(w, Math.round(w * pct)));
-        gg.fill(x - 1, y - 1, x + w + 1, y + h + 1, 0xAA000000);
         gg.fill(x, y, x + w, y + h, 0xAA202020);
         if (fill > 0) {
             gg.fill(x, y, x + fill, y + h, color);

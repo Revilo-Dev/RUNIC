@@ -154,11 +154,10 @@ public final class RelicRegistry {
         tooltip.add(EnhancementRarity.LEGENDARY.applyTo(Component.translatable("tooltip.runic.rarity.legendary")));
 
         if (detailed) {
-            tooltip.add(Component.translatable("tooltip.runic.relic_durability_use", formatPercent(definition.durabilityUseIncreasePercentValue())).withStyle(ChatFormatting.GRAY));
-            tooltip.add(Component.translatable("tooltip.runic.relic_corruption", definition.corruptionValue()).withStyle(ChatFormatting.GRAY));
+            tooltip.add(Component.translatable("tooltip.runic.relic_durability_use", formatPercent(definition.durabilityUseIncreasePercentValue())).withStyle(ChatFormatting.RED));
+            tooltip.add(Component.translatable("tooltip.runic.relic_corruption", definition.corruptionValue()).withStyle(ChatFormatting.DARK_PURPLE));
             tooltip.add(Component.translatable("tooltip.runic.relic_base." + definition.id().getPath()).withStyle(ChatFormatting.GRAY));
-            tooltip.add(Component.translatable("tooltip.runic.relic_set." + definition.id().getPath()).withStyle(ChatFormatting.GRAY));
-            tooltip.add(Component.translatable("tooltip.runic.relic_desc." + definition.id().getPath()).withStyle(ChatFormatting.DARK_GRAY));
+            tooltip.add(relicSetLine(definition));
         } else {
             tooltip.add(Component.translatable("tooltip.runic.hold_ctrl_more").withStyle(ChatFormatting.DARK_GRAY));
         }
@@ -190,11 +189,10 @@ public final class RelicRegistry {
         }
 
         if (showDetails) {
-            lines.add(Component.translatable("tooltip.runic.relic_durability_use", formatPercent(definition.durabilityUseIncreasePercentValue())).withStyle(ChatFormatting.GRAY));
-            lines.add(Component.translatable("tooltip.runic.relic_corruption", definition.corruptionValue()).withStyle(ChatFormatting.GRAY));
+            lines.add(Component.translatable("tooltip.runic.relic_durability_use", formatPercent(definition.durabilityUseIncreasePercentValue())).withStyle(ChatFormatting.RED));
+            lines.add(Component.translatable("tooltip.runic.relic_corruption", definition.corruptionValue()).withStyle(ChatFormatting.DARK_PURPLE));
             lines.add(Component.translatable("tooltip.runic.relic_base." + definition.id().getPath()).withStyle(ChatFormatting.GRAY));
-            lines.add(Component.translatable("tooltip.runic.relic_set." + definition.id().getPath()).withStyle(ChatFormatting.GRAY));
-            lines.add(Component.translatable("tooltip.runic.relic_desc." + definition.id().getPath()).withStyle(ChatFormatting.DARK_GRAY));
+            lines.add(relicSetLine(definition));
         } else {
             lines.add(Component.translatable("tooltip.runic.hold_ctrl_more").withStyle(ChatFormatting.DARK_GRAY));
         }
@@ -205,6 +203,11 @@ public final class RelicRegistry {
     private static String formatPercent(double value) {
         long rounded = Math.round(value);
         return Math.abs(value - rounded) < 0.001D ? Long.toString(rounded) : String.format(java.util.Locale.ROOT, "%.1f", value);
+    }
+
+    private static Component relicSetLine(RelicDefinition definition) {
+        return Component.literal("Full Set: ").withStyle(ChatFormatting.WHITE)
+                .append(Component.translatable("tooltip.runic.relic_set." + definition.id().getPath()).withStyle(ChatFormatting.GRAY));
     }
 
     private static void register(RelicDefinition definition) {

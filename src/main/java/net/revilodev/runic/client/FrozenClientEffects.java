@@ -26,7 +26,7 @@ public final class FrozenClientEffects {
     private static final ResourceLocation SNOW_OUTLINE =
             ResourceLocation.withDefaultNamespace("textures/misc/powder_snow_outline.png");
     private static final ResourceLocation ICE_TEX =
-            ResourceLocation.fromNamespaceAndPath(RunicMod.MOD_ID, "renderlayer/ice.png");
+            ResourceLocation.fromNamespaceAndPath(RunicMod.MOD_ID, "textures/renderlayer/ice.png");
 
     private FrozenClientEffects() {}
 
@@ -89,6 +89,8 @@ public final class FrozenClientEffects {
         var buffer = buffers.getBuffer(RenderType.entityTranslucent(ICE_TEX));
 
         poseStack.pushPose();
+        // Slightly expand the layer so it stays visible over the entity's base texture.
+        poseStack.scale(1.0125F, 1.0125F, 1.0125F);
         model.renderToBuffer(
                 poseStack,
                 buffer,

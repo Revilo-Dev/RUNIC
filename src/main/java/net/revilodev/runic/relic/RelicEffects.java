@@ -56,6 +56,7 @@ import net.revilodev.runic.stat.RuneStats;
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @EventBusSubscriber(modid = RunicMod.MOD_ID)
 public final class RelicEffects {
@@ -64,7 +65,9 @@ public final class RelicEffects {
     private static final String RUNIC_WITHER_SKULL = "runic_wither_skull";
     private static final String GUARDIAN_BEAM_UNTIL = "runic_guardian_beam_until";
     private static final String GUARDIAN_BEAM_OWNER = "runic_guardian_beam_owner";
+    private static final String GUARDIAN_BEAM_TARGET = "runic_guardian_beam_target";
     private static final int RELIC_POWER_COOLDOWN_TICKS = 200;
+    private static final int DRAGON_BREATH_COOLDOWN_TICKS = 300;
     private static final int RELIC_POWER_CAST_TICKS = 40;
     private static Method guardianSetActiveAttackTarget;
 
@@ -93,10 +96,11 @@ public final class RelicEffects {
         }
 
         if (used) {
-            player.getPersistentData().putLong(RELIC_POWER_COOLDOWN, now + RELIC_POWER_COOLDOWN_TICKS);
+            int cooldown = RelicRegistry.DRAGON_HEART.equals(relic) ? DRAGON_BREATH_COOLDOWN_TICKS : RELIC_POWER_COOLDOWN_TICKS;
+            player.getPersistentData().putLong(RELIC_POWER_COOLDOWN, now + cooldown);
             int duration = guardianPower ? RELIC_POWER_CAST_TICKS : 0;
             PacketDistributor.sendToPlayer(player, new RelicPowerStatusPayload(duration, duration,
-                    RELIC_POWER_COOLDOWN_TICKS, RELIC_POWER_COOLDOWN_TICKS));
+                    cooldown, cooldown));
         }
     }
 
@@ -300,6 +304,15 @@ public final class RelicEffects {
             }
             Vec3 source = owner.getEyePosition().subtract(0.0D, 0.35D, 0.0D);
             guardian.setPos(source.x, source.y, source.z);
+            UUID targetId = guardian.getPersistentData().getUUID(GUARDIAN_BEAM_TARGET);
+            if (!(serverLevel.getEntity(targetId) instanceof LivingEntity target) || !target.isAlive()) {
+                guardian.discard();
+                return;
+            }
+            guardian.setTarget(target);
+            if (guardian.tickCount % 5 == 0) {
+                target.hurt(owner.damageSources().indirectMagic(owner, owner), (float) (2.0D * relicPowerMultiplier(owner)));
+            }
         }
     }
 
@@ -489,7 +502,6 @@ public final class RelicEffects {
 
         spawnGuardianBeam(player, target);
         target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, RELIC_POWER_CAST_TICKS + 40, 2, false, false, true));
-        target.hurt(player.damageSources().indirectMagic(player, player), 14.0F);
         player.level().playSound(null, target.blockPosition(), SoundEvents.GUARDIAN_ATTACK, SoundSource.PLAYERS, 1.0F, 1.0F);
         return true;
     }
@@ -528,7 +540,7 @@ public final class RelicEffects {
             }
         }
         player.level().playSound(null, player.blockPosition(), SoundEvents.WARDEN_SONIC_BOOM, SoundSource.PLAYERS, 3.0F, 1.0F);
-        if (target != null && target.hurt(player.damageSources().sonicBoom(player), (float) RunicConfig.wardensSoulFullSetSonicPulseDamage())) {
+        if (target != null && target.hurt(player.damageSources().sonicBoom(player), (float) (RunicConfig.wardensSoulFullSetSonicPulseDamage() * relicPowerMultiplier(player)))) {
             double vertical = 0.5D * (1.0D - target.getAttributeValue(Attributes.KNOCKBACK_RESISTANCE));
             double horizontal = 2.5D * (1.0D - target.getAttributeValue(Attributes.KNOCKBACK_RESISTANCE));
             target.push(direction.x() * horizontal, direction.y() * vertical, direction.z() * horizontal);
@@ -577,9 +589,15 @@ public final class RelicEffects {
         guardian.setInvisible(true);
         guardian.setTarget(target);
         guardian.getPersistentData().putUUID(GUARDIAN_BEAM_OWNER, player.getUUID());
+        guardian.getPersistentData().putUUID(GUARDIAN_BEAM_TARGET, target.getUUID());
         guardian.getPersistentData().putLong(GUARDIAN_BEAM_UNTIL, player.level().getGameTime() + RELIC_POWER_CAST_TICKS);
         player.level().addFreshEntity(guardian);
         setGuardianBeamTarget(guardian, target.getId());
+    }
+
+    private static double relicPowerMultiplier(LivingEntity user) {
+        float abilityPower = RuneStats.get(user.getMainHandItem()).get(net.revilodev.runic.stat.RuneStatType.ABILITY_POWER);
+        return 1.0D + Math.min(0.35D, Math.max(0.0D, abilityPower) / 200.0D);
     }
 
     private static int armorCount(LivingEntity entity, ResourceLocation relicId) {

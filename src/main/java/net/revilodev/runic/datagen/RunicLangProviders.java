@@ -141,7 +141,7 @@ public final class RunicLangProviders {
             add("tooltip.runic.stat_desc.aegis", "Chance to negate an incoming hit.");
             add("tooltip.runic.stat_desc.jump_height", "Increases leaping height.");
             add("tooltip.runic.stat_desc.power", "Increases ranged damage.");
-            add("tooltip.runic.stat_desc.ability_power", "Increases ability damage and scaling.");
+            add("tooltip.runic.stat_desc.ability_power", "Partially increases relic power damage.");
 
             // Enchants
             add("enchantment.runic.poison_cloud", "Poison Cloud");
@@ -162,7 +162,7 @@ public final class RunicLangProviders {
             add("tooltip.runic.stabilization_inscription", "Stabilizes an item at the cost of brittleness and corruption.");
             add("tooltip.runic.tempering_inscription", "Reinforces an item, reducing durability loss but increasing corruption.");
             add("tooltip.runic.relic_socket_inscription", "Adds a relic socket, allowing one future relic to be bound to the item.");
-            add("tooltip.runic.dissonant_inscription", "Sets Synergy Potential to 0 and prevents this item from holding mythic runes.");
+            add("tooltip.runic.dissonant_inscription", "Removes curses and synergies, sets Synergy Potential to 0, and prevents this item from holding mythic runes.");
             add("tooltip.runic.use_artisans_workbench", "Apply in an Artisan's Workbench");
             add("tooltip.runic.inscription_attributes", "Attributes:");
             add("tooltip.runic.rarity.common", "Common");
@@ -278,19 +278,15 @@ public final class RunicLangProviders {
             add("item.runic.elder_guardians_eye", "Elder Guardian's Eye");
             add("item.runic.wither_charge", "Wither Charge");
             add("item.runic.wardens_soul", "Warden's Soul");
-            add("tooltip.runic.relic_desc.dragon_heart", "Empowers fire-based effects and rewards aggressive burning builds, but increases durability use and corruption.");
-            add("tooltip.runic.relic_desc.elder_guardians_eye", "Improves underwater combat and mining, with stronger benefits while fighting in water.");
-            add("tooltip.runic.relic_desc.wither_charge", "Extends wither effects and increases damage against withered enemies.");
-            add("tooltip.runic.relic_desc.wardens_soul", "Improves damage against powerful enemies and rewards fighting high-health targets.");
-            add("tooltip.runic.relic_base.dragon_heart", "Base Effect: improves fire damage and burn pressure.");
-            add("tooltip.runic.relic_base.elder_guardians_eye", "Base Effect: improves underwater combat and mining.");
-            add("tooltip.runic.relic_base.wither_charge", "Base Effect: improves damage and duration against withered enemies.");
-            add("tooltip.runic.relic_base.wardens_soul", "Base Effect: improves damage against high-health enemies.");
-            add("tooltip.runic.relic_set.dragon_heart", "Full Set: press the relic keybind to breathe dragon fire.");
-            add("tooltip.runic.relic_set.elder_guardians_eye", "Full Set: press the relic keybind to fire a guardian beam.");
-            add("tooltip.runic.relic_set.wither_charge", "Full Set: press the relic keybind to launch a wither bullet.");
-            add("tooltip.runic.relic_set.wardens_soul", "Full Set: press the relic keybind to release a sonic boom.");
-            add("tooltip.runic.hold_ctrl_more", "Hold Ctrl to read more.");
+            add("tooltip.runic.relic_base.dragon_heart", "Buffs fire damage and resistance.");
+            add("tooltip.runic.relic_base.elder_guardians_eye", "Buffs underwater combat and mining.");
+            add("tooltip.runic.relic_base.wither_charge", "Buffs wither damage and resistance.");
+            add("tooltip.runic.relic_base.wardens_soul", "Buffs crit damage against high-health enemies.");
+            add("tooltip.runic.relic_set.dragon_heart", "Press relic bind to breathe dragon fire.");
+            add("tooltip.runic.relic_set.elder_guardians_eye", "Press relic bind to fire a guardian beam.");
+            add("tooltip.runic.relic_set.wither_charge", "Press relic bind to launch a wither bullet.");
+            add("tooltip.runic.relic_set.wardens_soul", "Press relic bind to release a sonic boom.");
+            add("tooltip.runic.hold_ctrl_more", "(ctr for details)");
             add("key.categories.runic", "Runic");
             add("key.runic.relic_power", "Use Relic Power");
             add("tooltip.runic.mythic_rune", "Mythic Rune");
@@ -322,7 +318,7 @@ public final class RunicLangProviders {
             add("button.runic.reroll_etching", "Reroll");
             add("tooltip.runic.reroll_etching", "Use 1 level and 1 lapis to roll a random etching.");
             for (RuneStatType stat : RuneStatType.values()) {
-                add("enchantment.runic.stat." + stat.id(), titleCase(stat.id()));
+                add("enchantment.runic.stat." + stat.id(), enchantingName(stat));
             }
             add("tooltip.runic.aqua_affinity", "Increases underwater mining speed");
             add("tooltip.runic.bane_of_arthropods", "Deal more damage to arthropod type enemies");
@@ -380,6 +376,22 @@ public final class RunicLangProviders {
             add("tooltip.runic.acrobat", "Reduces dodge roll cooldown");
             add("tooltip.runic.longfooted", "Increases dodge roll distance");
             add("tooltip.runic.multi_roll", "Allows multiple rolls before cooldown");
+        }
+
+        private static String enchantingName(RuneStatType stat) {
+            return switch (stat) {
+                case HEALTH -> "Health Boost";
+                case STUN_CHANCE -> "Stunning";
+                case FLAME_CHANCE -> "Fire Aspect";
+                case BLEEDING_CHANCE -> "Bleeding";
+                case POISON_CHANCE -> "Toxic";
+                case WEAKENING_CHANCE -> "Diminishing";
+                case JUMP_HEIGHT -> "Leaping";
+                case FREEZING_CHANCE -> "Freezing";
+                case LEECHING_CHANCE -> "Leeching";
+                case STONE -> "Stone Skin";
+                default -> titleCase(stat.id());
+            };
         }
 
         private static String titleCase(String id) {

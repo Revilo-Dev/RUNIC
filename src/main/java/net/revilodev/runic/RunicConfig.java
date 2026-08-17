@@ -20,6 +20,7 @@ public final class RunicConfig {
 
     private static final ModConfigSpec.BooleanValue DISABLE_ALL;
     private static final ModConfigSpec.ConfigValue<List<? extends String>> BLACKLIST_RAW;
+    private static final ModConfigSpec.ConfigValue<List<? extends String>> ENCHANTED_BOOK_WHITELIST_RAW;
     private static final ModConfigSpec.BooleanValue DISABLE_RUNE_SLOTS;
     private static final ModConfigSpec.BooleanValue DISABLE_RUNIC_LOOT;
     private static final ModConfigSpec.BooleanValue DISABLE_ETCHING_CRAFTING;
@@ -204,10 +205,10 @@ public final class RunicConfig {
     private static volatile int MAX_SYNERGY_POTENTIAL_CACHE = 3;
     private static volatile double MAX_SYNERGY_CHANCE_CACHE = 0.80D;
     private static volatile int COMMON_CORRUPTION_CACHE = 1;
-    private static volatile int UNCOMMON_CORRUPTION_CACHE = 2;
-    private static volatile int RARE_CORRUPTION_CACHE = 3;
-    private static volatile int EPIC_CORRUPTION_CACHE = 4;
-    private static volatile int LEGENDARY_CORRUPTION_CACHE = 5;
+    private static volatile int UNCOMMON_CORRUPTION_CACHE = 1;
+    private static volatile int RARE_CORRUPTION_CACHE = 2;
+    private static volatile int EPIC_CORRUPTION_CACHE = 2;
+    private static volatile int LEGENDARY_CORRUPTION_CACHE = 3;
     private static volatile int MYTHIC_CORRUPTION_CACHE = 20;
     private static volatile int ETCHING_CORRUPTION_CACHE = 1;
     private static volatile int SUCCESSFUL_SYNERGY_CORRUPTION_CACHE = 5;
@@ -369,6 +370,8 @@ public final class RunicConfig {
     private static volatile int ICE_PRISON_COOLDOWN_TICKS_CACHE = 100;
     private static final AtomicReference<Set<ResourceLocation>> BLACKLIST_CACHE =
             new AtomicReference<>(Set.of());
+    private static final AtomicReference<Set<ResourceLocation>> ENCHANTED_BOOK_WHITELIST_CACHE =
+            new AtomicReference<>(Set.of());
     private static final AtomicReference<Set<String>> DISABLED_STATS_CACHE =
             new AtomicReference<>(Set.of());
 
@@ -383,6 +386,14 @@ public final class RunicConfig {
                 .comment("Enchantments disabled entirely")
                 .defineList(
                         "enchant_blacklist.blacklisted",
+                        List.of(),
+                        o -> o instanceof String s && ResourceLocation.tryParse(s) != null
+                );
+
+        ENCHANTED_BOOK_WHITELIST_RAW = builder
+                .comment("Enchantment ids whose enchanted books are kept by RUNIC's loot filter. Books with any unlisted enchantment are still removed.")
+                .defineList(
+                        "loot.enchanted_book_whitelist",
                         List.of(),
                         o -> o instanceof String s && ResourceLocation.tryParse(s) != null
                 );
@@ -425,10 +436,10 @@ public final class RunicConfig {
                 .defineInRange("update_5.max_synergy_chance", 0.80D, 0.0D, 1.0D);
 
         COMMON_CORRUPTION = builder.defineInRange("update_5.common_corruption", 1, 0, Integer.MAX_VALUE);
-        UNCOMMON_CORRUPTION = builder.defineInRange("update_5.uncommon_corruption", 2, 0, Integer.MAX_VALUE);
-        RARE_CORRUPTION = builder.defineInRange("update_5.rare_corruption", 3, 0, Integer.MAX_VALUE);
-        EPIC_CORRUPTION = builder.defineInRange("update_5.epic_corruption", 4, 0, Integer.MAX_VALUE);
-        LEGENDARY_CORRUPTION = builder.defineInRange("update_5.legendary_corruption", 5, 0, Integer.MAX_VALUE);
+        UNCOMMON_CORRUPTION = builder.defineInRange("update_5.uncommon_corruption", 1, 0, Integer.MAX_VALUE);
+        RARE_CORRUPTION = builder.defineInRange("update_5.rare_corruption", 2, 0, Integer.MAX_VALUE);
+        EPIC_CORRUPTION = builder.defineInRange("update_5.epic_corruption", 2, 0, Integer.MAX_VALUE);
+        LEGENDARY_CORRUPTION = builder.defineInRange("update_5.legendary_corruption", 3, 0, Integer.MAX_VALUE);
         MYTHIC_CORRUPTION = builder.defineInRange("update_5.mythic_corruption", 20, 0, Integer.MAX_VALUE);
         ETCHING_CORRUPTION = builder.defineInRange("update_5.etching_corruption", 1, 0, Integer.MAX_VALUE);
         SUCCESSFUL_SYNERGY_CORRUPTION = builder.defineInRange("update_5.successful_synergy_corruption", 5, 0, Integer.MAX_VALUE);
@@ -604,6 +615,10 @@ public final class RunicConfig {
 
     public static Set<ResourceLocation> blacklistedEnchantments() {
         return BLACKLIST_CACHE.get();
+    }
+
+    public static Set<ResourceLocation> enchantedBookWhitelist() {
+        return ENCHANTED_BOOK_WHITELIST_CACHE.get();
     }
 
     public static boolean disableAllEnchantments() {
@@ -851,6 +866,10 @@ public final class RunicConfig {
                 .map(ResourceLocation::tryParse)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toUnmodifiableSet());
+        Set<ResourceLocation> enchantedBookWhitelist = ENCHANTED_BOOK_WHITELIST_RAW.get().stream()
+                .map(ResourceLocation::tryParse)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toUnmodifiableSet());
         Set<String> disabledStats = DISABLED_STATS_RAW.get().stream()
                 .filter(Objects::nonNull)
                 .map(Object::toString)
@@ -1032,6 +1051,7 @@ public final class RunicConfig {
         ICE_PRISON_BOSS_DURATION_MULTIPLIER_CACHE = ICE_PRISON_BOSS_DURATION_MULTIPLIER.get();
         ICE_PRISON_COOLDOWN_TICKS_CACHE = ICE_PRISON_COOLDOWN_TICKS.get();
         BLACKLIST_CACHE.set(parsed);
+        ENCHANTED_BOOK_WHITELIST_CACHE.set(enchantedBookWhitelist);
         DISABLED_STATS_CACHE.set(disabledStats);
         DISABLE_ALL_CACHE.set(disableAll);
         DISABLE_RUNE_SLOTS_CACHE.set(disableRuneSlots);

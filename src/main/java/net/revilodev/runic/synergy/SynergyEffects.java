@@ -545,8 +545,9 @@ public final class SynergyEffects {
 
         int level = state.level();
         spawnFrozenShatterParticles(target);
-        float ratio = level >= 2 ? 0.35F : 0.20F;
-        float floor = level >= 2 ? 8.0F : 4.0F;
+        // Breaking Frostbite's freeze should be a modest payoff, not a large health-based execute.
+        float ratio = level >= 2 ? 0.18F : 0.10F;
+        float floor = level >= 2 ? 4.0F : 2.0F;
         dealInternal(attacker, target, Math.max(floor, target.getMaxHealth() * ratio));
 
         int recovery = phaseTwoDurationTicks(target, level);

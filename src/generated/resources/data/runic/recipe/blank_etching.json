@@ -11,8 +11,8 @@
   },
   "pattern": [
     "SSS",
-    "SLS",
-    "SSS"
+    "SSS",
+    "SLS"
   ],
   "result": {
     "count": 1,

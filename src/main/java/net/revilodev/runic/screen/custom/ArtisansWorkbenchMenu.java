@@ -575,6 +575,14 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
             applyRuneOnTake(out, enhancement, false);
         } else {
             if (!isEnhancementItem(enhancement)) return ItemStack.EMPTY;
+            if (MythicRuneRegistry.isMythicRune(enhancement)) {
+                if (effectiveRemaining(out) <= 0) return ItemStack.EMPTY;
+                applyRuneOnTake(out, enhancement, false);
+                boolean unchanged = ItemStack.isSameItemSameComponents(base, out) && base.getDamageValue() == out.getDamageValue();
+                if (unchanged) return ItemStack.EMPTY;
+                writePreviewDelta(base, out);
+                return out;
+            }
             ResourceLocation synergyId = RuneItem.getItemSynergyId(enhancement);
             if (synergyId != null) {
                 if (RunicItemData.hasSynergy(out, synergyId)) return ItemStack.EMPTY;

@@ -36,10 +36,8 @@ public final class GearTooltips {
 
     private static final int ENCHANT_TOOLTIP_PREVIEW_LIMIT = 4;
     private static final String SYNERGY_ICON = "\u2605";
-
-    private static final char SLOT_FILLED = 'ÃƒÂ¢Ã‚Â¬Ã‚Â¤';
-    private static final char SLOT_EMPTY = 'ÃƒÂ¢Ã¢â‚¬â€Ã‚Â¯';
-
+    private static final char SLOT_FILLED = '\u2B24';
+    private static final char SLOT_EMPTY = '\u25EF';
 
     public static boolean apply(ItemStack stack, List<Component> tooltip) {
         if (!isGear(stack)) return false;
@@ -59,7 +57,7 @@ public final class GearTooltips {
         List<Component> enchLines = buildEnchantmentLines(stack, showDetails);
         List<Component> synergyLines = buildSynergyLines(stack, showDetails);
         List<Component> relicLines = buildRelicLines(stack, showDetails);
-        List<Component> mythicLines = MythicRuneRegistry.buildTooltip(stack, showDetails || Screen.hasShiftDown());
+        List<Component> mythicLines = MythicRuneRegistry.buildTooltip(stack, Screen.hasAltDown());
         List<Component> slots = buildRuneSlots(stack);
         List<Component> updateFive = buildUpdateFiveLines(stack);
         boolean hasAttributes = !GearAttributes.getAll(stack).isEmpty() || RunicItemData.getSynergyPotential(stack) > 0;
