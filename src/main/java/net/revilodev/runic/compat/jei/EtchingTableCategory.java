@@ -17,7 +17,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.revilodev.runic.RunicMod;
-import net.revilodev.runic.block.ModBlocks;
+import net.revilodev.runic.enchanting.EnchantingResource;
+import net.revilodev.runic.item.EnhancementCategory;
 import net.revilodev.runic.item.custom.EtchingItem;
 import net.revilodev.runic.item.custom.RuneItem;
 import net.revilodev.runic.mythic.MythicRuneRegistry;
@@ -26,7 +27,7 @@ import net.revilodev.runic.stat.RuneStats;
 
 public final class EtchingTableCategory implements IRecipeCategory<EtchingTableRecipe> {
     public static final RecipeType<EtchingTableRecipe> TYPE =
-            RecipeType.create(RunicMod.MOD_ID, "etching_table", EtchingTableRecipe.class);
+            RecipeType.create(RunicMod.MOD_ID, "enchanting", EtchingTableRecipe.class);
 
     private static final int W = 118;
     private static final int H = 32;
@@ -34,7 +35,7 @@ public final class EtchingTableCategory implements IRecipeCategory<EtchingTableR
     private final IDrawable icon;
 
     public EtchingTableCategory(IGuiHelper gui) {
-        this.icon = gui.createDrawableItemStack(new ItemStack(ModBlocks.ETCHING_TABLE.get()));
+        this.icon = gui.createDrawableItemStack(new ItemStack(Items.ENCHANTING_TABLE));
     }
 
     @Override
@@ -44,7 +45,7 @@ public final class EtchingTableCategory implements IRecipeCategory<EtchingTableR
 
     @Override
     public Component getTitle() {
-        return Component.translatable("block.runic.etching_table");
+        return Component.translatable("block.minecraft.enchanting_table");
     }
 
     @Override
@@ -64,14 +65,8 @@ public final class EtchingTableCategory implements IRecipeCategory<EtchingTableR
 
     @Override
     public void setRecipe(IRecipeLayoutBuilder b, EtchingTableRecipe recipe, IFocusGroup focuses) {
-        b.addSlot(RecipeIngredientRole.INPUT, 4, 8)
-                .addIngredients(recipe.base());
-
         b.addSlot(RecipeIngredientRole.INPUT, 26, 8)
-                .addIngredients(recipe.material());
-
-        b.addSlot(RecipeIngredientRole.INPUT, 48, 8)
-                .addItemStack(new ItemStack(Items.LAPIS_LAZULI, 1));
+                .addItemStack(EnchantingResource.itemFor(category(recipe)));
 
         b.addSlot(RecipeIngredientRole.OUTPUT, 90, 8)
                 .addItemStack(output(recipe));
@@ -85,6 +80,12 @@ public final class EtchingTableCategory implements IRecipeCategory<EtchingTableR
         recipe.mythic().ifPresent(id -> MythicRuneRegistry.setItemRuneId(out, id));
 
         return out;
+    }
+
+    private static EnhancementCategory category(EtchingTableRecipe recipe) {
+        return recipe.stat().map(EnhancementCategory::forStat)
+                .or(() -> recipe.effect().map(EnhancementCategory::forEnchantment))
+                .orElse(null);
     }
 
     private static void applyEffect(ItemStack out, ResourceLocation id) {

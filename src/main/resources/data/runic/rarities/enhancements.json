@@ -48,14 +48,14 @@
     "minecraft:looting": "uncommon",
     "minecraft:punch": "uncommon",
     "minecraft:silk_touch": "uncommon",
-    "minecraft:thorns": "uncommon",
+    "minecraft:thorns": "legendary",
 
     "minecraft:flame": "rare",
     "minecraft:impaling": "rare",
     "minecraft:luck_of_the_sea": "rare",
     "minecraft:piercing": "rare",
     "minecraft:riptide": "rare",
-    "minecraft:frost_walker": "rare",
+    "minecraft:frost_walker": "epic",
 
     "minecraft:channeling": "epic",
     "minecraft:multishot": "epic",

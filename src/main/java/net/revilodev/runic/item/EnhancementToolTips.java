@@ -182,6 +182,8 @@ public final class EnhancementToolTips {
         tooltip.add(RarityTintedItemName.tintedName(ChatFormatting.DARK_PURPLE, stack, Component.translatable(definition.translationKey())));
         if (Screen.hasAltDown()) {
             tooltip.add(Component.translatable("tooltip.runic.mythic_desc." + id.getPath().substring("mythic/".length())).withStyle(ChatFormatting.DARK_GRAY));
+        } else {
+            tooltip.add(Component.literal("[Alt]").withStyle(ChatFormatting.DARK_GRAY));
         }
         tooltip.add(rarityLine(EnhancementRarity.MYTHIC));
         tooltip.add(EnhancementCategory.FORBIDDEN.line());
@@ -194,6 +196,8 @@ public final class EnhancementToolTips {
                 .append(RarityTintedItemName.tintedName(ChatFormatting.GOLD, ItemStack.EMPTY, Component.translatable("tooltip.runic.synergy." + path))));
         if (Screen.hasAltDown()) {
             tooltip.add(Component.translatable("tooltip.runic.synergy_desc." + path).withStyle(ChatFormatting.DARK_GRAY));
+        } else {
+            tooltip.add(Component.literal("[Alt]").withStyle(ChatFormatting.DARK_GRAY));
         }
         tooltip.add(rarityLine(EnhancementRarity.SYNERGY));
     }

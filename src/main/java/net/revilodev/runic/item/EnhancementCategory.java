@@ -28,6 +28,10 @@ public enum EnhancementCategory {
         return Component.translatable("tooltip.runic.category." + this.key).withStyle(this.color);
     }
 
+    public ChatFormatting color() {
+        return color;
+    }
+
     public static EnhancementCategory forStat(RuneStatType type) {
         return switch (type) {
             case ATTACK_DAMAGE, ATTACK_SPEED, ATTACK_RANGE, SWEEPING_RANGE, DRAW_SPEED, LEECHING_CHANCE,

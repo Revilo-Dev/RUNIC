@@ -219,7 +219,7 @@ public final class MythicRuneRegistry {
                 out.add(net.minecraft.network.chat.Component.literal("  ")
                         .append(net.minecraft.network.chat.Component.translatable("tooltip.runic.mythic_desc." + id.getPath().substring("mythic/".length())).withStyle(ChatFormatting.DARK_GRAY)));
             } else if (definition != null) {
-                out.add(net.minecraft.network.chat.Component.literal("  [Alt]").withStyle(ChatFormatting.DARK_GRAY));
+                out.add(net.minecraft.network.chat.Component.literal("  [Ctrl]").withStyle(ChatFormatting.DARK_GRAY));
             }
         }
         return out;

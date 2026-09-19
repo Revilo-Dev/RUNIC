@@ -4,9 +4,11 @@ import net.minecraft.core.Holder;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.minecraft.core.component.DataComponents;
+import net.revilodev.runic.RunicConfig;
 import net.revilodev.runic.recipe.EtchingTableRecipe;
 import net.revilodev.runic.stat.RuneStatType;
 import net.revilodev.runic.stat.RuneStats;
@@ -69,7 +71,10 @@ public final class EnchantBlacklist {
     }
 
     public static boolean isBlacklisted(ResourceLocation id) {
-        return DISABLE_ALL || HARD_DISABLED.contains(id) || CONFIG_DISABLED.contains(id);
+        // Explicitly whitelisted enchantments remain usable everywhere, including
+        // on items and enchanted books that pass through the stripping events.
+        return !RunicConfig.enchantedBookWhitelist().contains(id)
+                && (DISABLE_ALL || HARD_DISABLED.contains(id) || CONFIG_DISABLED.contains(id));
     }
 
     public static boolean isStatBlacklisted(RuneStatType type) {
@@ -115,7 +120,9 @@ public final class EnchantBlacklist {
         if (!stored.isEmpty()) {
             ItemEnchantments.Mutable mut = new ItemEnchantments.Mutable(stored);
             stored.entrySet().forEach(e -> {
-                if (isBlacklisted(e.getKey())) mut.set(e.getKey(), 0);
+                if (isBlacklisted(e.getKey()) && !isConfiguredBookEnchantment(stack, e.getKey())) {
+                    mut.set(e.getKey(), 0);
+                }
             });
             ItemEnchantments cleaned = mut.toImmutable();
             if (!cleaned.equals(stored)) {
@@ -147,5 +154,13 @@ public final class EnchantBlacklist {
         }
 
         return changed;
+    }
+
+    private static boolean isConfiguredBookEnchantment(ItemStack stack, Holder<Enchantment> enchantment) {
+        return stack.is(Items.ENCHANTED_BOOK)
+                && enchantment.unwrapKey()
+                .map(ResourceKey::location)
+                .map(RunicConfig::canEnchantBook)
+                .orElse(false);
     }
 }

@@ -316,7 +316,7 @@ public final class RunicLangProviders {
             add("tooltip.runic.use_inscription_table", "Used in an Inscription Table");
             add("tooltip.runic.use_enchanting_table", "Used in an Enchanting Table");
             add("button.runic.reroll_etching", "Reroll");
-            add("tooltip.runic.reroll_etching", "Use 1 level and 1 lapis to roll a random etching.");
+            add("tooltip.runic.reroll_etching", "Spend 3 levels to reroll the enchanting offers.");
             for (RuneStatType stat : RuneStatType.values()) {
                 add("enchantment.runic.stat." + stat.id(), enchantingName(stat));
             }

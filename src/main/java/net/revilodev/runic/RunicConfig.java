@@ -21,7 +21,9 @@ public final class RunicConfig {
     private static final ModConfigSpec.BooleanValue DISABLE_ALL;
     private static final ModConfigSpec.ConfigValue<List<? extends String>> BLACKLIST_RAW;
     private static final ModConfigSpec.ConfigValue<List<? extends String>> ENCHANTED_BOOK_WHITELIST_RAW;
+    private static final ModConfigSpec.ConfigValue<List<? extends String>> ENCHANTING_BOOK_ENCHANTMENTS_RAW;
     private static final ModConfigSpec.BooleanValue DISABLE_RUNE_SLOTS;
+    private static final ModConfigSpec.IntValue DEFAULT_WEAPON_RUNE_SLOTS;
     private static final ModConfigSpec.BooleanValue DISABLE_RUNIC_LOOT;
     private static final ModConfigSpec.BooleanValue DISABLE_ETCHING_CRAFTING;
     private static final ModConfigSpec.BooleanValue DISABLE_STAT_CAPS;
@@ -372,6 +374,9 @@ public final class RunicConfig {
             new AtomicReference<>(Set.of());
     private static final AtomicReference<Set<ResourceLocation>> ENCHANTED_BOOK_WHITELIST_CACHE =
             new AtomicReference<>(Set.of());
+    private static final AtomicReference<Set<ResourceLocation>> ENCHANTING_BOOK_ENCHANTMENTS_CACHE =
+            new AtomicReference<>(Set.of());
+    private static volatile int DEFAULT_WEAPON_RUNE_SLOTS_CACHE = 4;
     private static final AtomicReference<Set<String>> DISABLED_STATS_CACHE =
             new AtomicReference<>(Set.of());
 
@@ -391,9 +396,17 @@ public final class RunicConfig {
                 );
 
         ENCHANTED_BOOK_WHITELIST_RAW = builder
-                .comment("Enchantment ids whose enchanted books are kept by RUNIC's loot filter. Books with any unlisted enchantment are still removed.")
+                .comment("Enchantment ids exempt from RUNIC's enchantment blacklist and stripping. Their enchanted books are also kept by RUNIC's loot filter; books with any unlisted enchantment are still removed.")
                 .defineList(
                         "loot.enchanted_book_whitelist",
+                        List.of(),
+                        o -> o instanceof String s && ResourceLocation.tryParse(s) != null
+                );
+
+        ENCHANTING_BOOK_ENCHANTMENTS_RAW = builder
+                .comment("Enchantment ids that may be applied to books in an enchanting table. Empty by default, which disables enchanting books.")
+                .defineList(
+                        "enchanting_table.book_enchantments",
                         List.of(),
                         o -> o instanceof String s && ResourceLocation.tryParse(s) != null
                 );
@@ -401,6 +414,10 @@ public final class RunicConfig {
         DISABLE_RUNE_SLOTS = builder
                 .comment("When true, rune slots are ignored and no longer limit applying runes or etchings")
                 .define("mechanics.disable_rune_slots", false);
+
+        DEFAULT_WEAPON_RUNE_SLOTS = builder
+                .comment("Rune slots assigned to weapons that use RUNIC's fallback weapon allocation.")
+                .defineInRange("mechanics.default_weapon_rune_slots", 4, 0, Integer.MAX_VALUE);
 
         DISABLE_RUNIC_LOOT = builder
                 .comment("When true, RUNIC loot injection and enchanted-book stripping are disabled")
@@ -619,6 +636,18 @@ public final class RunicConfig {
 
     public static Set<ResourceLocation> enchantedBookWhitelist() {
         return ENCHANTED_BOOK_WHITELIST_CACHE.get();
+    }
+
+    public static boolean canEnchantBook(ResourceLocation enchantmentId) {
+        return enchantmentId != null && ENCHANTING_BOOK_ENCHANTMENTS_CACHE.get().contains(enchantmentId);
+    }
+
+    public static boolean hasEnchantableBookEnchantments() {
+        return !ENCHANTING_BOOK_ENCHANTMENTS_CACHE.get().isEmpty();
+    }
+
+    public static int defaultWeaponRuneSlots() {
+        return DEFAULT_WEAPON_RUNE_SLOTS_CACHE;
     }
 
     public static boolean disableAllEnchantments() {
@@ -870,6 +899,10 @@ public final class RunicConfig {
                 .map(ResourceLocation::tryParse)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toUnmodifiableSet());
+        Set<ResourceLocation> enchantingBookEnchantments = ENCHANTING_BOOK_ENCHANTMENTS_RAW.get().stream()
+                .map(ResourceLocation::tryParse)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toUnmodifiableSet());
         Set<String> disabledStats = DISABLED_STATS_RAW.get().stream()
                 .filter(Objects::nonNull)
                 .map(Object::toString)
@@ -879,6 +912,7 @@ public final class RunicConfig {
 
         boolean disableAll = DISABLE_ALL.get();
         boolean disableRuneSlots = DISABLE_RUNE_SLOTS.get();
+        DEFAULT_WEAPON_RUNE_SLOTS_CACHE = DEFAULT_WEAPON_RUNE_SLOTS.get();
         boolean disableRunicLoot = DISABLE_RUNIC_LOOT.get();
         boolean disableEtchingCrafting = DISABLE_ETCHING_CRAFTING.get();
         boolean disableStatCaps = DISABLE_STAT_CAPS.get();
@@ -1052,6 +1086,7 @@ public final class RunicConfig {
         ICE_PRISON_COOLDOWN_TICKS_CACHE = ICE_PRISON_COOLDOWN_TICKS.get();
         BLACKLIST_CACHE.set(parsed);
         ENCHANTED_BOOK_WHITELIST_CACHE.set(enchantedBookWhitelist);
+        ENCHANTING_BOOK_ENCHANTMENTS_CACHE.set(enchantingBookEnchantments);
         DISABLED_STATS_CACHE.set(disabledStats);
         DISABLE_ALL_CACHE.set(disableAll);
         DISABLE_RUNE_SLOTS_CACHE.set(disableRuneSlots);

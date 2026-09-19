@@ -27,6 +27,6 @@ public final class RelicItem extends Item {
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
         tooltip.add(Component.translatable("tooltip.runic.use_artisans_workbench").withStyle(ChatFormatting.DARK_GRAY));
-        RelicRegistry.appendRelicItemTooltip(relicId, tooltip, Screen.hasAltDown());
+        RelicRegistry.appendRelicItemTooltip(relicId, tooltip, Screen.hasControlDown());
     }
 }

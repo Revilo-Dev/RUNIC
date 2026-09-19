@@ -1412,6 +1412,7 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
 
     private boolean applyDissonant(ItemStack taken) {
         if (!canApplyDissonant(taken)) return false;
+        RunicItemData.setCorruption(taken, 0);
         RunicItemData.setSynergyPotential(taken, 0);
         RunicItemData.clearSynergies(taken);
         RunicItemData.clearMythicRunes(taken);

@@ -8,7 +8,6 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.revilodev.runic.compat.RunicCompat;
@@ -61,16 +60,6 @@ public class RuneItem extends Item implements RarityTintedItemName {
     @Override
     public ChatFormatting nameColor() {
         return ChatFormatting.GOLD;
-    }
-
-    @Override
-    public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        super.appendHoverText(stack, context, tooltip, flag);
-        ResourceLocation mythicId = MythicRuneRegistry.getItemRuneId(stack);
-        if (mythicId != null && MythicRuneRegistry.get(mythicId) != null) {
-            String path = mythicId.getPath().substring("mythic/".length());
-            tooltip.add(Component.translatable("tooltip.runic.mythic_desc." + path).withStyle(ChatFormatting.DARK_GRAY));
-        }
     }
 
     public static Set<ResourceLocation> allowedEffectIds() {

@@ -20,6 +20,7 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.*;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.revilodev.runic.RunicMod;
+import net.revilodev.runic.RunicConfig;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -238,7 +239,7 @@ public final class RuneSlotCapacityData extends SimpleJsonResourceReloadListener
             type = classify(item);
         }
         if (type != null && DEFAULTS.containsKey(type)) {
-            return DEFAULTS.get(type);
+            return defaultCapacity(type);
         }
         return 0;
     }
@@ -255,9 +256,20 @@ public final class RuneSlotCapacityData extends SimpleJsonResourceReloadListener
         }
         String type = classify(stack);
         if (type != null && DEFAULTS.containsKey(type)) {
-            return DEFAULTS.get(type);
+            return defaultCapacity(type);
         }
         return 0;
+    }
+
+    private static int defaultCapacity(String type) {
+        return isWeaponType(type) ? RunicConfig.defaultWeaponRuneSlots() : DEFAULTS.get(type);
+    }
+
+    private static boolean isWeaponType(String type) {
+        return switch (type) {
+            case "sword", "pickaxe", "axe", "shovel", "hoe", "bow", "crossbow", "trident", "mace" -> true;
+            default -> false;
+        };
     }
 
 

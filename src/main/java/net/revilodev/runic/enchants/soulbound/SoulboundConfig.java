@@ -1,12 +1,10 @@
 package net.revilodev.runic.enchants.soulbound;
 
+import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.event.config.ModConfigEvent;
 import net.neoforged.neoforge.common.ModConfigSpec;
-import net.revilodev.runic.RunicMod;
 
-@EventBusSubscriber(modid = RunicMod.MOD_ID, bus = EventBusSubscriber.Bus.MOD)
 public final class SoulboundConfig {
     private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
     private static final ModConfigSpec.BooleanValue ALLOW_BREAK_ITEM = BUILDER.define("allowBreakItem", false);
@@ -14,6 +12,10 @@ public final class SoulboundConfig {
     public static final ModConfigSpec SPEC = BUILDER.build();
     public static boolean allowBreakItem;
     public static int maxDamagePercent;
+
+    public static void register(IEventBus modEventBus) {
+        modEventBus.register(SoulboundConfig.class);
+    }
 
     @SubscribeEvent
     static void onLoad(ModConfigEvent event) {

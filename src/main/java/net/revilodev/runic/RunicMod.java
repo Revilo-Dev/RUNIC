@@ -36,6 +36,7 @@ public class RunicMod {
 
     public RunicMod(ModContainer modContainer, IEventBus modEventBus) {
         RunicConfig.register(modEventBus);
+        SoulboundConfig.register(modEventBus);
         modEventBus.addListener(DataGenerators::gatherData);
 
         modEventBus.addListener(this::commonSetup);

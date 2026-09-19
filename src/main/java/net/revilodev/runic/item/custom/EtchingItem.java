@@ -14,6 +14,7 @@ import net.revilodev.runic.RunicMod;
 import net.revilodev.runic.compat.RunicCompat;
 import net.revilodev.runic.event.EnchantBlacklist;
 import net.revilodev.runic.item.ModItems;
+import net.revilodev.runic.item.EnhancementCategory;
 import net.revilodev.runic.stat.RuneStatType;
 import net.revilodev.runic.stat.RuneStats;
 
@@ -107,7 +108,7 @@ public class EtchingItem extends Item {
         return stack;
     }
 
-    private static RuneStatType statTypeForTableEnchantment(Holder<Enchantment> enchantment) {
+    public static RuneStatType statTypeForTableEnchantment(Holder<Enchantment> enchantment) {
         return enchantment.unwrapKey()
                 .map(ResourceKey::location)
                 .filter(id -> id.getNamespace().equals(RunicMod.MOD_ID))
@@ -115,6 +116,15 @@ public class EtchingItem extends Item {
                 .filter(path -> path.startsWith("stat/"))
                 .map(path -> RuneStatType.byId(path.substring("stat/".length())))
                 .orElse(null);
+    }
+
+    public static EnhancementCategory categoryForTableEnchantment(Holder<Enchantment> enchantment) {
+        RuneStatType stat = statTypeForTableEnchantment(enchantment);
+        if (stat != null) {
+            return EnhancementCategory.forStat(stat);
+        }
+        ResourceLocation id = enchantment.unwrapKey().map(ResourceKey::location).orElse(null);
+        return EnhancementCategory.forEnchantment(id);
     }
 
     public static ItemStack createRandomStatEtching(RandomSource random) {

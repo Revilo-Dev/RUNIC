@@ -57,7 +57,7 @@ public final class GearTooltips {
         List<Component> enchLines = buildEnchantmentLines(stack, showDetails);
         List<Component> synergyLines = buildSynergyLines(stack, showDetails);
         List<Component> relicLines = buildRelicLines(stack, showDetails);
-        List<Component> mythicLines = MythicRuneRegistry.buildTooltip(stack, Screen.hasAltDown());
+        List<Component> mythicLines = MythicRuneRegistry.buildTooltip(stack, showDetails);
         List<Component> slots = buildRuneSlots(stack);
         List<Component> updateFive = buildUpdateFiveLines(stack);
         boolean hasAttributes = !GearAttributes.getAll(stack).isEmpty() || RunicItemData.getSynergyPotential(stack) > 0;
@@ -546,4 +546,3 @@ public final class GearTooltips {
         return s != null && s.startsWith("When ") && s.endsWith(":");
     }
 }
-

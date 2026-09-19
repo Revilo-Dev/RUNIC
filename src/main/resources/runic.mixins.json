@@ -1,0 +1,18 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "net.revilodev.runic.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "EnchantmentMenuAccessor",
+    "EnchantmentMenuMixin",
+    "EnchantmentResourceSlotMixin"
+  ],
+  "client": [
+    "client.AbstractContainerScreenAccessor",
+    "client.EnchantmentScreenMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

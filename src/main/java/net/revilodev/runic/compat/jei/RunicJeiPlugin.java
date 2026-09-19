@@ -7,6 +7,7 @@ import mezz.jei.api.registration.IRecipeCategoryRegistration;
 import mezz.jei.api.registration.IRecipeRegistration;
 import mezz.jei.api.registration.IRecipeCatalystRegistration;
 import mezz.jei.api.registration.IExtraIngredientRegistration;
+import mezz.jei.api.registration.IGuiHandlerRegistration;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.core.Holder;
@@ -19,7 +20,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.revilodev.runic.RunicMod;
-import net.revilodev.runic.block.ModBlocks;
 import net.revilodev.runic.compat.RunicCompat;
 import net.revilodev.runic.item.ModItems;
 import net.revilodev.runic.item.custom.EtchingItem;
@@ -29,6 +29,7 @@ import net.revilodev.runic.relic.RelicRegistry;
 import net.revilodev.runic.runes.UniqueRuneSources;
 import net.revilodev.runic.recipe.EtchingTableRecipe;
 import net.revilodev.runic.recipe.ModRecipeTypes;
+import net.revilodev.runic.screen.custom.ArtisansWorkbenchScreen;
 import net.revilodev.runic.stat.RuneStatType;
 
 import java.util.ArrayList;
@@ -67,7 +68,13 @@ public final class RunicJeiPlugin implements IModPlugin {
 
     @Override
     public void registerRecipeCatalysts(IRecipeCatalystRegistration registration) {
-        registration.addRecipeCatalyst(new ItemStack(ModBlocks.ETCHING_TABLE.get()), EtchingTableCategory.TYPE);
+        registration.addRecipeCatalyst(new ItemStack(net.minecraft.world.item.Items.ENCHANTING_TABLE), EtchingTableCategory.TYPE);
+    }
+
+    @Override
+    public void registerGuiHandlers(IGuiHandlerRegistration registration) {
+        // The workbench owns the entire interaction flow, so do not render JEI beside it.
+        registration.addGuiScreenHandler(ArtisansWorkbenchScreen.class, screen -> null);
     }
 
     @Override
