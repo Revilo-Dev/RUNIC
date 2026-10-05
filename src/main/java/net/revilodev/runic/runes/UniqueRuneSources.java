@@ -1,6 +1,7 @@
 package net.revilodev.runic.runes;
 
 import net.minecraft.resources.ResourceLocation;
+import net.revilodev.runic.RunicConfig;
 import net.revilodev.runic.stat.RuneStatType;
 
 import java.util.Set;
@@ -51,11 +52,11 @@ public final class UniqueRuneSources {
     );
 
     public static boolean isUniqueEtchingStat(RuneStatType type) {
-        return UNIQUE_ETCHING_STATS.contains(type);
+        return !RunicConfig.allRunesHaveEtchings() && UNIQUE_ETCHING_STATS.contains(type);
     }
 
     public static boolean isUniqueEtchingEffect(ResourceLocation id) {
-        return UNIQUE_ETCHING_EFFECTS.contains(id);
+        return !RunicConfig.allRunesHaveEtchings() && UNIQUE_ETCHING_EFFECTS.contains(id);
     }
 
     public static boolean isSourceLockedRuneStat(RuneStatType type) {

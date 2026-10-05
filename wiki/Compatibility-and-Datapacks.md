@@ -1,6 +1,6 @@
 # Compatibility and Datapacks
 
-RUNIC supports datapack-driven compatibility for rune slots, custom gear categories, rarity weights, and effect enchantments.
+RUNIC supports datapack-driven compatibility for rune slots, custom gear categories, rarities, recipes, and effect enchantments.
 
 This page is for players and pack makers. For mod developers, see [Developer Integration](Developer-Integration.md).
 
@@ -79,3 +79,10 @@ Packs can remove an effect from RUNIC's allowed list:
 
 After changing datapacks, reload the world or run `/reload`.
 
+## Rarity Files
+
+Rarity files live in `data/<namespace>/rarities/<file>.json` and map effect ids or `runic:stat/<id>` ids to rarity names. See [Developer Integration](Developer-Integration.md) for a complete example.
+
+## Config Overrides
+
+For a pack-specific item override, `rune_slots.whitelist = ["modid:item=count"]` is faster than a datapack. Use a datapack when distributing compatibility to other packs. `rune_slots.blacklist` always wins over both.

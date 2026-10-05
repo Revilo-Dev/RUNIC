@@ -1,45 +1,40 @@
 # Corruption and Attributes
 
-Corruption is the main risk system in RUNIC. Stronger gear usually carries more corruption.
+Corruption is a stored risk score. The default Exhausted threshold is 100, and the displayed percentage is `corruption / threshold × 100`. Corruption is clamped between zero and the threshold.
 
-## Corruption Bands
+## Bands and Roll Chances
 
-Gear can move through corruption bands:
+Every operation that increases corruption performs independent negative and positive attribute rolls using the band reached after that increase.
 
-- Stable
-- Tainted
-- Corrupted
-- Critical
-- Exhausted
+| Band | Percent | Negative roll | Positive roll | Possible negative attributes | Possible positive attributes |
+|---|---:|---:|---:|---|---|
+| Stable | 0–24% | 0% | 0% | none | none |
+| Tainted | 25–49% | 5% | 0% | Brittle, Fractured, Unstable | none |
+| Corrupted | 50–74% | 10% | 3% | Brittle, Fractured, Unstable, Chaotic | Reinforced, Tempered |
+| Critical | 75–99% | 20% | 5% | Brittle, Fractured, Unstable, Chaotic, Cursed | Reinforced, Tempered, Ancient, Harmonized |
+| Exhausted | 100% | no roll | no roll | Exhausted is applied | none |
 
-Higher bands are more dangerous and can add negative attributes.
+The two rolls are independent, so one corruption gain can add both a negative and a positive attribute. Negative attributes are normally added only once by random corruption rolls; positive attributes can gain levels up to 10.
 
-## Exhausted Gear
+## Attribute Effects
 
-When an item becomes exhausted, further RUNIC modification is blocked.
-
-## Negative Attributes
-
-Negative attributes can include:
-
-- Cursed: weakens rune values and makes future changes riskier.
-- Unstable: raises forging risk and weakens future rerolls.
-- Negative: reduces effective rune slot capacity.
-- Brittle: increases durability loss.
-- Fractured: failed synergy attempts add more corruption.
-- Exhausted: blocks further modification.
-- Chaotic: wild modifications made the item unpredictable.
-
-## Positive Attributes
-
-Positive attributes can include:
-
-- Ancient: boosts all rune power on the item.
-- Reinforced: reduces durability loss.
-- Tempered: reduces corruption gained from inscriptions.
-- Harmonized: strengthens synergy effects.
+| Attribute | Effect |
+|---|---|
+| Sealed | Prevents another extraction. |
+| Cursed | Multiplies enhancement power and effective stat caps by `0.95^level`; also reduces the next Cursed Inscription success chance by 10 percentage points per level. |
+| Unstable | Lowers both ends of future stat reroll ranges by 2 per level. |
+| Negative | Reduces effective rune-slot capacity by one per level. |
+| Ancient | Adds 5% enhancement power per level by default. |
+| Brittle | Increases durability loss through the durability handling system. |
+| Fractured | Adds 5 extra corruption after a failed synergy roll by default. |
+| Exhausted | Blocks further workbench modification. |
+| Overforged | Marks upgraded gear; another Upgrade adds extra corruption. |
+| Chaotic | Marks gear changed by a Wild Inscription. |
+| Reinforced | Reduces durability loss by 10% per level by default. |
+| Tempered | Reduces inscription corruption by 10% per level by default. |
+| Harmonized | Adds 10% synergy power per level by default, stacking with Dominion. |
+| Dissonant | Forces Synergy Potential to zero and prevents mythic runes. |
 
 ## Managing Corruption
 
-Use restoration, purification, stabilization, and tempering carefully. They can save an item, but most still have a cost.
-
+Restoration removes corruption at the cost of maximum durability and Brittle. Purification removes one removable negative attribute but adds corruption and Brittle. Stabilization trades Unstable for Brittle. Reaching the threshold permanently applies Exhausted even if corruption is later lowered.

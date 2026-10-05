@@ -15,6 +15,7 @@ import net.revilodev.runic.compat.RunicCompat;
 import net.revilodev.runic.event.EnchantBlacklist;
 import net.revilodev.runic.item.ModItems;
 import net.revilodev.runic.item.EnhancementCategory;
+import net.revilodev.runic.runes.UniqueRuneSources;
 import net.revilodev.runic.stat.RuneStatType;
 import net.revilodev.runic.stat.RuneStats;
 
@@ -47,10 +48,15 @@ public class EtchingItem extends Item {
 
         RuneStatType stat = statTypeForTableEnchantment(enchantment);
         if (stat != null) {
-            return !EnchantBlacklist.isStatBlacklisted(stat) && RunicCompat.isStatAvailable(stat);
+            return !UniqueRuneSources.isUniqueEtchingStat(stat)
+                    && !EnchantBlacklist.isStatBlacklisted(stat)
+                    && RunicCompat.isStatAvailable(stat);
         }
 
-        return isEffectEnchantment(enchantment) && !EnchantBlacklist.isBlacklisted(enchantment);
+        ResourceLocation id = enchantment.unwrapKey().map(ResourceKey::location).orElse(null);
+        return !UniqueRuneSources.isUniqueEtchingEffect(id)
+                && isEffectEnchantment(enchantment)
+                && !EnchantBlacklist.isBlacklisted(enchantment);
     }
 
     @Override
@@ -84,7 +90,10 @@ public class EtchingItem extends Item {
     }
 
     public static ItemStack createEffectEtching(Holder<Enchantment> enchantment) {
-        if (!isEffectEnchantment(enchantment) || EnchantBlacklist.isBlacklisted(enchantment)) {
+        ResourceLocation id = enchantment.unwrapKey().map(ResourceKey::location).orElse(null);
+        if (UniqueRuneSources.isUniqueEtchingEffect(id)
+                || !isEffectEnchantment(enchantment)
+                || EnchantBlacklist.isBlacklisted(enchantment)) {
             return ItemStack.EMPTY;
         }
         ItemStack stack = new ItemStack(ModItems.ETCHING.get());
@@ -99,7 +108,10 @@ public class EtchingItem extends Item {
     }
 
     public static ItemStack createStatEtching(RandomSource random, RuneStatType type) {
-        if (type == null || EnchantBlacklist.isStatBlacklisted(type) || !RunicCompat.isStatAvailable(type)) {
+        if (type == null
+                || UniqueRuneSources.isUniqueEtchingStat(type)
+                || EnchantBlacklist.isStatBlacklisted(type)
+                || !RunicCompat.isStatAvailable(type)) {
             return ItemStack.EMPTY;
         }
         RuneStats stats = RuneStats.singleUnrolled(type);

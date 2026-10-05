@@ -4,6 +4,7 @@ import com.mojang.serialization.Codec;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.world.item.Item;
@@ -19,6 +20,8 @@ import net.revilodev.runic.registry.ModDataComponents;
 import static net.revilodev.runic.registry.ModDataComponents.DATA_COMPONENT_TYPES;
 
 public final class RuneSlots {
+    private static final String STORAGE_DRAWERS_NAMESPACE = "storagedrawers";
+
     // master config gate
     public static boolean enabled() {
         return !RunicConfig.disableRuneSlots();
@@ -27,6 +30,10 @@ public final class RuneSlots {
     // stored value wins over derived capacity
     public static int capacity(ItemStack stack) {
         if (!enabled()) return 0;
+        var itemId = BuiltInRegistries.ITEM.getKey(stack.getItem());
+        if (isStorageDrawersItem(stack) || RunicConfig.isRuneSlotBlacklisted(itemId)) return 0;
+        Integer configured = RunicConfig.runeSlotWhitelistCount(itemId);
+        if (configured != null) return configured;
         Integer stored = stack.get(ModDataComponents.RUNE_SLOTS_CAPACITY.get());
         if (stored != null) return Math.max(0, stored);
         return RuneSlotCapacityData.capacity(stack);
@@ -69,6 +76,12 @@ public final class RuneSlots {
             if (stack.has(ModDataComponents.RUNE_SLOTS_USED.get())) {
                 stack.set(ModDataComponents.RUNE_SLOTS_USED.get(), 0);
             }
+            return;
+        }
+
+        if (isStorageDrawersItem(stack)
+                || RunicConfig.isRuneSlotBlacklisted(BuiltInRegistries.ITEM.getKey(stack.getItem()))) {
+            stack.set(ModDataComponents.RUNE_SLOTS_USED.get(), 0);
             return;
         }
 
@@ -120,6 +133,8 @@ public final class RuneSlots {
     // explicit capacity override
     public static void addOneSlot(ItemStack stack) {
         if (!enabled()) return;
+        if (isStorageDrawersItem(stack)
+                || RunicConfig.isRuneSlotBlacklisted(BuiltInRegistries.ITEM.getKey(stack.getItem()))) return;
         int cap = capacity(stack);
         stack.set(ModDataComponents.RUNE_SLOTS_CAPACITY.get(), cap + 1);
     }
@@ -150,6 +165,11 @@ public final class RuneSlots {
         for (int i = 0; i < u; i++) sb.append('\u2B24');
         for (int i = 0; i < rem; i++) sb.append('\u25EF');
         return Component.literal(sb.toString()).withStyle(ChatFormatting.AQUA);
+    }
+
+    /** Storage Drawers items must never receive RUNIC enhancement slots. */
+    private static boolean isStorageDrawersItem(ItemStack stack) {
+        return STORAGE_DRAWERS_NAMESPACE.equals(BuiltInRegistries.ITEM.getKey(stack.getItem()).getNamespace());
     }
 
     private RuneSlots() {}

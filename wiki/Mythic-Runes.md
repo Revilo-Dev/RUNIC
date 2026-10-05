@@ -4,23 +4,23 @@ Mythic runes are rare, powerful upgrades with larger tradeoffs than normal runes
 
 ## Ruin
 
-Greatly increases weapon damage. Hits may add extra corruption, and the item uses more durability.
+Adds 20% damage. Hits have a 5% chance to add 1 corruption, and durability use increases by 20%.
 
 ## Dominion
 
-Amplifies other enhancements and synergies on the item.
+Adds 10% power to other enhancements and 5% power to synergies for each Dominion rune.
 
 ## Hunger
 
-Restores durability on kills, but attacks can add extra corruption.
+Restores 2 durability on kills. Hits have a 3% chance to add 1 corruption.
 
 ## Void
 
-Deals more damage to weakened targets and builds corruption while the item stays in combat.
+Below 35% health, deals 25% more damage. While in combat, adds 1 corruption every 200 ticks.
 
 ## Ascendance
 
-Defeating powerful enemies briefly grants strength and speed.
+Defeating a target with at least 50 maximum health grants a 200-tick buff with 15% damage and 10% speed bonuses.
 
 ## Rules
 
@@ -28,3 +28,4 @@ Most mythic runes are for weapons or ranged weapons. Dominion can also apply to 
 
 An item cannot use every mythic rune freely. If the workbench rejects one, the item type is probably unsupported or the rune is already present.
 
+Mythic application adds its configured 20 base corruption by default, may apply a curse, and is controlled under `forging.mythics`.

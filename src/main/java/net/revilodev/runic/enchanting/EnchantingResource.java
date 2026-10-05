@@ -85,7 +85,7 @@ public final class EnchantingResource {
     // Allows enchanting books only through a config whitelist.
     public static boolean allowsBook(Holder<Enchantment> enchantment) {
         ResourceLocation id = enchantment.unwrapKey().map(ResourceKey::location).orElse(null);
-        return RunicConfig.canEnchantBook(id);
+        return RunicConfig.isEnchantmentWhitelisted(id);
     }
 
     private static EnhancementCategory categoryFor(ItemStack resource) {

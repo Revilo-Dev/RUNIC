@@ -19,6 +19,8 @@ The workbench can:
 
 Each applied rune or etching uses enhancement capacity. If the item is full, you need to remove something or increase capacity before adding more.
 
+Synergies use no slots, relics use their own socket, and mythic runes require a free normal slot. The output preview is authoritative and is computed server-side.
+
 ## Previewing Risk
 
 The workbench preview shows expected changes before you commit. Pay attention to:
@@ -33,3 +35,4 @@ The workbench preview shows expected changes before you commit. Pay attention to
 
 An item may be blocked from further modification if it is sealed, exhausted, unsupported, or missing the required slot/socket.
 
+Sealed specifically blocks extraction. Exhausted blocks all forging. Dissonant blocks mythic runes and Synergy Potential.

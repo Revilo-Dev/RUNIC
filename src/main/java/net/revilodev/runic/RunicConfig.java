@@ -7,6 +7,8 @@ import net.neoforged.neoforge.common.ModConfigSpec;
 import net.revilodev.runic.event.EnchantBlacklist;
 
 import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -20,13 +22,13 @@ public final class RunicConfig {
 
     private static final ModConfigSpec.BooleanValue DISABLE_ALL;
     private static final ModConfigSpec.ConfigValue<List<? extends String>> BLACKLIST_RAW;
-    private static final ModConfigSpec.ConfigValue<List<? extends String>> ENCHANTED_BOOK_WHITELIST_RAW;
-    private static final ModConfigSpec.ConfigValue<List<? extends String>> ENCHANTING_BOOK_ENCHANTMENTS_RAW;
+    private static final ModConfigSpec.ConfigValue<List<? extends String>> ENCHANTMENT_WHITELIST_RAW;
+    private static final ModConfigSpec.ConfigValue<List<? extends String>> RUNE_SLOT_BLACKLIST_RAW;
+    private static final ModConfigSpec.ConfigValue<List<? extends String>> RUNE_SLOT_WHITELIST_RAW;
     private static final ModConfigSpec.BooleanValue DISABLE_RUNE_SLOTS;
     private static final ModConfigSpec.IntValue DEFAULT_WEAPON_RUNE_SLOTS;
     private static final ModConfigSpec.BooleanValue DISABLE_RUNIC_LOOT;
-    private static final ModConfigSpec.BooleanValue DISABLE_ETCHING_CRAFTING;
-    private static final ModConfigSpec.BooleanValue DISABLE_STAT_CAPS;
+    private static final ModConfigSpec.BooleanValue DISABLE_INSCRIPTION_CRAFTING;
     private static final ModConfigSpec.ConfigValue<List<? extends String>> DISABLED_STATS_RAW;
     private static final ModConfigSpec.DoubleValue BASE_SYNERGY_CHANCE;
     private static final ModConfigSpec.DoubleValue SYNERGY_POTENTIAL_BONUS;
@@ -128,7 +130,7 @@ public final class RunicConfig {
     private static final ModConfigSpec.DoubleValue HARMONIZED_SYNERGY_POWER_BONUS_PERCENT;
     private static final ModConfigSpec.DoubleValue TEMPERED_INSCRIPTION_CORRUPTION_REDUCTION_PERCENT;
     private static final ModConfigSpec.DoubleValue REINFORCED_DURABILITY_LOSS_REDUCTION_PERCENT;
-    private static final ModConfigSpec.BooleanValue REMOVED_ETCHINGS_LOOT_ENABLED;
+    private static final ModConfigSpec.BooleanValue ALL_RUNES_HAVE_ETCHINGS;
     private static final ModConfigSpec.IntValue COMMON_RUNE_LOOT_WEIGHT;
     private static final ModConfigSpec.IntValue UNCOMMON_RUNE_LOOT_WEIGHT;
     private static final ModConfigSpec.IntValue RARE_RUNE_LOOT_WEIGHT;
@@ -200,8 +202,7 @@ public final class RunicConfig {
     private static final AtomicBoolean DISABLE_ALL_CACHE = new AtomicBoolean(false);
     private static final AtomicBoolean DISABLE_RUNE_SLOTS_CACHE = new AtomicBoolean(false);
     private static final AtomicBoolean DISABLE_RUNIC_LOOT_CACHE = new AtomicBoolean(false);
-    private static final AtomicBoolean DISABLE_ETCHING_CRAFTING_CACHE = new AtomicBoolean(false);
-    private static final AtomicBoolean DISABLE_STAT_CAPS_CACHE = new AtomicBoolean(false);
+    private static final AtomicBoolean DISABLE_INSCRIPTION_CRAFTING_CACHE = new AtomicBoolean(false);
     private static volatile double BASE_SYNERGY_CHANCE_CACHE = 0.20D;
     private static volatile double SYNERGY_POTENTIAL_BONUS_CACHE = 0.20D;
     private static volatile int MAX_SYNERGY_POTENTIAL_CACHE = 3;
@@ -302,7 +303,7 @@ public final class RunicConfig {
     private static volatile double HARMONIZED_SYNERGY_POWER_BONUS_PERCENT_CACHE = 10.0D;
     private static volatile double TEMPERED_INSCRIPTION_CORRUPTION_REDUCTION_PERCENT_CACHE = 10.0D;
     private static volatile double REINFORCED_DURABILITY_LOSS_REDUCTION_PERCENT_CACHE = 10.0D;
-    private static volatile boolean REMOVED_ETCHINGS_LOOT_ENABLED_CACHE = true;
+    private static volatile boolean ALL_RUNES_HAVE_ETCHINGS_CACHE = false;
     private static volatile int COMMON_RUNE_LOOT_WEIGHT_CACHE = 60;
     private static volatile int UNCOMMON_RUNE_LOOT_WEIGHT_CACHE = 35;
     private static volatile int RARE_RUNE_LOOT_WEIGHT_CACHE = 18;
@@ -372,10 +373,12 @@ public final class RunicConfig {
     private static volatile int ICE_PRISON_COOLDOWN_TICKS_CACHE = 100;
     private static final AtomicReference<Set<ResourceLocation>> BLACKLIST_CACHE =
             new AtomicReference<>(Set.of());
-    private static final AtomicReference<Set<ResourceLocation>> ENCHANTED_BOOK_WHITELIST_CACHE =
+    private static final AtomicReference<Set<ResourceLocation>> ENCHANTMENT_WHITELIST_CACHE =
             new AtomicReference<>(Set.of());
-    private static final AtomicReference<Set<ResourceLocation>> ENCHANTING_BOOK_ENCHANTMENTS_CACHE =
+    private static final AtomicReference<Set<ResourceLocation>> RUNE_SLOT_BLACKLIST_CACHE =
             new AtomicReference<>(Set.of());
+    private static final AtomicReference<Map<ResourceLocation, Integer>> RUNE_SLOT_WHITELIST_CACHE =
+            new AtomicReference<>(Map.of());
     private static volatile int DEFAULT_WEAPON_RUNE_SLOTS_CACHE = 4;
     private static final AtomicReference<Set<String>> DISABLED_STATS_CACHE =
             new AtomicReference<>(Set.of());
@@ -395,20 +398,28 @@ public final class RunicConfig {
                         o -> o instanceof String s && ResourceLocation.tryParse(s) != null
                 );
 
-        ENCHANTED_BOOK_WHITELIST_RAW = builder
-                .comment("Enchantment ids exempt from RUNIC's enchantment blacklist and stripping. Their enchanted books are also kept by RUNIC's loot filter; books with any unlisted enchantment are still removed.")
+        ENCHANTMENT_WHITELIST_RAW = builder
+                .comment("Enchantment ids enabled everywhere by RUNIC: any item, the enchanting table, enchanted-book loot, runes, and etchings. Example: [\"minecraft:sharpness\", \"minecraft:protection\"]")
                 .defineList(
-                        "loot.enchanted_book_whitelist",
+                        "enchantments.whitelist",
                         List.of(),
-                        o -> o instanceof String s && ResourceLocation.tryParse(s) != null
+                        o -> o instanceof String
                 );
 
-        ENCHANTING_BOOK_ENCHANTMENTS_RAW = builder
-                .comment("Enchantment ids that may be applied to books in an enchanting table. Empty by default, which disables enchanting books.")
+        RUNE_SLOT_BLACKLIST_RAW = builder
+                .comment("Item ids that must never have rune slots. The blacklist wins over datapacks, stored slots, and the whitelist.")
                 .defineList(
-                        "enchanting_table.book_enchantments",
+                        "rune_slots.blacklist",
                         List.of(),
-                        o -> o instanceof String s && ResourceLocation.tryParse(s) != null
+                        o -> o instanceof String
+                );
+
+        RUNE_SLOT_WHITELIST_RAW = builder
+                .comment("Rune-slot overrides in id=count form. Adds slots to unsupported items and overrides any existing count. Example: [\"minecraft:stick=2\", \"minecraft:elytra=4\"]")
+                .defineList(
+                        "rune_slots.whitelist",
+                        List.of(),
+                        o -> o instanceof String
                 );
 
         DISABLE_RUNE_SLOTS = builder
@@ -423,13 +434,9 @@ public final class RunicConfig {
                 .comment("When true, RUNIC loot injection and enchanted-book stripping are disabled")
                 .define("loot.disable_runic_loot", false);
 
-        DISABLE_ETCHING_CRAFTING = builder
-                .comment("When true, the etching table cannot craft etchings or inscriptions")
-                .define("crafting.disable_etching_crafting", false);
-
-        DISABLE_STAT_CAPS = builder
-                .comment("When true, stat rune application is no longer clamped by stat caps")
-                .define("mechanics.disable_stat_caps", false);
+        DISABLE_INSCRIPTION_CRAFTING = builder
+                .comment("When true, the etching table cannot craft inscriptions")
+                .define("crafting.disable_inscription_crafting", false);
 
         DISABLED_STATS_RAW = builder
                 .comment("Disabled runic stat ids")
@@ -441,184 +448,186 @@ public final class RunicConfig {
 
         BASE_SYNERGY_CHANCE = builder
                 .comment("Base chance for compatible enhancements to combine into a synergy")
-                .defineInRange("update_5.base_synergy_chance", 0.20D, 0.0D, 1.0D);
+                .defineInRange("forging.base_synergy_chance", 0.20D, 0.0D, 1.0D);
         SYNERGY_POTENTIAL_BONUS = builder
                 .comment("Additional synergy chance per Synergy Potential level")
-                .defineInRange("update_5.synergy_potential_bonus", 0.20D, 0.0D, 1.0D);
+                .defineInRange("forging.synergy_potential_bonus", 0.20D, 0.0D, 1.0D);
         MAX_SYNERGY_POTENTIAL = builder
                 .comment("Maximum Synergy Potential level an item can store")
-                .defineInRange("update_5.max_synergy_potential", 3, 0, Integer.MAX_VALUE);
+                .defineInRange("forging.max_synergy_potential", 3, 0, Integer.MAX_VALUE);
         MAX_SYNERGY_CHANCE = builder
                 .comment("Maximum final synergy chance")
-                .defineInRange("update_5.max_synergy_chance", 0.80D, 0.0D, 1.0D);
+                .defineInRange("forging.max_synergy_chance", 0.80D, 0.0D, 1.0D);
 
-        COMMON_CORRUPTION = builder.defineInRange("update_5.common_corruption", 1, 0, Integer.MAX_VALUE);
-        UNCOMMON_CORRUPTION = builder.defineInRange("update_5.uncommon_corruption", 1, 0, Integer.MAX_VALUE);
-        RARE_CORRUPTION = builder.defineInRange("update_5.rare_corruption", 2, 0, Integer.MAX_VALUE);
-        EPIC_CORRUPTION = builder.defineInRange("update_5.epic_corruption", 2, 0, Integer.MAX_VALUE);
-        LEGENDARY_CORRUPTION = builder.defineInRange("update_5.legendary_corruption", 3, 0, Integer.MAX_VALUE);
-        MYTHIC_CORRUPTION = builder.defineInRange("update_5.mythic_corruption", 20, 0, Integer.MAX_VALUE);
-        ETCHING_CORRUPTION = builder.defineInRange("update_5.etching_corruption", 1, 0, Integer.MAX_VALUE);
-        SUCCESSFUL_SYNERGY_CORRUPTION = builder.defineInRange("update_5.successful_synergy_corruption", 5, 0, Integer.MAX_VALUE);
-        FAILED_SYNERGY_CORRUPTION = builder.defineInRange("update_5.failed_synergy_corruption", 2, 0, Integer.MAX_VALUE);
-        FRACTURED_EXTRA_FAILURE_CORRUPTION = builder.defineInRange("update_5.fractured_extra_failure_corruption", 5, 0, Integer.MAX_VALUE);
-        RESONANCE_INSCRIPTION_CORRUPTION = builder.defineInRange("update_5.resonance_inscription_corruption", 6, 0, Integer.MAX_VALUE);
+        COMMON_CORRUPTION = builder.defineInRange("forging.common_corruption", 1, 0, Integer.MAX_VALUE);
+        UNCOMMON_CORRUPTION = builder.defineInRange("forging.uncommon_corruption", 1, 0, Integer.MAX_VALUE);
+        RARE_CORRUPTION = builder.defineInRange("forging.rare_corruption", 2, 0, Integer.MAX_VALUE);
+        EPIC_CORRUPTION = builder.defineInRange("forging.epic_corruption", 2, 0, Integer.MAX_VALUE);
+        LEGENDARY_CORRUPTION = builder.defineInRange("forging.legendary_corruption", 3, 0, Integer.MAX_VALUE);
+        MYTHIC_CORRUPTION = builder.defineInRange("forging.mythic_corruption", 20, 0, Integer.MAX_VALUE);
+        ETCHING_CORRUPTION = builder.defineInRange("forging.etching_corruption", 1, 0, Integer.MAX_VALUE);
+        SUCCESSFUL_SYNERGY_CORRUPTION = builder.defineInRange("forging.successful_synergy_corruption", 5, 0, Integer.MAX_VALUE);
+        FAILED_SYNERGY_CORRUPTION = builder.defineInRange("forging.failed_synergy_corruption", 2, 0, Integer.MAX_VALUE);
+        FRACTURED_EXTRA_FAILURE_CORRUPTION = builder.defineInRange("forging.fractured_extra_failure_corruption", 5, 0, Integer.MAX_VALUE);
+        RESONANCE_INSCRIPTION_CORRUPTION = builder.defineInRange("forging.resonance_inscription_corruption", 6, 0, Integer.MAX_VALUE);
         EXHAUSTED_CORRUPTION_THRESHOLD = builder
                 .comment("Corruption value at which an item becomes Exhausted")
-                .defineInRange("update_5.exhausted_corruption_threshold", 100, 1, Integer.MAX_VALUE);
-        EXPANSION_INSCRIPTION_CORRUPTION = builder.defineInRange("update_5.expansion_inscription_corruption", 8, 0, Integer.MAX_VALUE);
-        EXPANSION_INSCRIPTION_MAX_DURABILITY_LOSS_PERCENT = builder.defineInRange("update_5.expansion_inscription_max_durability_loss_percent", 10.0D, 0.0D, 100.0D);
-        RESTORATION_INSCRIPTION_CORRUPTION_REDUCTION = builder.defineInRange("update_5.restoration_inscription_corruption_reduction", 10, 0, Integer.MAX_VALUE);
-        RESTORATION_INSCRIPTION_MAX_DURABILITY_LOSS_PERCENT = builder.defineInRange("update_5.restoration_inscription_max_durability_loss_percent", 15.0D, 0.0D, 100.0D);
-        RESTORATION_INSCRIPTION_ADDS_BRITTLE = builder.define("update_5.restoration_inscription_adds_brittle", true);
-        NULLIFICATION_INSCRIPTION_CORRUPTION = builder.defineInRange("update_5.nullification_inscription_corruption", 10, 0, Integer.MAX_VALUE);
-        NULLIFICATION_INSCRIPTION_REMOVES_SLOT = builder.define("update_5.nullification_inscription_removes_slot", true);
-        NULLIFICATION_INSCRIPTION_CAN_REMOVE_SYNERGIES = builder.define("update_5.nullification_inscription_can_remove_synergies", true);
-        UPGRADE_INSCRIPTION_CORRUPTION = builder.defineInRange("update_5.upgrade_inscription_corruption", 5, 0, Integer.MAX_VALUE);
-        UPGRADE_INSCRIPTION_EXTRA_CORRUPTION_IF_OVERFORGED = builder.defineInRange("update_5.upgrade_inscription_extra_corruption_if_overforged", 5, 0, Integer.MAX_VALUE);
-        UPGRADE_INSCRIPTION_STAT_INCREASE_PERCENT = builder.defineInRange("update_5.upgrade_inscription_stat_increase_percent", 10.0D, 0.0D, 1000.0D);
-        REROLL_INSCRIPTION_CORRUPTION = builder.defineInRange("update_5.reroll_inscription_corruption", 3, 0, Integer.MAX_VALUE);
-        REROLL_INSCRIPTION_ADD_UNSTABLE_ON_HIGHER_ROLL = builder.define("update_5.reroll_inscription_add_unstable_on_higher_roll", true);
-        WILD_INSCRIPTION_CORRUPTION = builder.defineInRange("update_5.wild_inscription_corruption", 12, 0, Integer.MAX_VALUE);
-        WILD_INSCRIPTION_CAN_MUTATE_SYNERGIES = builder.define("update_5.wild_inscription_can_mutate_synergies", false);
-        CURSED_INSCRIPTION_CORRUPTION = builder.defineInRange("update_5.cursed_inscription_corruption", 10, 0, Integer.MAX_VALUE);
-        CURSED_INSCRIPTION_SUCCESS_CHANCE = builder.defineInRange("update_5.cursed_inscription_success_chance", 0.50D, 0.0D, 1.0D);
-        CURSED_INSCRIPTION_OVERUPGRADE_PERCENT = builder.defineInRange("update_5.cursed_inscription_overupgrade_percent", 25.0D, 0.0D, 1000.0D);
-        CURSED_INSCRIPTION_FAILURE_ADDS_BRITTLE = builder.define("update_5.cursed_inscription_failure_adds_brittle", true);
-        EXTRACTION_INSCRIPTION_CORRUPTION = builder.defineInRange("update_5.extraction_inscription_corruption", 8, 0, Integer.MAX_VALUE);
-        EXTRACTION_INSCRIPTION_CAN_EXTRACT_SYNERGIES = builder.define("update_5.extraction_inscription_can_extract_synergies", false);
-        EXTRACTION_INSCRIPTION_CAN_EXTRACT_MYTHIC = builder.define("update_5.extraction_inscription_can_extract_mythic", false);
-        PURIFICATION_INSCRIPTION_CORRUPTION = builder.defineInRange("update_5.purification_inscription_corruption", 10, 0, Integer.MAX_VALUE);
-        PURIFICATION_INSCRIPTION_DURABILITY_LOSS_CHANCE = builder.defineInRange("update_5.purification_inscription_durability_loss_chance", 0.50D, 0.0D, 1.0D);
-        PURIFICATION_INSCRIPTION_MAX_DURABILITY_LOSS_PERCENT = builder.defineInRange("update_5.purification_inscription_max_durability_loss_percent", 10.0D, 0.0D, 100.0D);
-        STABILIZATION_INSCRIPTION_CORRUPTION = builder.defineInRange("update_5.stabilization_inscription_corruption", 5, 0, Integer.MAX_VALUE);
-        STABILIZATION_INSCRIPTION_ADDS_BRITTLE = builder.define("update_5.stabilization_inscription_adds_brittle", true);
-        TEMPERING_INSCRIPTION_CORRUPTION = builder.defineInRange("update_5.tempering_inscription_corruption", 5, 0, Integer.MAX_VALUE);
-        TEMPERING_INSCRIPTION_DURABILITY_LOSS_REDUCTION_PERCENT = builder.defineInRange("update_5.tempering_inscription_durability_loss_reduction_percent", 10.0D, 0.0D, 100.0D);
-        RELIC_SOCKET_INSCRIPTION_CORRUPTION = builder.defineInRange("update_5.relic_socket_inscription_corruption", 10, 0, Integer.MAX_VALUE);
-        RELIC_SOCKET_INSCRIPTION_ADDS_BRITTLE = builder.define("update_5.relic_socket_inscription_adds_brittle", true);
-        RELIC_LOOT_INJECTION_ENABLED = builder.define("update_5.relic_loot_injection_enabled", true);
-        RELIC_DEFAULT_CORRUPTION = builder.defineInRange("update_5.relic.default_corruption", 10, 0, Integer.MAX_VALUE);
-        RELIC_DEFAULT_DURABILITY_USE_INCREASE_PERCENT = builder.defineInRange("update_5.relic.default_durability_use_increase_percent", 20.0D, 0.0D, 1000.0D);
-        RELIC_FULL_SET_REQUIRED_COUNT = builder.defineInRange("update_5.relic.full_set_required_count", 4, 0, Integer.MAX_VALUE);
-        RELIC_ENABLE_SET_BONUSES = builder.define("update_5.relic.enable_set_bonuses", true);
-        RELIC_EFFECTS_REQUIRE_EQUIPPED = builder.define("update_5.relic.effects_require_equipped", true);
-        DRAGON_HEART_CORRUPTION = builder.defineInRange("update_5.relic.dragon_heart.corruption", 10, 0, Integer.MAX_VALUE);
-        DRAGON_HEART_DURABILITY_USE_INCREASE_PERCENT = builder.defineInRange("update_5.relic.dragon_heart.durability_use_increase_percent", 20.0D, 0.0D, 1000.0D);
-        DRAGON_HEART_FIRE_DAMAGE_BONUS_PERCENT = builder.defineInRange("update_5.relic.dragon_heart.fire_damage_bonus_percent", 10.0D, 0.0D, 1000.0D);
-        DRAGON_HEART_BURN_DURATION_BONUS_SECONDS = builder.defineInRange("update_5.relic.dragon_heart.burn_duration_bonus_seconds", 2, 0, Integer.MAX_VALUE);
-        DRAGON_HEART_FULL_SET_FIRE_DAMAGE_BONUS_PERCENT = builder.defineInRange("update_5.relic.dragon_heart.full_set_fire_damage_bonus_percent", 25.0D, 0.0D, 1000.0D);
-        DRAGON_HEART_FULL_SET_IGNITE_AURA_CHANCE = builder.defineInRange("update_5.relic.dragon_heart.full_set_ignite_aura_chance", 0.15D, 0.0D, 1.0D);
-        DRAGON_HEART_FULL_SET_IGNITE_AURA_RADIUS = builder.defineInRange("update_5.relic.dragon_heart.full_set_ignite_aura_radius", 4.0D, 0.0D, 128.0D);
-        ELDER_GUARDIANS_EYE_CORRUPTION = builder.defineInRange("update_5.relic.elder_guardians_eye.corruption", 10, 0, Integer.MAX_VALUE);
-        ELDER_GUARDIANS_EYE_DURABILITY_USE_INCREASE_PERCENT = builder.defineInRange("update_5.relic.elder_guardians_eye.durability_use_increase_percent", 20.0D, 0.0D, 1000.0D);
-        ELDER_GUARDIANS_EYE_UNDERWATER_DAMAGE_BONUS_PERCENT = builder.defineInRange("update_5.relic.elder_guardians_eye.underwater_damage_bonus_percent", 15.0D, 0.0D, 1000.0D);
-        ELDER_GUARDIANS_EYE_MINING_SPEED_BONUS_PERCENT = builder.defineInRange("update_5.relic.elder_guardians_eye.mining_speed_bonus_percent", 10.0D, 0.0D, 1000.0D);
-        ELDER_GUARDIANS_EYE_FULL_SET_SLOW_CHANCE = builder.defineInRange("update_5.relic.elder_guardians_eye.full_set_slow_chance", 0.20D, 0.0D, 1.0D);
-        ELDER_GUARDIANS_EYE_FULL_SET_SLOW_DURATION_TICKS = builder.defineInRange("update_5.relic.elder_guardians_eye.full_set_slow_duration_ticks", 60, 0, Integer.MAX_VALUE);
-        WITHER_CHARGE_CORRUPTION = builder.defineInRange("update_5.relic.wither_charge.corruption", 12, 0, Integer.MAX_VALUE);
-        WITHER_CHARGE_DURABILITY_USE_INCREASE_PERCENT = builder.defineInRange("update_5.relic.wither_charge.durability_use_increase_percent", 25.0D, 0.0D, 1000.0D);
-        WITHER_CHARGE_WITHER_DURATION_BONUS_PERCENT = builder.defineInRange("update_5.relic.wither_charge.wither_duration_bonus_percent", 20.0D, 0.0D, 1000.0D);
-        WITHER_CHARGE_DAMAGE_TO_WITHERED_BONUS_PERCENT = builder.defineInRange("update_5.relic.wither_charge.damage_to_withered_bonus_percent", 10.0D, 0.0D, 1000.0D);
-        WITHER_CHARGE_FULL_SET_WITHER_PULSE_CHANCE = builder.defineInRange("update_5.relic.wither_charge.full_set_wither_pulse_chance", 0.15D, 0.0D, 1.0D);
-        WITHER_CHARGE_FULL_SET_WITHER_PULSE_RADIUS = builder.defineInRange("update_5.relic.wither_charge.full_set_wither_pulse_radius", 4.0D, 0.0D, 128.0D);
-        WARDENS_SOUL_CORRUPTION = builder.defineInRange("update_5.relic.wardens_soul.corruption", 15, 0, Integer.MAX_VALUE);
-        WARDENS_SOUL_DURABILITY_USE_INCREASE_PERCENT = builder.defineInRange("update_5.relic.wardens_soul.durability_use_increase_percent", 35.0D, 0.0D, 1000.0D);
-        WARDENS_SOUL_BOSS_DAMAGE_BONUS_PERCENT = builder.defineInRange("update_5.relic.wardens_soul.boss_damage_bonus_percent", 10.0D, 0.0D, 1000.0D);
-        WARDENS_SOUL_HEAVY_DAMAGE_PULSE_CHANCE = builder.defineInRange("update_5.relic.wardens_soul.heavy_damage_pulse_chance", 0.20D, 0.0D, 1.0D);
-        WARDENS_SOUL_FULL_SET_SONIC_PULSE_DAMAGE = builder.defineInRange("update_5.relic.wardens_soul.full_set_sonic_pulse_damage", 6.0D, 0.0D, 1000.0D);
-        WARDENS_SOUL_FULL_SET_SONIC_PULSE_COOLDOWN_TICKS = builder.defineInRange("update_5.relic.wardens_soul.full_set_sonic_pulse_cooldown_ticks", 300, 0, Integer.MAX_VALUE);
-        WARDENS_SOUL_HIGH_HEALTH_THRESHOLD = builder.defineInRange("update_5.relic.wardens_soul.high_health_threshold", 100.0D, 0.0D, 1000000.0D);
-        MYTHIC_RUNES_ENABLED = builder.define("update_5.mythic.enabled", true);
-        MYTHIC_RUNE_LOOT_ENABLED = builder.define("update_5.mythic.loot_enabled", true);
-        MYTHIC_RUNE_EXTRA_CURSE_CHANCE = builder.defineInRange("update_5.mythic.extra_curse_chance", 0.25D, 0.0D, 1.0D);
-        MYTHIC_RUNE_APPLY_CURSE_ON_SUCCESS = builder.define("update_5.mythic.apply_curse_on_success", true);
-        MYTHIC_RUNE_CAN_BE_EXTRACTED = builder.define("update_5.mythic.can_be_extracted", false);
-        MYTHIC_RUNE_CAN_BE_MUTATED_BY_WILD = builder.define("update_5.mythic.can_be_mutated_by_wild", false);
-        MYTHIC_RUNE_MIN_LOOT_DIFFICULTY = builder.defineInRange("update_5.mythic.min_loot_difficulty", 4, 0, Integer.MAX_VALUE);
-        MYTHIC_RUNE_WEIGHT = builder.defineInRange("update_5.mythic.weight", 1, 0, Integer.MAX_VALUE);
-        STABLE_CORRUPTION_ATTRIBUTE_ROLL_CHANCE = builder.defineInRange("update_5.corruption.stable_attribute_roll_chance", 0.0D, 0.0D, 1.0D);
-        TAINTED_NEGATIVE_ATTRIBUTE_ROLL_CHANCE = builder.defineInRange("update_5.corruption.tainted_negative_attribute_roll_chance", 0.05D, 0.0D, 1.0D);
-        TAINTED_POSITIVE_ATTRIBUTE_ROLL_CHANCE = builder.defineInRange("update_5.corruption.tainted_positive_attribute_roll_chance", 0.0D, 0.0D, 1.0D);
-        CORRUPTED_NEGATIVE_ATTRIBUTE_ROLL_CHANCE = builder.defineInRange("update_5.corruption.corrupted_negative_attribute_roll_chance", 0.10D, 0.0D, 1.0D);
-        CORRUPTED_POSITIVE_ATTRIBUTE_ROLL_CHANCE = builder.defineInRange("update_5.corruption.corrupted_positive_attribute_roll_chance", 0.03D, 0.0D, 1.0D);
-        CRITICAL_NEGATIVE_ATTRIBUTE_ROLL_CHANCE = builder.defineInRange("update_5.corruption.critical_negative_attribute_roll_chance", 0.20D, 0.0D, 1.0D);
-        CRITICAL_POSITIVE_ATTRIBUTE_ROLL_CHANCE = builder.defineInRange("update_5.corruption.critical_positive_attribute_roll_chance", 0.05D, 0.0D, 1.0D);
-        CORRUPTION_ENABLE_NEGATIVE_ATTRIBUTES = builder.define("update_5.corruption.enable_negative_attributes", true);
-        CORRUPTION_ENABLE_POSITIVE_ATTRIBUTES = builder.define("update_5.corruption.enable_positive_attributes", true);
-        ANCIENT_ENHANCEMENT_POWER_BONUS_PERCENT = builder.defineInRange("update_5.attributes.ancient_enhancement_power_bonus_percent", 5.0D, 0.0D, 1000.0D);
-        HARMONIZED_SYNERGY_POWER_BONUS_PERCENT = builder.defineInRange("update_5.attributes.harmonized_synergy_power_bonus_percent", 10.0D, 0.0D, 1000.0D);
-        TEMPERED_INSCRIPTION_CORRUPTION_REDUCTION_PERCENT = builder.defineInRange("update_5.attributes.tempered_inscription_corruption_reduction_percent", 10.0D, 0.0D, 1000.0D);
-        REINFORCED_DURABILITY_LOSS_REDUCTION_PERCENT = builder.defineInRange("update_5.attributes.reinforced_durability_loss_reduction_percent", 10.0D, 0.0D, 1000.0D);
-        REMOVED_ETCHINGS_LOOT_ENABLED = builder.define("loot.removed_etchings_enabled", true);
-        COMMON_RUNE_LOOT_WEIGHT = builder.defineInRange("loot.common_rune_weight", 60, 0, Integer.MAX_VALUE);
-        UNCOMMON_RUNE_LOOT_WEIGHT = builder.defineInRange("loot.uncommon_rune_weight", 35, 0, Integer.MAX_VALUE);
-        RARE_RUNE_LOOT_WEIGHT = builder.defineInRange("loot.rare_rune_weight", 18, 0, Integer.MAX_VALUE);
-        EPIC_RUNE_LOOT_WEIGHT = builder.defineInRange("loot.epic_rune_weight", 8, 0, Integer.MAX_VALUE);
-        LEGENDARY_RUNE_LOOT_WEIGHT = builder.defineInRange("loot.legendary_rune_weight", 3, 0, Integer.MAX_VALUE);
-        MYTHIC_RUNE_LOOT_WEIGHT = builder.defineInRange("loot.mythic_rune_weight", 1, 0, Integer.MAX_VALUE);
-        LOOT_ONLY_ETCHING_WEIGHT = builder.defineInRange("loot.loot_only_etching_weight", 4, 0, Integer.MAX_VALUE);
-        RELIC_LOOT_WEIGHT = builder.defineInRange("loot.relic_weight", 2, 0, Integer.MAX_VALUE);
-        RUIN_DAMAGE_BONUS_PERCENT = builder.defineInRange("update_5.mythic.ruin.damage_bonus_percent", 20.0D, 0.0D, 1000.0D);
-        RUIN_EXTRA_CORRUPTION_CHANCE = builder.defineInRange("update_5.mythic.ruin.extra_corruption_chance", 0.05D, 0.0D, 1.0D);
-        RUIN_EXTRA_CORRUPTION_AMOUNT = builder.defineInRange("update_5.mythic.ruin.extra_corruption_amount", 1, 0, Integer.MAX_VALUE);
-        RUIN_DURABILITY_USE_INCREASE_PERCENT = builder.defineInRange("update_5.mythic.ruin.durability_use_increase_percent", 20.0D, 0.0D, 1000.0D);
-        DOMINION_ENHANCEMENT_POWER_BONUS_PERCENT = builder.defineInRange("update_5.mythic.dominion.enhancement_power_bonus_percent", 10.0D, 0.0D, 1000.0D);
-        DOMINION_SYNERGY_POWER_BONUS_PERCENT = builder.defineInRange("update_5.mythic.dominion.synergy_power_bonus_percent", 5.0D, 0.0D, 1000.0D);
-        HUNGER_DURABILITY_RESTORE_ON_KILL = builder.defineInRange("update_5.mythic.hunger.durability_restore_on_kill", 2, 0, Integer.MAX_VALUE);
-        HUNGER_EXTRA_CORRUPTION_ON_HIT_CHANCE = builder.defineInRange("update_5.mythic.hunger.extra_corruption_on_hit_chance", 0.03D, 0.0D, 1.0D);
-        HUNGER_EXTRA_CORRUPTION_AMOUNT = builder.defineInRange("update_5.mythic.hunger.extra_corruption_amount", 1, 0, Integer.MAX_VALUE);
-        VOID_LOW_HEALTH_THRESHOLD = builder.defineInRange("update_5.mythic.void.low_health_threshold", 0.35D, 0.0D, 1.0D);
-        VOID_DAMAGE_BONUS_PERCENT = builder.defineInRange("update_5.mythic.void.damage_bonus_percent", 25.0D, 0.0D, 1000.0D);
-        VOID_COMBAT_CORRUPTION_INTERVAL_TICKS = builder.defineInRange("update_5.mythic.void.combat_corruption_interval_ticks", 200, 0, Integer.MAX_VALUE);
-        VOID_COMBAT_CORRUPTION_AMOUNT = builder.defineInRange("update_5.mythic.void.combat_corruption_amount", 1, 0, Integer.MAX_VALUE);
-        ASCENDANCE_TARGET_MAX_HEALTH_THRESHOLD = builder.defineInRange("update_5.mythic.ascendance.target_max_health_threshold", 50.0D, 0.0D, 1000000.0D);
-        ASCENDANCE_DURATION_TICKS = builder.defineInRange("update_5.mythic.ascendance.duration_ticks", 200, 0, Integer.MAX_VALUE);
-        ASCENDANCE_DAMAGE_BONUS_PERCENT = builder.defineInRange("update_5.mythic.ascendance.damage_bonus_percent", 15.0D, 0.0D, 1000.0D);
-        ASCENDANCE_SPEED_BONUS_PERCENT = builder.defineInRange("update_5.mythic.ascendance.speed_bonus_percent", 10.0D, 0.0D, 1000.0D);
+                .defineInRange("forging.exhausted_corruption_threshold", 100, 1, Integer.MAX_VALUE);
+        EXPANSION_INSCRIPTION_CORRUPTION = builder.defineInRange("forging.expansion_inscription_corruption", 8, 0, Integer.MAX_VALUE);
+        EXPANSION_INSCRIPTION_MAX_DURABILITY_LOSS_PERCENT = builder.defineInRange("forging.expansion_inscription_max_durability_loss_percent", 10.0D, 0.0D, 100.0D);
+        RESTORATION_INSCRIPTION_CORRUPTION_REDUCTION = builder.defineInRange("forging.restoration_inscription_corruption_reduction", 10, 0, Integer.MAX_VALUE);
+        RESTORATION_INSCRIPTION_MAX_DURABILITY_LOSS_PERCENT = builder.defineInRange("forging.restoration_inscription_max_durability_loss_percent", 15.0D, 0.0D, 100.0D);
+        RESTORATION_INSCRIPTION_ADDS_BRITTLE = builder.define("forging.restoration_inscription_adds_brittle", true);
+        NULLIFICATION_INSCRIPTION_CORRUPTION = builder.defineInRange("forging.nullification_inscription_corruption", 10, 0, Integer.MAX_VALUE);
+        NULLIFICATION_INSCRIPTION_REMOVES_SLOT = builder.define("forging.nullification_inscription_removes_slot", true);
+        NULLIFICATION_INSCRIPTION_CAN_REMOVE_SYNERGIES = builder.define("forging.nullification_inscription_can_remove_synergies", true);
+        UPGRADE_INSCRIPTION_CORRUPTION = builder.defineInRange("forging.upgrade_inscription_corruption", 5, 0, Integer.MAX_VALUE);
+        UPGRADE_INSCRIPTION_EXTRA_CORRUPTION_IF_OVERFORGED = builder.defineInRange("forging.upgrade_inscription_extra_corruption_if_overforged", 5, 0, Integer.MAX_VALUE);
+        UPGRADE_INSCRIPTION_STAT_INCREASE_PERCENT = builder.defineInRange("forging.upgrade_inscription_stat_increase_percent", 10.0D, 0.0D, 1000.0D);
+        REROLL_INSCRIPTION_CORRUPTION = builder.defineInRange("forging.reroll_inscription_corruption", 3, 0, Integer.MAX_VALUE);
+        REROLL_INSCRIPTION_ADD_UNSTABLE_ON_HIGHER_ROLL = builder.define("forging.reroll_inscription_add_unstable_on_higher_roll", true);
+        WILD_INSCRIPTION_CORRUPTION = builder.defineInRange("forging.wild_inscription_corruption", 12, 0, Integer.MAX_VALUE);
+        WILD_INSCRIPTION_CAN_MUTATE_SYNERGIES = builder.define("forging.wild_inscription_can_mutate_synergies", false);
+        CURSED_INSCRIPTION_CORRUPTION = builder.defineInRange("forging.cursed_inscription_corruption", 10, 0, Integer.MAX_VALUE);
+        CURSED_INSCRIPTION_SUCCESS_CHANCE = builder.defineInRange("forging.cursed_inscription_success_chance", 0.50D, 0.0D, 1.0D);
+        CURSED_INSCRIPTION_OVERUPGRADE_PERCENT = builder.defineInRange("forging.cursed_inscription_overupgrade_percent", 25.0D, 0.0D, 1000.0D);
+        CURSED_INSCRIPTION_FAILURE_ADDS_BRITTLE = builder.define("forging.cursed_inscription_failure_adds_brittle", true);
+        EXTRACTION_INSCRIPTION_CORRUPTION = builder.defineInRange("forging.extraction_inscription_corruption", 8, 0, Integer.MAX_VALUE);
+        EXTRACTION_INSCRIPTION_CAN_EXTRACT_SYNERGIES = builder.define("forging.extraction_inscription_can_extract_synergies", false);
+        EXTRACTION_INSCRIPTION_CAN_EXTRACT_MYTHIC = builder.define("forging.extraction_inscription_can_extract_mythic", false);
+        PURIFICATION_INSCRIPTION_CORRUPTION = builder.defineInRange("forging.purification_inscription_corruption", 10, 0, Integer.MAX_VALUE);
+        PURIFICATION_INSCRIPTION_DURABILITY_LOSS_CHANCE = builder.defineInRange("forging.purification_inscription_durability_loss_chance", 0.50D, 0.0D, 1.0D);
+        PURIFICATION_INSCRIPTION_MAX_DURABILITY_LOSS_PERCENT = builder.defineInRange("forging.purification_inscription_max_durability_loss_percent", 10.0D, 0.0D, 100.0D);
+        STABILIZATION_INSCRIPTION_CORRUPTION = builder.defineInRange("forging.stabilization_inscription_corruption", 5, 0, Integer.MAX_VALUE);
+        STABILIZATION_INSCRIPTION_ADDS_BRITTLE = builder.define("forging.stabilization_inscription_adds_brittle", true);
+        TEMPERING_INSCRIPTION_CORRUPTION = builder.defineInRange("forging.tempering_inscription_corruption", 5, 0, Integer.MAX_VALUE);
+        TEMPERING_INSCRIPTION_DURABILITY_LOSS_REDUCTION_PERCENT = builder.defineInRange("forging.tempering_inscription_durability_loss_reduction_percent", 10.0D, 0.0D, 100.0D);
+        RELIC_SOCKET_INSCRIPTION_CORRUPTION = builder.defineInRange("forging.relic_socket_inscription_corruption", 10, 0, Integer.MAX_VALUE);
+        RELIC_SOCKET_INSCRIPTION_ADDS_BRITTLE = builder.define("forging.relic_socket_inscription_adds_brittle", true);
+        RELIC_LOOT_INJECTION_ENABLED = builder.define("forging.relic_loot_injection_enabled", true);
+        RELIC_DEFAULT_CORRUPTION = builder.defineInRange("forging.relics.default_corruption", 10, 0, Integer.MAX_VALUE);
+        RELIC_DEFAULT_DURABILITY_USE_INCREASE_PERCENT = builder.defineInRange("forging.relics.default_durability_use_increase_percent", 20.0D, 0.0D, 1000.0D);
+        RELIC_FULL_SET_REQUIRED_COUNT = builder.defineInRange("forging.relics.full_set_required_count", 4, 0, Integer.MAX_VALUE);
+        RELIC_ENABLE_SET_BONUSES = builder.define("forging.relics.enable_set_bonuses", true);
+        RELIC_EFFECTS_REQUIRE_EQUIPPED = builder.define("forging.relics.effects_require_equipped", true);
+        DRAGON_HEART_CORRUPTION = builder.defineInRange("forging.relics.dragon_heart.corruption", 10, 0, Integer.MAX_VALUE);
+        DRAGON_HEART_DURABILITY_USE_INCREASE_PERCENT = builder.defineInRange("forging.relics.dragon_heart.durability_use_increase_percent", 20.0D, 0.0D, 1000.0D);
+        DRAGON_HEART_FIRE_DAMAGE_BONUS_PERCENT = builder.defineInRange("forging.relics.dragon_heart.fire_damage_bonus_percent", 10.0D, 0.0D, 1000.0D);
+        DRAGON_HEART_BURN_DURATION_BONUS_SECONDS = builder.defineInRange("forging.relics.dragon_heart.burn_duration_bonus_seconds", 2, 0, Integer.MAX_VALUE);
+        DRAGON_HEART_FULL_SET_FIRE_DAMAGE_BONUS_PERCENT = builder.defineInRange("forging.relics.dragon_heart.full_set_fire_damage_bonus_percent", 25.0D, 0.0D, 1000.0D);
+        DRAGON_HEART_FULL_SET_IGNITE_AURA_CHANCE = builder.defineInRange("forging.relics.dragon_heart.full_set_ignite_aura_chance", 0.15D, 0.0D, 1.0D);
+        DRAGON_HEART_FULL_SET_IGNITE_AURA_RADIUS = builder.defineInRange("forging.relics.dragon_heart.full_set_ignite_aura_radius", 4.0D, 0.0D, 128.0D);
+        ELDER_GUARDIANS_EYE_CORRUPTION = builder.defineInRange("forging.relics.elder_guardians_eye.corruption", 10, 0, Integer.MAX_VALUE);
+        ELDER_GUARDIANS_EYE_DURABILITY_USE_INCREASE_PERCENT = builder.defineInRange("forging.relics.elder_guardians_eye.durability_use_increase_percent", 20.0D, 0.0D, 1000.0D);
+        ELDER_GUARDIANS_EYE_UNDERWATER_DAMAGE_BONUS_PERCENT = builder.defineInRange("forging.relics.elder_guardians_eye.underwater_damage_bonus_percent", 15.0D, 0.0D, 1000.0D);
+        ELDER_GUARDIANS_EYE_MINING_SPEED_BONUS_PERCENT = builder.defineInRange("forging.relics.elder_guardians_eye.mining_speed_bonus_percent", 10.0D, 0.0D, 1000.0D);
+        ELDER_GUARDIANS_EYE_FULL_SET_SLOW_CHANCE = builder.defineInRange("forging.relics.elder_guardians_eye.full_set_slow_chance", 0.20D, 0.0D, 1.0D);
+        ELDER_GUARDIANS_EYE_FULL_SET_SLOW_DURATION_TICKS = builder.defineInRange("forging.relics.elder_guardians_eye.full_set_slow_duration_ticks", 60, 0, Integer.MAX_VALUE);
+        WITHER_CHARGE_CORRUPTION = builder.defineInRange("forging.relics.wither_charge.corruption", 12, 0, Integer.MAX_VALUE);
+        WITHER_CHARGE_DURABILITY_USE_INCREASE_PERCENT = builder.defineInRange("forging.relics.wither_charge.durability_use_increase_percent", 25.0D, 0.0D, 1000.0D);
+        WITHER_CHARGE_WITHER_DURATION_BONUS_PERCENT = builder.defineInRange("forging.relics.wither_charge.wither_duration_bonus_percent", 20.0D, 0.0D, 1000.0D);
+        WITHER_CHARGE_DAMAGE_TO_WITHERED_BONUS_PERCENT = builder.defineInRange("forging.relics.wither_charge.damage_to_withered_bonus_percent", 10.0D, 0.0D, 1000.0D);
+        WITHER_CHARGE_FULL_SET_WITHER_PULSE_CHANCE = builder.defineInRange("forging.relics.wither_charge.full_set_wither_pulse_chance", 0.15D, 0.0D, 1.0D);
+        WITHER_CHARGE_FULL_SET_WITHER_PULSE_RADIUS = builder.defineInRange("forging.relics.wither_charge.full_set_wither_pulse_radius", 4.0D, 0.0D, 128.0D);
+        WARDENS_SOUL_CORRUPTION = builder.defineInRange("forging.relics.wardens_soul.corruption", 15, 0, Integer.MAX_VALUE);
+        WARDENS_SOUL_DURABILITY_USE_INCREASE_PERCENT = builder.defineInRange("forging.relics.wardens_soul.durability_use_increase_percent", 35.0D, 0.0D, 1000.0D);
+        WARDENS_SOUL_BOSS_DAMAGE_BONUS_PERCENT = builder.defineInRange("forging.relics.wardens_soul.boss_damage_bonus_percent", 10.0D, 0.0D, 1000.0D);
+        WARDENS_SOUL_HEAVY_DAMAGE_PULSE_CHANCE = builder.defineInRange("forging.relics.wardens_soul.heavy_damage_pulse_chance", 0.20D, 0.0D, 1.0D);
+        WARDENS_SOUL_FULL_SET_SONIC_PULSE_DAMAGE = builder.defineInRange("forging.relics.wardens_soul.full_set_sonic_pulse_damage", 6.0D, 0.0D, 1000.0D);
+        WARDENS_SOUL_FULL_SET_SONIC_PULSE_COOLDOWN_TICKS = builder.defineInRange("forging.relics.wardens_soul.full_set_sonic_pulse_cooldown_ticks", 300, 0, Integer.MAX_VALUE);
+        WARDENS_SOUL_HIGH_HEALTH_THRESHOLD = builder.defineInRange("forging.relics.wardens_soul.high_health_threshold", 100.0D, 0.0D, 1000000.0D);
+        MYTHIC_RUNES_ENABLED = builder.define("forging.mythics.enabled", true);
+        MYTHIC_RUNE_LOOT_ENABLED = builder.define("forging.mythics.loot_enabled", true);
+        MYTHIC_RUNE_EXTRA_CURSE_CHANCE = builder.defineInRange("forging.mythics.extra_curse_chance", 0.25D, 0.0D, 1.0D);
+        MYTHIC_RUNE_APPLY_CURSE_ON_SUCCESS = builder.define("forging.mythics.apply_curse_on_success", true);
+        MYTHIC_RUNE_CAN_BE_EXTRACTED = builder.define("forging.mythics.can_be_extracted", false);
+        MYTHIC_RUNE_CAN_BE_MUTATED_BY_WILD = builder.define("forging.mythics.can_be_mutated_by_wild", false);
+        MYTHIC_RUNE_MIN_LOOT_DIFFICULTY = builder.defineInRange("forging.mythics.min_loot_difficulty", 4, 0, Integer.MAX_VALUE);
+        MYTHIC_RUNE_WEIGHT = builder.defineInRange("forging.mythics.rarity", 1, 0, Integer.MAX_VALUE);
+        STABLE_CORRUPTION_ATTRIBUTE_ROLL_CHANCE = builder.defineInRange("forging.corruption.stable_attribute_roll_chance", 0.0D, 0.0D, 1.0D);
+        TAINTED_NEGATIVE_ATTRIBUTE_ROLL_CHANCE = builder.defineInRange("forging.corruption.tainted_negative_attribute_roll_chance", 0.05D, 0.0D, 1.0D);
+        TAINTED_POSITIVE_ATTRIBUTE_ROLL_CHANCE = builder.defineInRange("forging.corruption.tainted_positive_attribute_roll_chance", 0.0D, 0.0D, 1.0D);
+        CORRUPTED_NEGATIVE_ATTRIBUTE_ROLL_CHANCE = builder.defineInRange("forging.corruption.corrupted_negative_attribute_roll_chance", 0.10D, 0.0D, 1.0D);
+        CORRUPTED_POSITIVE_ATTRIBUTE_ROLL_CHANCE = builder.defineInRange("forging.corruption.corrupted_positive_attribute_roll_chance", 0.03D, 0.0D, 1.0D);
+        CRITICAL_NEGATIVE_ATTRIBUTE_ROLL_CHANCE = builder.defineInRange("forging.corruption.critical_negative_attribute_roll_chance", 0.20D, 0.0D, 1.0D);
+        CRITICAL_POSITIVE_ATTRIBUTE_ROLL_CHANCE = builder.defineInRange("forging.corruption.critical_positive_attribute_roll_chance", 0.05D, 0.0D, 1.0D);
+        CORRUPTION_ENABLE_NEGATIVE_ATTRIBUTES = builder.define("forging.corruption.enable_negative_attributes", true);
+        CORRUPTION_ENABLE_POSITIVE_ATTRIBUTES = builder.define("forging.corruption.enable_positive_attributes", true);
+        ANCIENT_ENHANCEMENT_POWER_BONUS_PERCENT = builder.defineInRange("forging.attributes.ancient_enhancement_power_bonus_percent", 5.0D, 0.0D, 1000.0D);
+        HARMONIZED_SYNERGY_POWER_BONUS_PERCENT = builder.defineInRange("forging.attributes.harmonized_synergy_power_bonus_percent", 10.0D, 0.0D, 1000.0D);
+        TEMPERED_INSCRIPTION_CORRUPTION_REDUCTION_PERCENT = builder.defineInRange("forging.attributes.tempered_inscription_corruption_reduction_percent", 10.0D, 0.0D, 1000.0D);
+        REINFORCED_DURABILITY_LOSS_REDUCTION_PERCENT = builder.defineInRange("forging.attributes.reinforced_durability_loss_reduction_percent", 10.0D, 0.0D, 1000.0D);
+        ALL_RUNES_HAVE_ETCHINGS = builder
+                .comment("Adds etching variants for all runes, even overpowered ones")
+                .define("loot.all_runes_have_etchings", false);
+        COMMON_RUNE_LOOT_WEIGHT = builder.defineInRange("loot.common_rune_rarity", 60, 0, Integer.MAX_VALUE);
+        UNCOMMON_RUNE_LOOT_WEIGHT = builder.defineInRange("loot.uncommon_rune_rarity", 35, 0, Integer.MAX_VALUE);
+        RARE_RUNE_LOOT_WEIGHT = builder.defineInRange("loot.rare_rune_rarity", 18, 0, Integer.MAX_VALUE);
+        EPIC_RUNE_LOOT_WEIGHT = builder.defineInRange("loot.epic_rune_rarity", 8, 0, Integer.MAX_VALUE);
+        LEGENDARY_RUNE_LOOT_WEIGHT = builder.defineInRange("loot.legendary_rune_rarity", 3, 0, Integer.MAX_VALUE);
+        MYTHIC_RUNE_LOOT_WEIGHT = builder.defineInRange("loot.mythic_rune_rarity", 1, 0, Integer.MAX_VALUE);
+        LOOT_ONLY_ETCHING_WEIGHT = builder.defineInRange("loot.loot_only_etching_rarity", 4, 0, Integer.MAX_VALUE);
+        RELIC_LOOT_WEIGHT = builder.defineInRange("loot.relic_rarity", 2, 0, Integer.MAX_VALUE);
+        RUIN_DAMAGE_BONUS_PERCENT = builder.defineInRange("forging.mythics.ruin.damage_bonus_percent", 20.0D, 0.0D, 1000.0D);
+        RUIN_EXTRA_CORRUPTION_CHANCE = builder.defineInRange("forging.mythics.ruin.extra_corruption_chance", 0.05D, 0.0D, 1.0D);
+        RUIN_EXTRA_CORRUPTION_AMOUNT = builder.defineInRange("forging.mythics.ruin.extra_corruption_amount", 1, 0, Integer.MAX_VALUE);
+        RUIN_DURABILITY_USE_INCREASE_PERCENT = builder.defineInRange("forging.mythics.ruin.durability_use_increase_percent", 20.0D, 0.0D, 1000.0D);
+        DOMINION_ENHANCEMENT_POWER_BONUS_PERCENT = builder.defineInRange("forging.mythics.dominion.enhancement_power_bonus_percent", 10.0D, 0.0D, 1000.0D);
+        DOMINION_SYNERGY_POWER_BONUS_PERCENT = builder.defineInRange("forging.mythics.dominion.synergy_power_bonus_percent", 5.0D, 0.0D, 1000.0D);
+        HUNGER_DURABILITY_RESTORE_ON_KILL = builder.defineInRange("forging.mythics.hunger.durability_restore_on_kill", 2, 0, Integer.MAX_VALUE);
+        HUNGER_EXTRA_CORRUPTION_ON_HIT_CHANCE = builder.defineInRange("forging.mythics.hunger.extra_corruption_on_hit_chance", 0.03D, 0.0D, 1.0D);
+        HUNGER_EXTRA_CORRUPTION_AMOUNT = builder.defineInRange("forging.mythics.hunger.extra_corruption_amount", 1, 0, Integer.MAX_VALUE);
+        VOID_LOW_HEALTH_THRESHOLD = builder.defineInRange("forging.mythics.void.low_health_threshold", 0.35D, 0.0D, 1.0D);
+        VOID_DAMAGE_BONUS_PERCENT = builder.defineInRange("forging.mythics.void.damage_bonus_percent", 25.0D, 0.0D, 1000.0D);
+        VOID_COMBAT_CORRUPTION_INTERVAL_TICKS = builder.defineInRange("forging.mythics.void.combat_corruption_interval_ticks", 200, 0, Integer.MAX_VALUE);
+        VOID_COMBAT_CORRUPTION_AMOUNT = builder.defineInRange("forging.mythics.void.combat_corruption_amount", 1, 0, Integer.MAX_VALUE);
+        ASCENDANCE_TARGET_MAX_HEALTH_THRESHOLD = builder.defineInRange("forging.mythics.ascendance.target_max_health_threshold", 50.0D, 0.0D, 1000000.0D);
+        ASCENDANCE_DURATION_TICKS = builder.defineInRange("forging.mythics.ascendance.duration_ticks", 200, 0, Integer.MAX_VALUE);
+        ASCENDANCE_DAMAGE_BONUS_PERCENT = builder.defineInRange("forging.mythics.ascendance.damage_bonus_percent", 15.0D, 0.0D, 1000.0D);
+        ASCENDANCE_SPEED_BONUS_PERCENT = builder.defineInRange("forging.mythics.ascendance.speed_bonus_percent", 10.0D, 0.0D, 1000.0D);
 
-        SHATTER_RADIUS = builder.defineInRange("update_5.synergy.shatter_radius", 3.0D, 0.0D, 128.0D);
-        SHATTER_DAMAGE_MULTIPLIER = builder.defineInRange("update_5.synergy.shatter_damage_multiplier", 0.35D, 0.0D, 1000.0D);
-        SHATTER_COOLDOWN_TICKS = builder.defineInRange("update_5.synergy.shatter_cooldown_ticks", 40, 0, Integer.MAX_VALUE);
-        BLOODFIRE_FIRE_SECONDS = builder.defineInRange("update_5.synergy.bloodfire_fire_seconds", 4, 0, Integer.MAX_VALUE);
-        BLOODFIRE_BLEED_CHANCE = builder.defineInRange("update_5.synergy.bloodfire_bleed_chance", 0.35D, 0.0D, 1.0D);
-        BLOODFIRE_BLEED_DURATION_TICKS = builder.defineInRange("update_5.synergy.bloodfire_bleed_duration_ticks", 80, 0, Integer.MAX_VALUE);
-        CORROSION_ARMOR_IGNORE_PERCENT = builder.defineInRange("update_5.synergy.corrosion_armor_ignore_percent", 0.25D, 0.0D, 1.0D);
-        CORROSION_BONUS_DAMAGE_MULTIPLIER = builder.defineInRange("update_5.synergy.corrosion_bonus_damage_multiplier", 0.20D, 0.0D, 1000.0D);
-        EXECUTIONERS_FURY_DURATION_TICKS = builder.defineInRange("update_5.synergy.executioners_fury_duration_ticks", 100, 0, Integer.MAX_VALUE);
-        EXECUTIONERS_FURY_DAMAGE_BONUS_PERCENT = builder.defineInRange("update_5.synergy.executioners_fury_damage_bonus_percent", 0.15D, 0.0D, 1000.0D);
-        EXECUTIONERS_FURY_EXECUTION_HEALTH_THRESHOLD = builder.defineInRange("update_5.synergy.executioners_fury_execution_health_threshold", 0.30D, 0.0D, 1.0D);
-        JUGGERNAUT_DAMAGE_THRESHOLD_PERCENT = builder.defineInRange("update_5.synergy.juggernaut_damage_threshold_percent", 0.20D, 0.0D, 1.0D);
-        JUGGERNAUT_DURATION_TICKS = builder.defineInRange("update_5.synergy.juggernaut_duration_ticks", 100, 0, Integer.MAX_VALUE);
-        JUGGERNAUT_ARMOR_BONUS = builder.defineInRange("update_5.synergy.juggernaut_armor_bonus", 4.0D, 0.0D, 1000.0D);
-        JUGGERNAUT_KNOCKBACK_RESISTANCE_BONUS = builder.defineInRange("update_5.synergy.juggernaut_knockback_resistance_bonus", 0.5D, 0.0D, 1.0D);
-        JUGGERNAUT_COOLDOWN_TICKS = builder.defineInRange("update_5.synergy.juggernaut_cooldown_ticks", 300, 0, Integer.MAX_VALUE);
-        TEMPEST_HITS_REQUIRED = builder.defineInRange("update_5.synergy.tempest_hits_required", 5, 0, Integer.MAX_VALUE);
-        TEMPEST_CHAIN_TARGETS = builder.defineInRange("update_5.synergy.tempest_chain_targets", 3, 0, Integer.MAX_VALUE);
-        TEMPEST_DAMAGE_MULTIPLIER = builder.defineInRange("update_5.synergy.tempest_damage_multiplier", 0.25D, 0.0D, 1000.0D);
-        TEMPEST_RADIUS = builder.defineInRange("update_5.synergy.tempest_radius", 5.0D, 0.0D, 128.0D);
-        REAPER_HEAL_AMOUNT = builder.defineInRange("update_5.synergy.reaper_heal_amount", 3.0D, 0.0D, 1000.0D);
-        REAPER_ATTACK_SPEED_BONUS_PERCENT = builder.defineInRange("update_5.synergy.reaper_attack_speed_bonus_percent", 0.15D, 0.0D, 1000.0D);
-        REAPER_DURATION_TICKS = builder.defineInRange("update_5.synergy.reaper_duration_ticks", 80, 0, Integer.MAX_VALUE);
-        REAPER_EXECUTION_HEALTH_THRESHOLD = builder.defineInRange("update_5.synergy.reaper_execution_health_threshold", 0.30D, 0.0D, 1.0D);
-        SOULBURN_RADIUS = builder.defineInRange("update_5.synergy.soulburn_radius", 4.0D, 0.0D, 128.0D);
-        SOULBURN_WITHER_DURATION_TICKS = builder.defineInRange("update_5.synergy.soulburn_wither_duration_ticks", 100, 0, Integer.MAX_VALUE);
-        SOULBURN_WITHER_AMPLIFIER = builder.defineInRange("update_5.synergy.soulburn_wither_amplifier", 0, 0, Integer.MAX_VALUE);
-        SOULBURN_COOLDOWN_TICKS = builder.defineInRange("update_5.synergy.soulburn_cooldown_ticks", 40, 0, Integer.MAX_VALUE);
-        FROSTBITE_FREEZE_BONUS_MULTIPLIER = builder.defineInRange("update_5.synergy.frostbite_freeze_bonus_multiplier", 1.5D, 0.0D, 1000.0D);
-        FROSTBITE_CHILLED_DAMAGE_MULTIPLIER = builder.defineInRange("update_5.synergy.frostbite_chilled_damage_multiplier", 0.15D, 0.0D, 1000.0D);
-        VENOM_BURST_CHANCE = builder.defineInRange("update_5.synergy.venom_burst_chance", 0.25D, 0.0D, 1.0D);
-        VENOM_BURST_RADIUS = builder.defineInRange("update_5.synergy.venom_burst_radius", 3.5D, 0.0D, 128.0D);
-        VENOM_BURST_DAMAGE_MULTIPLIER = builder.defineInRange("update_5.synergy.venom_burst_damage_multiplier", 0.20D, 0.0D, 1000.0D);
-        VENOM_BURST_POISON_DURATION_TICKS = builder.defineInRange("update_5.synergy.venom_burst_poison_duration_ticks", 80, 0, Integer.MAX_VALUE);
-        BERSERK_HITS_REQUIRED = builder.defineInRange("update_5.synergy.berserk_hits_required", 3, 1, Integer.MAX_VALUE);
-        BERSERK_DURATION_TICKS = builder.defineInRange("update_5.synergy.berserk_duration_ticks", 100, 0, Integer.MAX_VALUE);
-        BERSERK_ATTACK_SPEED_BONUS_PERCENT = builder.defineInRange("update_5.synergy.berserk_attack_speed_bonus_percent", 0.20D, 0.0D, 1000.0D);
-        BERSERK_MOVEMENT_SPEED_BONUS_PERCENT = builder.defineInRange("update_5.synergy.berserk_movement_speed_bonus_percent", 0.10D, 0.0D, 1000.0D);
-        ICE_PRISON_RADIUS = builder.defineInRange("update_5.synergy.ice_prison_radius", 3.0D, 0.0D, 128.0D);
-        ICE_PRISON_DURATION_TICKS = builder.defineInRange("update_5.synergy.ice_prison_duration_ticks", 40, 0, Integer.MAX_VALUE);
-        ICE_PRISON_BOSS_DURATION_MULTIPLIER = builder.defineInRange("update_5.synergy.ice_prison_boss_duration_multiplier", 0.25D, 0.0D, 1.0D);
-        ICE_PRISON_COOLDOWN_TICKS = builder.defineInRange("update_5.synergy.ice_prison_cooldown_ticks", 100, 0, Integer.MAX_VALUE);
+        SHATTER_RADIUS = builder.defineInRange("forging.synergy_effects.shatter_radius", 3.0D, 0.0D, 128.0D);
+        SHATTER_DAMAGE_MULTIPLIER = builder.defineInRange("forging.synergy_effects.shatter_damage_multiplier", 0.35D, 0.0D, 1000.0D);
+        SHATTER_COOLDOWN_TICKS = builder.defineInRange("forging.synergy_effects.shatter_cooldown_ticks", 40, 0, Integer.MAX_VALUE);
+        BLOODFIRE_FIRE_SECONDS = builder.defineInRange("forging.synergy_effects.bloodfire_fire_seconds", 4, 0, Integer.MAX_VALUE);
+        BLOODFIRE_BLEED_CHANCE = builder.defineInRange("forging.synergy_effects.bloodfire_bleed_chance", 0.35D, 0.0D, 1.0D);
+        BLOODFIRE_BLEED_DURATION_TICKS = builder.defineInRange("forging.synergy_effects.bloodfire_bleed_duration_ticks", 80, 0, Integer.MAX_VALUE);
+        CORROSION_ARMOR_IGNORE_PERCENT = builder.defineInRange("forging.synergy_effects.corrosion_armor_ignore_percent", 0.25D, 0.0D, 1.0D);
+        CORROSION_BONUS_DAMAGE_MULTIPLIER = builder.defineInRange("forging.synergy_effects.corrosion_bonus_damage_multiplier", 0.20D, 0.0D, 1000.0D);
+        EXECUTIONERS_FURY_DURATION_TICKS = builder.defineInRange("forging.synergy_effects.executioners_fury_duration_ticks", 100, 0, Integer.MAX_VALUE);
+        EXECUTIONERS_FURY_DAMAGE_BONUS_PERCENT = builder.defineInRange("forging.synergy_effects.executioners_fury_damage_bonus_percent", 0.15D, 0.0D, 1000.0D);
+        EXECUTIONERS_FURY_EXECUTION_HEALTH_THRESHOLD = builder.defineInRange("forging.synergy_effects.executioners_fury_execution_health_threshold", 0.30D, 0.0D, 1.0D);
+        JUGGERNAUT_DAMAGE_THRESHOLD_PERCENT = builder.defineInRange("forging.synergy_effects.juggernaut_damage_threshold_percent", 0.20D, 0.0D, 1.0D);
+        JUGGERNAUT_DURATION_TICKS = builder.defineInRange("forging.synergy_effects.juggernaut_duration_ticks", 100, 0, Integer.MAX_VALUE);
+        JUGGERNAUT_ARMOR_BONUS = builder.defineInRange("forging.synergy_effects.juggernaut_armor_bonus", 4.0D, 0.0D, 1000.0D);
+        JUGGERNAUT_KNOCKBACK_RESISTANCE_BONUS = builder.defineInRange("forging.synergy_effects.juggernaut_knockback_resistance_bonus", 0.5D, 0.0D, 1.0D);
+        JUGGERNAUT_COOLDOWN_TICKS = builder.defineInRange("forging.synergy_effects.juggernaut_cooldown_ticks", 300, 0, Integer.MAX_VALUE);
+        TEMPEST_HITS_REQUIRED = builder.defineInRange("forging.synergy_effects.tempest_hits_required", 5, 0, Integer.MAX_VALUE);
+        TEMPEST_CHAIN_TARGETS = builder.defineInRange("forging.synergy_effects.tempest_chain_targets", 3, 0, Integer.MAX_VALUE);
+        TEMPEST_DAMAGE_MULTIPLIER = builder.defineInRange("forging.synergy_effects.tempest_damage_multiplier", 0.25D, 0.0D, 1000.0D);
+        TEMPEST_RADIUS = builder.defineInRange("forging.synergy_effects.tempest_radius", 5.0D, 0.0D, 128.0D);
+        REAPER_HEAL_AMOUNT = builder.defineInRange("forging.synergy_effects.reaper_heal_amount", 3.0D, 0.0D, 1000.0D);
+        REAPER_ATTACK_SPEED_BONUS_PERCENT = builder.defineInRange("forging.synergy_effects.reaper_attack_speed_bonus_percent", 0.15D, 0.0D, 1000.0D);
+        REAPER_DURATION_TICKS = builder.defineInRange("forging.synergy_effects.reaper_duration_ticks", 80, 0, Integer.MAX_VALUE);
+        REAPER_EXECUTION_HEALTH_THRESHOLD = builder.defineInRange("forging.synergy_effects.reaper_execution_health_threshold", 0.30D, 0.0D, 1.0D);
+        SOULBURN_RADIUS = builder.defineInRange("forging.synergy_effects.soulburn_radius", 4.0D, 0.0D, 128.0D);
+        SOULBURN_WITHER_DURATION_TICKS = builder.defineInRange("forging.synergy_effects.soulburn_wither_duration_ticks", 100, 0, Integer.MAX_VALUE);
+        SOULBURN_WITHER_AMPLIFIER = builder.defineInRange("forging.synergy_effects.soulburn_wither_amplifier", 0, 0, Integer.MAX_VALUE);
+        SOULBURN_COOLDOWN_TICKS = builder.defineInRange("forging.synergy_effects.soulburn_cooldown_ticks", 40, 0, Integer.MAX_VALUE);
+        FROSTBITE_FREEZE_BONUS_MULTIPLIER = builder.defineInRange("forging.synergy_effects.frostbite_freeze_bonus_multiplier", 1.5D, 0.0D, 1000.0D);
+        FROSTBITE_CHILLED_DAMAGE_MULTIPLIER = builder.defineInRange("forging.synergy_effects.frostbite_chilled_damage_multiplier", 0.15D, 0.0D, 1000.0D);
+        VENOM_BURST_CHANCE = builder.defineInRange("forging.synergy_effects.venom_burst_chance", 0.25D, 0.0D, 1.0D);
+        VENOM_BURST_RADIUS = builder.defineInRange("forging.synergy_effects.venom_burst_radius", 3.5D, 0.0D, 128.0D);
+        VENOM_BURST_DAMAGE_MULTIPLIER = builder.defineInRange("forging.synergy_effects.venom_burst_damage_multiplier", 0.20D, 0.0D, 1000.0D);
+        VENOM_BURST_POISON_DURATION_TICKS = builder.defineInRange("forging.synergy_effects.venom_burst_poison_duration_ticks", 80, 0, Integer.MAX_VALUE);
+        BERSERK_HITS_REQUIRED = builder.defineInRange("forging.synergy_effects.berserk_hits_required", 3, 1, Integer.MAX_VALUE);
+        BERSERK_DURATION_TICKS = builder.defineInRange("forging.synergy_effects.berserk_duration_ticks", 100, 0, Integer.MAX_VALUE);
+        BERSERK_ATTACK_SPEED_BONUS_PERCENT = builder.defineInRange("forging.synergy_effects.berserk_attack_speed_bonus_percent", 0.20D, 0.0D, 1000.0D);
+        BERSERK_MOVEMENT_SPEED_BONUS_PERCENT = builder.defineInRange("forging.synergy_effects.berserk_movement_speed_bonus_percent", 0.10D, 0.0D, 1000.0D);
+        ICE_PRISON_RADIUS = builder.defineInRange("forging.synergy_effects.ice_prison_radius", 3.0D, 0.0D, 128.0D);
+        ICE_PRISON_DURATION_TICKS = builder.defineInRange("forging.synergy_effects.ice_prison_duration_ticks", 40, 0, Integer.MAX_VALUE);
+        ICE_PRISON_BOSS_DURATION_MULTIPLIER = builder.defineInRange("forging.synergy_effects.ice_prison_boss_duration_multiplier", 0.25D, 0.0D, 1.0D);
+        ICE_PRISON_COOLDOWN_TICKS = builder.defineInRange("forging.synergy_effects.ice_prison_cooldown_ticks", 100, 0, Integer.MAX_VALUE);
 
         SPEC = builder.build();
     }
@@ -634,16 +643,24 @@ public final class RunicConfig {
         return BLACKLIST_CACHE.get();
     }
 
-    public static Set<ResourceLocation> enchantedBookWhitelist() {
-        return ENCHANTED_BOOK_WHITELIST_CACHE.get();
+    public static Set<ResourceLocation> enchantmentWhitelist() {
+        return ENCHANTMENT_WHITELIST_CACHE.get();
     }
 
-    public static boolean canEnchantBook(ResourceLocation enchantmentId) {
-        return enchantmentId != null && ENCHANTING_BOOK_ENCHANTMENTS_CACHE.get().contains(enchantmentId);
+    public static boolean isEnchantmentWhitelisted(ResourceLocation enchantmentId) {
+        return enchantmentId != null && ENCHANTMENT_WHITELIST_CACHE.get().contains(enchantmentId);
     }
 
-    public static boolean hasEnchantableBookEnchantments() {
-        return !ENCHANTING_BOOK_ENCHANTMENTS_CACHE.get().isEmpty();
+    public static boolean hasWhitelistedEnchantments() {
+        return !ENCHANTMENT_WHITELIST_CACHE.get().isEmpty();
+    }
+
+    public static boolean isRuneSlotBlacklisted(ResourceLocation itemId) {
+        return itemId != null && RUNE_SLOT_BLACKLIST_CACHE.get().contains(itemId);
+    }
+
+    public static Integer runeSlotWhitelistCount(ResourceLocation itemId) {
+        return itemId == null ? null : RUNE_SLOT_WHITELIST_CACHE.get().get(itemId);
     }
 
     public static int defaultWeaponRuneSlots() {
@@ -662,12 +679,8 @@ public final class RunicConfig {
         return DISABLE_RUNIC_LOOT_CACHE.get();
     }
 
-    public static boolean disableEtchingCrafting() {
-        return DISABLE_ETCHING_CRAFTING_CACHE.get();
-    }
-
-    public static boolean disableStatCaps() {
-        return DISABLE_STAT_CAPS_CACHE.get();
+    public static boolean disableInscriptionCrafting() {
+        return DISABLE_INSCRIPTION_CRAFTING_CACHE.get();
     }
 
     public static Set<String> disabledStats() {
@@ -778,7 +791,7 @@ public final class RunicConfig {
     public static double harmonizedSynergyPowerBonusPercent() { return HARMONIZED_SYNERGY_POWER_BONUS_PERCENT_CACHE; }
     public static double temperedInscriptionCorruptionReductionPercent() { return TEMPERED_INSCRIPTION_CORRUPTION_REDUCTION_PERCENT_CACHE; }
     public static double reinforcedDurabilityLossReductionPercent() { return REINFORCED_DURABILITY_LOSS_REDUCTION_PERCENT_CACHE; }
-    public static boolean removedEtchingsLootEnabled() { return REMOVED_ETCHINGS_LOOT_ENABLED_CACHE; }
+    public static boolean allRunesHaveEtchings() { return ALL_RUNES_HAVE_ETCHINGS_CACHE; }
     public static int commonRuneLootWeight() { return COMMON_RUNE_LOOT_WEIGHT_CACHE; }
     public static int uncommonRuneLootWeight() { return UNCOMMON_RUNE_LOOT_WEIGHT_CACHE; }
     public static int rareRuneLootWeight() { return RARE_RUNE_LOOT_WEIGHT_CACHE; }
@@ -854,8 +867,7 @@ public final class RunicConfig {
         switch (key) {
             case "rune_slots" -> DISABLE_RUNE_SLOTS.set(true);
             case "runic_loot" -> DISABLE_RUNIC_LOOT.set(true);
-            case "etching_crafting" -> DISABLE_ETCHING_CRAFTING.set(true);
-            case "stat_caps" -> DISABLE_STAT_CAPS.set(true);
+            case "inscription_crafting" -> DISABLE_INSCRIPTION_CRAFTING.set(true);
             default -> {
                 if (net.revilodev.runic.stat.RuneStatType.byId(key) != null) {
                     java.util.List<String> next = new java.util.ArrayList<>(DISABLED_STATS_RAW.get());
@@ -895,14 +907,17 @@ public final class RunicConfig {
                 .map(ResourceLocation::tryParse)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toUnmodifiableSet());
-        Set<ResourceLocation> enchantedBookWhitelist = ENCHANTED_BOOK_WHITELIST_RAW.get().stream()
+        Set<ResourceLocation> enchantmentWhitelist = ENCHANTMENT_WHITELIST_RAW.get().stream()
+                .map(String::trim)
                 .map(ResourceLocation::tryParse)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toUnmodifiableSet());
-        Set<ResourceLocation> enchantingBookEnchantments = ENCHANTING_BOOK_ENCHANTMENTS_RAW.get().stream()
+        Set<ResourceLocation> runeSlotBlacklist = RUNE_SLOT_BLACKLIST_RAW.get().stream()
+                .map(String::trim)
                 .map(ResourceLocation::tryParse)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toUnmodifiableSet());
+        Map<ResourceLocation, Integer> runeSlotWhitelist = parseRuneSlotWhitelist(RUNE_SLOT_WHITELIST_RAW.get());
         Set<String> disabledStats = DISABLED_STATS_RAW.get().stream()
                 .filter(Objects::nonNull)
                 .map(Object::toString)
@@ -914,8 +929,7 @@ public final class RunicConfig {
         boolean disableRuneSlots = DISABLE_RUNE_SLOTS.get();
         DEFAULT_WEAPON_RUNE_SLOTS_CACHE = DEFAULT_WEAPON_RUNE_SLOTS.get();
         boolean disableRunicLoot = DISABLE_RUNIC_LOOT.get();
-        boolean disableEtchingCrafting = DISABLE_ETCHING_CRAFTING.get();
-        boolean disableStatCaps = DISABLE_STAT_CAPS.get();
+        boolean disableInscriptionCrafting = DISABLE_INSCRIPTION_CRAFTING.get();
         BASE_SYNERGY_CHANCE_CACHE = BASE_SYNERGY_CHANCE.get();
         SYNERGY_POTENTIAL_BONUS_CACHE = SYNERGY_POTENTIAL_BONUS.get();
         MAX_SYNERGY_POTENTIAL_CACHE = MAX_SYNERGY_POTENTIAL.get();
@@ -1016,7 +1030,7 @@ public final class RunicConfig {
         HARMONIZED_SYNERGY_POWER_BONUS_PERCENT_CACHE = HARMONIZED_SYNERGY_POWER_BONUS_PERCENT.get();
         TEMPERED_INSCRIPTION_CORRUPTION_REDUCTION_PERCENT_CACHE = TEMPERED_INSCRIPTION_CORRUPTION_REDUCTION_PERCENT.get();
         REINFORCED_DURABILITY_LOSS_REDUCTION_PERCENT_CACHE = REINFORCED_DURABILITY_LOSS_REDUCTION_PERCENT.get();
-        REMOVED_ETCHINGS_LOOT_ENABLED_CACHE = REMOVED_ETCHINGS_LOOT_ENABLED.get();
+        ALL_RUNES_HAVE_ETCHINGS_CACHE = ALL_RUNES_HAVE_ETCHINGS.get();
         COMMON_RUNE_LOOT_WEIGHT_CACHE = COMMON_RUNE_LOOT_WEIGHT.get();
         UNCOMMON_RUNE_LOOT_WEIGHT_CACHE = UNCOMMON_RUNE_LOOT_WEIGHT.get();
         RARE_RUNE_LOOT_WEIGHT_CACHE = RARE_RUNE_LOOT_WEIGHT.get();
@@ -1085,17 +1099,33 @@ public final class RunicConfig {
         ICE_PRISON_BOSS_DURATION_MULTIPLIER_CACHE = ICE_PRISON_BOSS_DURATION_MULTIPLIER.get();
         ICE_PRISON_COOLDOWN_TICKS_CACHE = ICE_PRISON_COOLDOWN_TICKS.get();
         BLACKLIST_CACHE.set(parsed);
-        ENCHANTED_BOOK_WHITELIST_CACHE.set(enchantedBookWhitelist);
-        ENCHANTING_BOOK_ENCHANTMENTS_CACHE.set(enchantingBookEnchantments);
+        ENCHANTMENT_WHITELIST_CACHE.set(enchantmentWhitelist);
+        RUNE_SLOT_BLACKLIST_CACHE.set(runeSlotBlacklist);
+        RUNE_SLOT_WHITELIST_CACHE.set(runeSlotWhitelist);
         DISABLED_STATS_CACHE.set(disabledStats);
         DISABLE_ALL_CACHE.set(disableAll);
         DISABLE_RUNE_SLOTS_CACHE.set(disableRuneSlots);
         DISABLE_RUNIC_LOOT_CACHE.set(disableRunicLoot);
-        DISABLE_ETCHING_CRAFTING_CACHE.set(disableEtchingCrafting);
-        DISABLE_STAT_CAPS_CACHE.set(disableStatCaps);
+        DISABLE_INSCRIPTION_CRAFTING_CACHE.set(disableInscriptionCrafting);
 
         EnchantBlacklist.setConfigDisabled(parsed);
         EnchantBlacklist.setConfigDisabledStats(disabledStats);
         EnchantBlacklist.setDisableAll(disableAll);
+    }
+
+    private static Map<ResourceLocation, Integer> parseRuneSlotWhitelist(List<? extends String> entries) {
+        Map<ResourceLocation, Integer> parsed = new LinkedHashMap<>();
+        for (String entry : entries) {
+            if (entry == null) continue;
+            int separator = entry.lastIndexOf('=');
+            if (separator <= 0 || separator == entry.length() - 1) continue;
+            ResourceLocation itemId = ResourceLocation.tryParse(entry.substring(0, separator).trim());
+            if (itemId == null) continue;
+            try {
+                parsed.put(itemId, Math.max(0, Integer.parseInt(entry.substring(separator + 1).trim())));
+            } catch (NumberFormatException ignored) {
+            }
+        }
+        return Map.copyOf(parsed);
     }
 }

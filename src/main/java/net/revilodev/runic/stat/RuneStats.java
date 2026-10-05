@@ -120,7 +120,7 @@ public final class RuneStats {
     }
 
     public static RuneStats combine(RuneStats base, RuneStats add) {
-        return combine(base, add, !RunicConfig.disableStatCaps());
+        return combine(base, add, true);
     }
 
     // optional cap aware merge

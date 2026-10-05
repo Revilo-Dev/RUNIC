@@ -1,161 +1,114 @@
 # Developer Integration
 
-This page is for mod developers who want their items or enchantments to work with RUNIC.
+Use configuration for pack-local overrides, datapacks for distributable data integration, and Java only when adding new mechanics.
 
-## Datapack Support
+## Add or Remove Rune Slots
 
-The preferred integration path is datapack JSON. Put these files in your mod resources under `src/main/resources/data/<your_modid>/`.
+For a server/pack config override, use `rune_slots.whitelist = ["yourmod:item=5"]` or `rune_slots.blacklist = ["yourmod:item"]`. The blacklist wins, and a whitelist count overrides all detected, datapack, or stored capacities.
 
-## Add Rune Slots to Custom Gear
-
-Create:
-
-```text
-data/<your_modid>/rune_slots/<file>.json
-```
-
-Direct item example:
+For a datapack, create `data/<namespace>/rune_slots/<file>.json`:
 
 ```json
 {
-  "items": {
-    "your_modid:steel_greatsword": 5
-  },
-  "item_types": {
-    "your_modid:steel_greatsword": "sword"
-  }
+  "defaults": { "sword": 4 },
+  "items": { "yourmod:steel_greatsword": 5 },
+  "tags": { "yourmod:runic_weapons": 5 },
+  "item_types": { "yourmod:steel_greatsword": "sword" },
+  "tag_types": { "yourmod:runic_weapons": "sword" }
 }
 ```
 
-Tag-based example:
+Supported types are `helmet`, `chestplate`, `leggings`, `boots`, `sword`, `pickaxe`, `axe`, `shovel`, `hoe`, `bow`, `crossbow`, `shield`, `trident`, `elytra`, `fishing_rod`, and `mace`. Direct items beat tags; tags beat defaults. Vanilla classes and item attribute modifiers provide a final automatic fallback.
+
+Legacy `{ "item": "id", "slots": 4 }` and `{ "list": [{"item":"id","slots":4}] }` files are also accepted.
+
+## Add Effect Enchantments
+
+The easiest runtime option is the config:
+
+```toml
+[enchantments]
+whitelist = ["yourmod:storm_edge"]
+```
+
+This makes the enchantment a RUNIC effect, permits it on any workbench item, adds it to enchanting-table candidates, and preserves it in book loot.
+
+For a distributable datapack list, create `data/<namespace>/runic_effects/<file>.json`:
 
 ```json
 {
-  "tags": {
-    "your_modid:runic_weapons": 5
-  },
-  "tag_types": {
-    "your_modid:runic_weapons": "sword"
-  }
+  "add": ["yourmod:storm_edge", "yourmod:lifesteal"],
+  "remove": ["minecraft:mending"]
 }
 ```
 
-Then create a normal item tag:
+`effects` is an alias of `add`. Datapack removal affects the built-in effect set, but a config whitelist explicitly adds its ids back.
 
-```text
-data/your_modid/tags/item/runic_weapons.json
-```
+## Add Etching Table Recipes
 
-```json
-{
-  "replace": false,
-  "values": [
-    "your_modid:steel_greatsword",
-    "your_modid:obsidian_glaive"
-  ]
-}
-```
-
-## Supported Gear Types
-
-Use one of:
-
-`helmet`, `chestplate`, `leggings`, `boots`, `sword`, `pickaxe`, `axe`, `shovel`, `hoe`, `bow`, `crossbow`, `shield`, `trident`, `elytra`, `fishing_rod`, `mace`.
-
-Gear type affects which stats, attributes, mythic runes, and workbench behavior apply.
-
-If your item already exposes vanilla-style attributes, RUNIC may auto-detect it. A datapack type is still recommended for predictable behavior.
-
-## Add Custom Enchantments as RUNIC Effects
-
-Create:
-
-```text
-data/<your_modid>/runic_effects/<file>.json
-```
-
-```json
-{
-  "effects": [
-    "your_modid:storm_edge",
-    "your_modid:lifesteal"
-  ]
-}
-```
-
-`effects` and `add` are aliases. `remove` can remove built-in or datapack-added entries.
-
-```json
-{
-  "add": [
-    "your_modid:storm_edge"
-  ],
-  "remove": [
-    "minecraft:mending"
-  ]
-}
-```
-
-## Add Etching Table Recipes for Your Enchants
-
-Whitelisting an enchantment makes it valid as a RUNIC effect, but players still need a recipe if you want it craftable.
-
-Create an Etching Table recipe:
-
-```text
-data/<your_modid>/recipe/etching_table/effect/storm_edge.json
-```
+Create `data/<namespace>/recipe/etching_table/<name>.json`:
 
 ```json
 {
   "type": "runic:etching_table",
-  "base": {
-    "item": "runic:blank_etching"
-  },
-  "material": {
-    "item": "minecraft:lightning_rod"
-  },
-  "result": {
-    "id": "runic:etching",
-    "count": 1
-  },
-  "effect": "your_modid:storm_edge"
+  "base": { "item": "runic:blank_inscription" },
+  "material": { "item": "minecraft:lightning_rod" },
+  "result": { "id": "runic:etching", "count": 1 },
+  "effect": "yourmod:storm_edge"
 }
 ```
 
-The resulting etching applies the enchantment at RUNIC's etching level. RUNIC clamps levels to the enchantment's max level.
+Use `stat: "attack_damage"` for a stat template or `mythic: "runic:mythic/ruin"` for a mythic item. The menu shows only Blank Inscription-based recipes. Blank Etchings are produced through the Enchanting Table.
 
-## Code-Level Integration
+## Add or Change Rarities
 
-If your mod directly edits RUNIC gear, use RUNIC APIs instead of raw NBT.
+Create `data/<namespace>/rarities/<file>.json`:
 
-Important classes:
+```json
+{
+  "default": "common",
+  "entries": {
+    "yourmod:storm_edge": "epic",
+    "runic:stat/attack_damage": "uncommon"
+  }
+}
+```
 
-- `net.revilodev.runic.stat.RuneStats`
-- `net.revilodev.runic.runes.RuneSlots`
-- `net.revilodev.runic.item.custom.RuneItem`
-- `net.revilodev.runic.item.custom.EtchingItem`
-- `net.revilodev.runic.gear.GearAttributes`
+Valid built-in rarity keys are `common`, `uncommon`, `rare`, `epic`, `legendary`, `mythic`, and `cursed`. Rarity affects color, offer tiers, corruption category, and relative loot selection.
 
-Recommended flow:
+## Add Items Through Tags
+
+Any item tag referenced by `tags` or `tag_types` must be a normal item tag at `data/<namespace>/tags/item/<name>.json`. This is the recommended way to integrate families of gear without enumerating every id.
+
+## Java APIs
+
+Important APIs are:
+
+- `RuneSlotCapacityData` for reloadable slot/type data.
+- `RuneSlots` for effective capacity, usage, expansion, and synchronization.
+- `RuneStats` and `RuneStatType` for stat storage and capped combination.
+- `RunicEffectEnchantments` for the live effect set.
+- `RuneItem` and `EtchingItem` for enhancement item creation.
+- `RunicItemData` for corruption, synergies, relic sockets, and mythic ids.
+- `GearAttributes` for levelled item attributes.
+- `SynergyRegistry`, `MythicRuneRegistry`, and `RelicRegistry` for built-in definitions.
+
+Always mutate items on the logical server and call `RuneSlots.syncUsedToContents(stack)` after directly changing stats or enchantments.
 
 ```java
 RuneStats current = RuneStats.get(stack);
-RuneStats add = RuneStats.single(RuneStatType.ATTACK_DAMAGE, 2.0F);
-RuneStats merged = RuneStats.combine(current, add);
-RuneStats.set(stack, merged);
+RuneStats added = RuneStats.single(RuneStatType.ATTACK_DAMAGE, 2.0F);
+RuneStats.set(stack, RuneStats.combine(current, added));
 RuneSlots.syncUsedToContents(stack);
 ```
 
-For enchant-like effects:
+## Adding New Built-In Mechanics
 
-```java
-if (RuneItem.isEffectEnchantment(enchantment)) {
-    int level = RuneItem.clampEffectLevel(enchantment, 2);
-    // Add the enchantment to DataComponents.ENCHANTMENTS server-side,
-    // then call RuneSlots.syncUsedToContents(stack).
-}
-```
+- New stat: add a `RuneStatType`, translation/model/category/rarity data, application behavior if it is not a generic attribute, and optional recipe/loot source.
+- New synergy: register its input pair and id in `SynergyRegistry`, implement behavior in `SynergyEffects`, add config values, tooltip text, model mapping, and tests or validation.
+- New mythic rune: add a `MythicRuneDefinition`, application target rules, behavior in `MythicRuneEffects`, config values, translations, recipe/loot source, and model mapping.
+- New relic: register its item and `RelicDefinition`, boss/loot source, passive and active logic in `RelicEffects`, config values, translations, and models.
+- New inscription: register the item, add an Etching Table recipe, preview/apply rules in `ArtisansWorkbenchMenu`, tooltip translations, and config values.
+- New compatibility pack: prefer rune-slot, effect, rarity, tag, and recipe JSON so it works without a hard dependency.
 
-Always apply changes on the logical server. Client screens should only request or preview changes.
-
+Datapack reload listeners sync rune slots, types, effect ids, and rarities to clients. Custom gameplay registries implemented only in Java require both sides to ship the same mod version.

@@ -4,6 +4,7 @@ import net.minecraft.core.Holder;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.enchantment.Enchantment;
+import net.revilodev.runic.RunicConfig;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -85,13 +86,15 @@ public final class RunicEffectEnchantments {
     }
 
     public static Set<ResourceLocation> allowedEffectIds() {
-        return Set.copyOf(loadedEffects);
+        Set<ResourceLocation> allowed = new HashSet<>(loadedEffects);
+        allowed.addAll(RunicConfig.enchantmentWhitelist());
+        return Set.copyOf(allowed);
     }
 
     public static boolean isEffectEnchantment(Holder<Enchantment> holder) {
         return holder.unwrapKey()
                 .map(ResourceKey::location)
-                .map(loadedEffects::contains)
+                .map(id -> loadedEffects.contains(id) || RunicConfig.isEnchantmentWhitelisted(id))
                 .orElse(false);
     }
 

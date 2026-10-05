@@ -29,7 +29,7 @@ public final class EnchantingTableEvents {
             return;
         }
 
-        if (event.getItem().is(Items.BOOK) && RunicConfig.hasEnchantableBookEnchantments()) {
+        if (RunicConfig.hasWhitelistedEnchantments()) {
             return;
         }
 

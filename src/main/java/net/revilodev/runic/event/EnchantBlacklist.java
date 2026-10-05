@@ -73,7 +73,7 @@ public final class EnchantBlacklist {
     public static boolean isBlacklisted(ResourceLocation id) {
         // Explicitly whitelisted enchantments remain usable everywhere, including
         // on items and enchanted books that pass through the stripping events.
-        return !RunicConfig.enchantedBookWhitelist().contains(id)
+        return !RunicConfig.isEnchantmentWhitelisted(id)
                 && (DISABLE_ALL || HARD_DISABLED.contains(id) || CONFIG_DISABLED.contains(id));
     }
 
@@ -160,7 +160,7 @@ public final class EnchantBlacklist {
         return stack.is(Items.ENCHANTED_BOOK)
                 && enchantment.unwrapKey()
                 .map(ResourceKey::location)
-                .map(RunicConfig::canEnchantBook)
+                .map(RunicConfig::isEnchantmentWhitelisted)
                 .orElse(false);
     }
 }

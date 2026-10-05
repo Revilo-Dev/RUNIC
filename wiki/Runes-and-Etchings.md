@@ -30,7 +30,7 @@ Stat enhancements can improve things like:
 - Draw speed
 - Status chances such as bleeding, freezing, stunning, poison, withering, flame, or shocking
 
-Some stats have caps. Upgrade effects can push stats higher, but that usually increases corruption risk.
+Some stats have caps, and caps are always enabled. Upgrade raises a stat up to its cap; Cursed can push a capped stat beyond it at significant risk.
 
 ## Effect Enhancements
 
@@ -42,3 +42,4 @@ Examples include effects such as Mending, Fortune, Flame, Piercing, Soul Speed, 
 
 Many stat runes and etchings are stored as a template until applied. The final value is rolled when the enhancement is applied to gear.
 
+See [Enchantments and Base Stats](Enchantments-and-Base-Stats.md) for every range and cap.

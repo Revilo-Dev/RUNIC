@@ -1,6 +1,9 @@
 package net.revilodev.runic.mixin;
 
 import net.minecraft.core.Holder;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.Container;
 import net.minecraft.world.inventory.EnchantmentMenu;
 import net.minecraft.world.item.ItemStack;
@@ -10,6 +13,7 @@ import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.EnchantmentInstance;
 import net.minecraft.util.RandomSource;
 import net.revilodev.runic.enchanting.EnchantingResource;
+import net.revilodev.runic.RunicConfig;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -26,6 +30,7 @@ abstract class EnchantmentMenuMixin {
     @Shadow private Container enchantSlots;
     @Shadow public int[] costs;
     private int runic$activeOfferSlot;
+    private RegistryAccess runic$registries;
 
     @Redirect(
             method = "quickMoveStack",
@@ -39,6 +44,7 @@ abstract class EnchantmentMenuMixin {
     private void runic$setActiveOfferSlot(net.minecraft.core.RegistryAccess registries, ItemStack stack, int slot, int cost,
                                            CallbackInfoReturnable<List<EnchantmentInstance>> callback) {
         runic$activeOfferSlot = slot;
+        runic$registries = registries;
         if (EnchantingResource.isRunicEtching(stack) && EnchantingResource.isEchoShard(enchantSlots.getItem(1))) {
             Arrays.fill(costs, 25);
         }
@@ -53,10 +59,23 @@ abstract class EnchantmentMenuMixin {
         ItemStack resource = enchantSlots.getItem(1);
         Stream<Holder<Enchantment>> filtered = candidates;
 
+        if (!RunicConfig.enchantmentWhitelist().isEmpty() && runic$registries != null) {
+            var registry = runic$registries.registryOrThrow(Registries.ENCHANTMENT);
+            Stream<Holder<Enchantment>> configured = RunicConfig.enchantmentWhitelist().stream()
+                    .<Holder<Enchantment>>map(id -> registry.getHolder(ResourceKey.create(Registries.ENCHANTMENT, id)).orElse(null))
+                    .filter(java.util.Objects::nonNull);
+            filtered = Stream.concat(filtered, configured).distinct();
+        }
+
         if (stack.is(Items.BOOK)) {
             filtered = filtered.filter(EnchantingResource::allowsBook);
         } else if (EnchantingResource.isRunicEtching(stack)) {
             filtered = filtered.filter(enchantment -> EnchantingResource.allows(resource, enchantment));
+        } else {
+            filtered = filtered.filter(enchantment -> enchantment.unwrapKey()
+                    .map(ResourceKey::location)
+                    .map(RunicConfig::isEnchantmentWhitelisted)
+                    .orElse(false));
         }
 
         List<Holder<Enchantment>> allowedEnchantments = filtered.toList();

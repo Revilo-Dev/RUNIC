@@ -110,7 +110,7 @@ public final class EtchingTableMenu extends AbstractContainerMenu {
 
 
     private void updateResult() {
-        if (RunicConfig.disableEtchingCrafting()) {
+        if (RunicConfig.disableInscriptionCrafting()) {
             clearResult();
             broadcastChanges();
             return;
@@ -157,7 +157,7 @@ public final class EtchingTableMenu extends AbstractContainerMenu {
 
 
     private void craft(Player player) {
-        if (lastRecipe == null || RunicConfig.disableEtchingCrafting()) return;
+        if (lastRecipe == null || RunicConfig.disableInscriptionCrafting()) return;
 
         ItemStack base = input.getItem(0);
         ItemStack mat = input.getItem(1);
@@ -183,7 +183,7 @@ public final class EtchingTableMenu extends AbstractContainerMenu {
     }
 
     public static boolean canAffordEtchingCostLevels(Player player) {
-        if (RunicConfig.disableEtchingCrafting()) return false;
+        if (RunicConfig.disableInscriptionCrafting()) return false;
         return player.getAbilities().instabuild || player.experienceLevel >= ETCHING_XP_COST_LEVELS;
     }
 

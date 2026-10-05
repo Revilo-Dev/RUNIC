@@ -423,12 +423,6 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
             if (v <= 0.0F) continue;
             if (EnchantBlacklist.isStatBlacklisted(t)) continue;
 
-            if (RunicConfig.disableStatCaps()) {
-                int allowed = Math.min(10, maxCost);
-                if (allowed >= 1) return true;
-                continue;
-            }
-
             float cap = t.cap();
             if (cap <= 0.0F) continue;
 
@@ -1219,12 +1213,6 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
             if (v <= 0.0F) continue;
             if (EnchantBlacklist.isStatBlacklisted(t)) continue;
 
-            if (RunicConfig.disableStatCaps()) {
-                candidates.add(t);
-                allowed.put(t, 10);
-                continue;
-            }
-
             float cap = t.cap();
             if (cap <= 0.0F) continue;
 
@@ -1668,7 +1656,7 @@ public final class ArtisansWorkbenchMenu extends AbstractContainerMenu {
             if (!canApplyExpansion(taken)) return;
             if (!reduceMaxDurabilityPercent(taken, RunicConfig.expansionInscriptionMaxDurabilityLossPercent())) return;
             applyExpansion(taken);
-            addInscriptionCorruption(taken, 20);
+            addInscriptionCorruption(taken, RunicConfig.expansionInscriptionCorruption());
             updateGlintAfter(taken);
             return;
         }

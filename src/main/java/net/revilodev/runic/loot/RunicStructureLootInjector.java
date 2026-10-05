@@ -339,11 +339,9 @@ public class RunicStructureLootInjector extends LootModifier {
     }
 
     private static void addRemovedEtchingChoice(List<RuneChoice> pool, RuneChoice choice) {
-        if (RunicConfig.removedEtchingsLootEnabled()) {
-            int weight = Math.max(0, RunicConfig.lootOnlyEtchingWeight());
-            for (int i = 0; i < Math.max(1, weight); i++) {
-                pool.add(choice);
-            }
+        int rarity = Math.max(1, RunicConfig.lootOnlyEtchingWeight());
+        for (int i = 0; i < rarity; i++) {
+            pool.add(choice);
         }
     }
 

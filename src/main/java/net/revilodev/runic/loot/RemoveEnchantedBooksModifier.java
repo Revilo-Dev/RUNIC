@@ -30,22 +30,27 @@ public class RemoveEnchantedBooksModifier extends LootModifier {
         if (RunicConfig.disableRunicLoot()) {
             return generatedLoot;
         }
-        generatedLoot.removeIf(stack -> stack.is(Items.ENCHANTED_BOOK) && !isWhitelisted(stack));
+        generatedLoot.removeIf(stack -> stack.is(Items.ENCHANTED_BOOK) && !keepWhitelistedEnchantments(stack));
         return generatedLoot;
     }
 
-    private static boolean isWhitelisted(ItemStack stack) {
+    private static boolean keepWhitelistedEnchantments(ItemStack stack) {
         ItemEnchantments enchantments = stack.getOrDefault(DataComponents.STORED_ENCHANTMENTS, ItemEnchantments.EMPTY);
-        if (enchantments.isEmpty() || RunicConfig.enchantedBookWhitelist().isEmpty()) {
+        if (enchantments.isEmpty() || RunicConfig.enchantmentWhitelist().isEmpty()) {
             return false;
         }
 
-        for (Holder<Enchantment> enchantment : enchantments.keySet()) {
+        ItemEnchantments.Mutable kept = new ItemEnchantments.Mutable(ItemEnchantments.EMPTY);
+        for (var entry : enchantments.entrySet()) {
+            Holder<Enchantment> enchantment = entry.getKey();
             ResourceLocation id = enchantment.unwrapKey().map(ResourceKey::location).orElse(null);
-            if (id == null || !RunicConfig.enchantedBookWhitelist().contains(id)) {
-                return false;
+            if (RunicConfig.isEnchantmentWhitelisted(id)) {
+                kept.set(enchantment, entry.getIntValue());
             }
         }
+        ItemEnchantments result = kept.toImmutable();
+        if (result.isEmpty()) return false;
+        stack.set(DataComponents.STORED_ENCHANTMENTS, result);
         return true;
     }
 

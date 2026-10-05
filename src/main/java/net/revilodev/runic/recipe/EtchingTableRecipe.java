@@ -95,7 +95,7 @@ public final class EtchingTableRecipe implements Recipe<EtchingTableInput> {
 
     @Override
     public boolean matches(EtchingTableInput input, net.minecraft.world.level.Level level) {
-        if (RunicConfig.disableEtchingCrafting()) return false;
+        if (RunicConfig.disableInscriptionCrafting() && isInscriptionRecipe()) return false;
         if (stat.map(EnchantBlacklist::isStatBlacklisted).orElse(false)) return false;
         if (stat.map(s -> !RunicCompat.isStatAvailable(s)).orElse(false)) return false;
         if (effect.map(EnchantBlacklist::isBlacklisted).orElse(false)) return false;
@@ -112,7 +112,7 @@ public final class EtchingTableRecipe implements Recipe<EtchingTableInput> {
 
     @Override
     public ItemStack assemble(EtchingTableInput input, HolderLookup.Provider registries) {
-        if (RunicConfig.disableEtchingCrafting()) {
+        if (RunicConfig.disableInscriptionCrafting() && isInscriptionRecipe()) {
             return ItemStack.EMPTY;
         }
         if (stat.map(EnchantBlacklist::isStatBlacklisted).orElse(false)) {
@@ -143,6 +143,10 @@ public final class EtchingTableRecipe implements Recipe<EtchingTableInput> {
         mythic.ifPresent(id -> MythicRuneRegistry.setItemRuneId(out, id));
 
         return out;
+    }
+
+    private boolean isInscriptionRecipe() {
+        return base.test(new ItemStack(net.revilodev.runic.item.ModItems.BLANK_INSCRIPTION.get()));
     }
 
     private static boolean stackHasAnyEnchantment(ItemStack stack) {

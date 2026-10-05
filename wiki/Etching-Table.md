@@ -1,29 +1,26 @@
 # Etching Table
 
-The Etching Table is used to create enhancement items before they are applied to gear.
+The Etching Table is RUNIC's inscription crafting station. Blank Etchings themselves are enchanted at the normal Enchanting Table; this block consumes a Blank Inscription plus a recipe material to make utility inscriptions and special rune items.
 
-## What It Makes
+## Operation
 
-The Etching Table can create:
+1. Put the recipe base in the first input and its material in the second.
+2. Inspect the server-generated output preview.
+3. Pay the five-level crafting cost and take the result.
 
-- Stat etchings
-- Effect etchings
-- Utility inscriptions
-- Mythic rune items
+Only recipes whose base accepts `runic:blank_inscription` appear in this menu. Blacklisted enchantments, disabled stats, missing compatibility stats, and unknown mythic ids invalidate a recipe. JEI displays registered recipes when installed.
 
-## Inputs
+`crafting.disable_inscription_crafting = true` clears the result and prevents the five-level payment/craft. It does not disable Blank Etching enchanting.
 
-Most recipes use:
+## Datapack Recipe
 
-- A base item, such as a blank etching or blank inscription
-- A material linked to the desired enhancement
-- Lapis where required by the interface
+```json
+{
+  "type": "runic:etching_table",
+  "base": { "item": "runic:blank_inscription" },
+  "material": { "item": "minecraft:diamond" },
+  "result": { "id": "runic:upgrade_rune", "count": 1 }
+}
+```
 
-The output preview shows the enhancement item that will be created.
-
-## Tips
-
-Use JEI if available. RUNIC registers Etching Table recipes so supported recipes can be browsed in game.
-
-Some effects may be disabled by config, blacklist, or datapack rules. Disabled effects will not craft.
-
+Recipes may also declare `stat`, `effect`, or `mythic` to write enhancement data to the result.
