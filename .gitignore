@@ -1,44 +1,48 @@
 # eclipse
-bin
+/bin/
 *.launch
-.settings
-.metadata
+/.settings/
+/.metadata/
 .classpath
 .project
 
 # idea
-out
+/out/
 *.ipr
 *.iws
 *.iml
-.idea
-.fleet
-.vscode
+/.idea/
 
 # gradle
-build
-.gradle
+/build/
+/.gradle/
+/gradlew
+/gradlew.bat
+/settings.gradle
 
-# other
-eclipse
-run
-runs
-run-data
-logs
-crash-reports
+# non-Boundless assets
+/src/main/resources/assets/*/
+!/src/main/resources/assets/boundless/
+
+# wiki
+/wiki/
+
+# runtime
+/run/
+/runs/
+/run-data/
+/logs/
+/crash-reports/
+*.log
 hs_err_pid*
 replay_pid*
-*.log
-.run
 
-# local machine files
+# local sources
+/.tmpneoforge/
+/.tmpneoforge2/
+/.tmpneoforge3/
+/repo/
+
+# os
 .DS_Store
 Thumbs.db
-Desktop.ini
-
-# JVM crash dumps and recordings
-*.class
-*.hprof
-*.jfr
-
-repo
